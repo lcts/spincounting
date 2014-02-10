@@ -1,0 +1,85 @@
+% spincounting script 
+% Version: v0.9.2
+% Author:  Christopher Engelhard
+% Date:    2014-02-10
+%
+%
+% USAGE:
+% spincounting
+% nspins = spincounting
+% nspins = spincounting('Option', Value, ...)
+% nspins = spincounting(paramstruct)
+% [nspins tfactor q dintnorm dint] = spincounting(paramstruct) 
+%
+% All parameters can be given as either Option-Value pairs or in the form of a struct.
+% The full list of parameters is:
+%
+% paramstruct
+%            .tunefile				: Tune picture file, default: Prompt
+%            .specfile				: Spectrum file, default: Prompt
+%            .outfile				: Filenameunder which to save output, default: Prompt
+%            .nosave                : boolean, don't save anything if true, default: false
+%            .nspins				: # of spins in sample, default: false
+%            .tfactor				: spectrometer transfer factor, default: false
+%            .S						: spin of sample, default: 1/2
+%            .maxpwr				: maximum microwave power, default: 200mW
+%            .tunepicscaling		: scaling of the tune picture in MHz/us, default: 6,94e4
+%            .qparams				: parameters passed on to FitResDip
+%                    .background	: indices of background, default: auto
+%                    .smoothing		: # of points used for smoothing, default 2.5% of total
+%                    .order			: order of background correction used, default 3
+%                    .dipmodel		: model used for dip fitting, default: lorentz
+%            .intparams				: parameters passed on to DoubleInt
+%                      .background	: indices of background, default: auto
+%                      .order		: order of background correction used, # of elements
+%									  determines # of steps, default [3 3]
+%
+% More detailed descriptions of qparams, intparams in their respective functions.
+%
+% Passing nspins and/or tfactor to the script determines the operation mode.
+% - neither:	calculate normalized double integral
+% - nspins:		calculate tfactor from spectrum
+% - tfactor:	calculate nspins from spectrum
+% - both:		check tfactor against nspins using the given spectrum
+%
+% OUTPUTS:
+% nspins:   calculated number of spins (only returned for known transfer factor)
+% tfactor:  calculated transfer factor (only returned for a known number of spins)
+% q:        quality factor of the cavity
+% dintnorm:	double integral of background-corrected spectrum, measurement parameters
+%           taken into account
+% dint:     double integral of background-corrected spectrum, raw
+%
+%
+% PLOTS:
+% - tune picture:
+%   - data blue, fit red/dashed
+%   - bg fit red/dashed/thin, area used for bg correction shaded
+% - spectrum:
+%   - data blue, first integral green, second integral red
+%   - blue/green dotted: bg fits, area used for bg correction shaded
+%   - red dotted: max/min used for determination of double integral
+%
+%
+% NEEDED FUNCTIONS (included in package):
+%   - DoubleInt
+%   - FitResDip
+%   - GetSpecFile
+%   - GetTuneFile
+%   - LocalNoise (needed by FitResDip)
+%   - peakdet    (        "          )
+%
+% Documentation of the various functions is found within their respective m-files.
+%
+% CURRENT LIMITATIONS:
+% - While the dip is autodetected, this only works if the full tune picture is recorded, i.e. there
+%   need to be flat areas to the left and to the right of the tune pic.
+% - the time resolution of the tune file is currently not read and therefore needs to be set
+%   to 50us/div
+%
+% THIS SCRIPT IS STRICTLY GIGO: GARBAGE IN, GARBAGE OUT.
+% If you overmodulate with a badly calibrated modulation amplitude, saturate your sample or
+% do other silly stuff, then this script is just a random number generator.
+%
+% COMMENTS/SUGGESTIONS/BUGS:
+% christopher.engelhard@fu-berlin.de

@@ -1,0 +1,4 @@
+Changelog
+
+v0.9.1 - 2014-02-06
+ - fixed error where dint instead of dintnorm was used to calculate nspins
