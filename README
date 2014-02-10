@@ -21,6 +21,8 @@
 %            .nosave                : boolean, don't save anything if true, default: false
 %            .nspins				: # of spins in sample, default: false
 %            .tfactor				: spectrometer transfer factor, default: false
+%            .q						: quality factor q. Setting this disables all q-factor 
+%                                     calculation related functionality, default: false
 %            .S						: spin of sample, default: 1/2
 %            .maxpwr				: maximum microwave power, default: 200mW
 %            .tunepicscaling		: scaling of the tune picture in MHz/us, default: 6,94e4
