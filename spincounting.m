@@ -57,7 +57,7 @@ function [nspins tfactor q dintnorm dint] = spincounting(varargin)
 % Further help in the README
 %
 
-VERSION = '0.9.3';
+VERSION = '0.9.2-devel';
 fprintf('\nspincouting v%s\n', VERSION);
 
 %% INPUT HANDLING
@@ -162,7 +162,7 @@ end
 % plot tune picture with background corrections and fit
 if ~p.q
   close(findobj('type','figure','name','TuneFigure'))
-  hTuneFigure = figure('name','TuneFigure')
+  hTuneFigure = figure('name','TuneFigure');
   xlim = [min(tunedata(:,1)) max(tunedata(:,1))];
   ylim = [1.1*min(tunedata(:,2)) 1.1*max([tunedata(:,2); fit(:,1); fit(:,2)])];
   fill([tunedata(tunebg(1),1) tunedata(tunebg(1),1) tunedata(tunebg(2),1) tunedata(tunebg(2),1)], ...
@@ -185,7 +185,7 @@ if ~p.q
 end
 % plot spectrum with background corrections and integrals
 close(findobj('type','figure','name','SpecFigure'))
-hSpecFigure = figure('name','SpecFigure')
+hSpecFigure = figure('name','SpecFigure');
 hSpecAxes(1) = axes('Tag', 'specaxes');
 hSpecAxes(2) = axes('Tag', 'intaxes');
 
@@ -198,7 +198,7 @@ set(hSpecAxes(1), 'Layer', 'top', ...
                   'XColor', 'k', 'YColor', 'k');
 xlabel(hSpecAxes(1), 'field / G');
 ylabel(hSpecAxes(1), 'intensity / a.u.');
-set(hSpecAxes(2), 'Position',get(ax(1),'Position'), ...
+set(hSpecAxes(2), 'Position',get(hSpecAxes(1),'Position'), ...
                   'Layer', 'top', ...
                   'Xlim', xlim, 'Ylim', ylim2, ...
                   'XAxisLocation', 'Top', 'YAxisLocation', 'Right', ...
@@ -209,17 +209,17 @@ linkaxes(hSpecAxes,'x');
 set(hSpecAxes, 'nextplot','add');
 fill([specdata(specbg(1),1) specdata(specbg(1),1) specdata(specbg(2),1) specdata(specbg(2),1)], ...
      [ylim1(1) ylim1(2) ylim1(2) ylim1(1)], ...
-     [.9 .9 .9],'EdgeColor','none','parent',ax(1));
+     [.9 .9 .9],'EdgeColor','none','parent',hSpecAxes(1));
 fill([specdata(specbg(3),1) specdata(specbg(3),1) specdata(specbg(4),1) specdata(specbg(4),1)], ...
      [ylim1(1) ylim1(2) ylim1(2) ylim1(1)], ...
-     [.9 .9 .9],'EdgeColor','none','parent',ax(1));
-hSpecPlot(1) = plot(specdata(:,1),specdata(:,2),'parent',ax(1));
-hSpecPlot(2) = plot(bgs(:,1), bgs(:,2),'parent',ax(1));
-hSpecPlot(3) = plot(specs(:,1),specs(:,2),'parent',ax(1));
-hSpecPlot(4) = plot(bgs(:,1),bgs(:,3),'parent',ax(1));
-hSpecPlot(5) = plot(specs(:,1),specs(:,3),'parent',ax(2));
-hSpecPlot(6) = plot(xlim,[0 0],'parent',ax(2));
-hSpecPlot(7) = plot(xlim,[specs(end,3) specs(end,3)],'parent',ax(2));
+     [.9 .9 .9],'EdgeColor','none','parent',hSpecAxes(1));
+hSpecPlot(1) = plot(specdata(:,1),specdata(:,2),'parent',hSpecAxes(1));
+hSpecPlot(2) = plot(bgs(:,1), bgs(:,2),'parent',hSpecAxes(1));
+hSpecPlot(3) = plot(specs(:,1),specs(:,2),'parent',hSpecAxes(1));
+hSpecPlot(4) = plot(bgs(:,1),bgs(:,3),'parent',hSpecAxes(1));
+hSpecPlot(5) = plot(specs(:,1),specs(:,3),'parent',hSpecAxes(2));
+hSpecPlot(6) = plot(xlim,[0 0],'parent',hSpecAxes(2));
+hSpecPlot(7) = plot(xlim,[specs(end,3) specs(end,3)],'parent',hSpecAxes(2));
 set(hSpecPlot( 1:5     ), 'LineWidth', 1.5);
 set(hSpecPlot([2 4 6 7]), 'LineStyle', ':');
 set(hSpecPlot([1 2]), 'Color', [0 0 .8]);
@@ -250,11 +250,11 @@ if ~p.q
   q = specparams.Frequency / fwhm / 1e6;
   fprintf('\n\n\n\nTune picture background indices: [%i %i %i %i]\nSpectrum background indices: [%i %i %i %i]\n', ...
           tunebg, specbg)
-  fprintf('\nFWHM: %.4f MHz\nQuality Q: %.2f\nDouble integral: %g a.u.\n', ...
+  fprintf('\nFWHM: %.4f MHz\nq-factor: %.2f\nDouble integral: %g a.u.\n', ...
           fwhm, q, dint)
 else
   q = p.q;
-  fprintf('Given quality-factor  Q: %.2f\nDouble integral: %g a.u.\n', q, dint);
+  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\nDouble integral: %g a.u.\n', q, dint);
 end
 
 % set measurement parameters
@@ -276,12 +276,18 @@ fprintf('\nNormalized double integral = %g a.u.\n', dintnorm);
 if ~p.nosave
 % Summarize what we've done to logfile
   fprintf(fid, 'spincounting v%s - %s\n', VERSION, datestr(clock));
-  fprintf(fid, '\nTUNE PICTURE FITTING\nTune picture scaling: %e MHz/us\nTune picture background indices: [%i %i %i %i]\nFWHM: %.4f MHz\nQuality Q: %.2f\n', ...
-          p.tunepicscaling, tunebg, fwhm, q);
+  if ~p.q
+    fprintf(fid, '\nTUNE PICTURE FITTING\nTune picture scaling: %e MHz/us\nTune picture background indices: [%i %i %i %i]\nFWHM: %.4f MHz\nq-factor: %.2f\n', ...
+            p.tunepicscaling, tunebg, fwhm, q);
+  else
+    fprintf(fid, '\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', q);
+  end
   fprintf(fid, '\nSPECTRUM PROCESSING\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\nBridge max power: %.2fW\nTemperature: %.0fK\nBoltzmann population factor: %g\nSample spin: S = %.2f\nNormalized double integral = %g a.u.\n', specbg, dint, p.maxpwr, specparams.Temperature, nb, p.S, dintnorm);
-% save plots to file
-  set(hTuneFigure,'PaperPositionMode','auto');
-  print('-dpng', '-r300', strcat(p.outfile, '_tune_picture.png'));
+  % save plots to file
+  if ~p.q
+    set(hTuneFigure,'PaperPositionMode','auto');
+    print('-dpng', '-r300', strcat(p.outfile, '_tune_picture.png'));
+  end
   set(hSpecFigure,'PaperPositionMode','auto');
   print('-dpng', '-r300', strcat(p.outfile, '_spectrum.png'));
   fprintf(fid, '\nFigures saved to %s and %s\n', [p.outfile, '_tune_picture.png'], [p.outfile, '_spectrum.png']);
