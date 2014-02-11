@@ -1,11 +1,5 @@
 function [nspins tfactor q dintnorm dint] = spincounting(varargin)
-%
-% spincounting script 
-% Version: v0.9.3
-% Author:  Christopher Engelhard
-% Date:    2014-02-10
-%
-%
+
 % USAGE:
 % spincounting
 % nspins = spincounting
@@ -37,14 +31,6 @@ function [nspins tfactor q dintnorm dint] = spincounting(varargin)
 %                      .background	: indices of background, default: auto
 %                      .order		: order of background correction used, # of elements
 %									  determines # of steps, default [3 3]
-%
-% More detailed descriptions of qparams, intparams in their respective functions.
-%
-% Passing nspins and/or tfactor to the script determines the operation mode.
-% - neither:	calculate normalized double integral
-% - nspins:		calculate tfactor from spectrum
-% - tfactor:	calculate nspins from spectrum
-% - both:		check tfactor against nspins using the given spectrum
 %
 % OUTPUTS:
 % nspins:   calculated number of spins (only returned for known transfer factor)
@@ -97,7 +83,10 @@ pmain.parse(varargin{:});
 p = pmain.Results;
 %% p.qparams = pq.Results
 
-%% SET MODE %%
+% warn the user his data isn't being saved
+if p.nosave; warning('spincounting:NoSave', 'nosave option set, data is not being saved.\n'); end
+
+% set mode
 if ~p.nspins
   if ~p.tfactor
     MODE = 'integrate';
