@@ -21,7 +21,7 @@ function [nspins tfactor q dintnorm dint] = spincounting(varargin)
 %                                     calculation related functionality, default: false
 %            .S						: spin of sample, default: 1/2
 %            .maxpwr				: maximum microwave power, default: 200mW
-%            .tunepicscaling		: scaling of the tune picture in MHz/us, default: 6,94e4
+%            .tunepicscaling		: scaling of the tune picture in MHz/s, default: 6,94e4
 %            .qparams				: parameters passed on to FitResDip
 %                    .background	: indices of background, default: auto
 %                    .smoothing		: # of points used for smoothing, default 2.5% of total
@@ -43,7 +43,7 @@ function [nspins tfactor q dintnorm dint] = spincounting(varargin)
 % Further help in the README
 %
 
-VERSION = '0.9.2-devel';
+VERSION = '0.9.3';
 fprintf('\nspincouting v%s\n', VERSION);
 
 %% INPUT HANDLING
