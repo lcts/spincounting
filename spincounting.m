@@ -276,10 +276,11 @@ if ~p.nosave
   if ~p.q
     set(hTuneFigure,'PaperPositionMode','auto');
     print('-dpng', '-r300', strcat(p.outfile, '_tune_picture.png'));
+    fprintf(fid, '\nTune figure saved to %s. ', [p.outfile, '_tune_picture.png']);
   end
   set(hSpecFigure,'PaperPositionMode','auto');
   print('-dpng', '-r300', strcat(p.outfile, '_spectrum.png'));
-  fprintf(fid, '\nFigures saved to %s and %s\n', [p.outfile, '_tune_picture.png'], [p.outfile, '_spectrum.png']);
+  fprintf(fid, 'Double integration figure saved to %s\n', [p.outfile, '_spectrum.png']);
 end
 
 
