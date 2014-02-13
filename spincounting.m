@@ -1,5 +1,6 @@
 function [nspins tfactor q dintnorm dint] = spincounting(varargin)
-
+% Evaluate EPR spectra quantitatively
+%
 % USAGE:
 % spincounting
 % nspins = spincounting
@@ -11,32 +12,32 @@ function [nspins tfactor q dintnorm dint] = spincounting(varargin)
 % The full list of parameters is:
 %
 % paramstruct
-%            .tunefile				: Tune picture file, default: Prompt
-%            .specfile				: Spectrum file, default: Prompt
-%            .outfile				: Filenameunder which to save output, default: Prompt
-%            .nosave                : boolean, don't save anything if true, default: false
-%            .nspins				: # of spins in sample, default: false
-%            .tfactor				: spectrometer transfer factor, default: false
-%            .q						: quality factor q. Setting this disables all q-factor 
-%                                     calculation related functionality, default: false
-%            .S						: spin of sample, default: 1/2
-%            .maxpwr				: maximum microwave power, default: 200mW
-%            .tunepicscaling		: scaling of the tune picture in MHz/s, default: 6,94e4
-%            .qparams				: parameters passed on to FitResDip
-%                    .background	: indices of background, default: auto
-%                    .smoothing		: # of points used for smoothing, default 2.5% of total
-%                    .order			: order of background correction used, default 3
-%                    .dipmodel		: model used for dip fitting, default: lorentz
-%            .intparams				: parameters passed on to DoubleInt
-%                      .background	: indices of background, default: auto
-%                      .order		: order of background correction used, # of elements
-%									  determines # of steps, default [3 3]
+%            .tunefile             : Tune picture file, default: Prompt
+%            .specfile             : Spectrum file, default: Prompt
+%            .outfile              : Filenameunder which to save output, default: Prompt
+%            .nosave               : boolean, don't save anything if true, default: false
+%            .nspins               : # of spins in sample, default: false
+%            .tfactor              : spectrometer transfer factor, default: false
+%            .q                    : quality factor q. Setting this disables all q-factor 
+%                                    calculation related functionality, default: false
+%            .S                    : spin of sample, default: 1/2
+%            .maxpwr               : maximum microwave power, default: 200mW
+%            .tunepicscaling       : scaling of the tune picture in MHz/s, default: 6,94e4
+%            .qparams              : parameters passed on to FitResDip
+%                    .background   : indices of background, default: auto
+%                    .smoothing    : # of points used for smoothing, default 2.5% of total
+%                    .order        : order of background correction used, default 3
+%                    .dipmodel     : model used for dip fitting, default: lorentz
+%            .intparams            : parameters passed on to DoubleInt
+%                      .background : indices of background, default: auto
+%                      .order      : order of background correction used, # of elements
+%									 determines # of steps, default [3 3]
 %
 % OUTPUTS:
 % nspins:   calculated number of spins (only returned for known transfer factor)
 % tfactor:  calculated transfer factor (only returned for a known number of spins)
 % q:        quality factor of the cavity
-% dintnorm:	double integral of background-corrected spectrum, measurement parameters
+% dintnorm: double integral of background-corrected spectrum, measurement parameters
 %           taken into account
 % dint:     double integral of background-corrected spectrum, raw
 %
@@ -260,7 +261,6 @@ fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nU
         p.maxpwr, specparams.Temperature, nb, p.S);
 dintnorm = dint / (sqrt(pwr) * specparams.ModAmp * q * nb * p.S*(p.S+1));
 fprintf('\nNormalized double integral = %g a.u.\n', dintnorm);
-
 
 if ~p.nosave
 % Summarize what we've done to logfile
