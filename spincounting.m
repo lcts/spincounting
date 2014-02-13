@@ -244,7 +244,7 @@ if ~p.q
           fwhm, q, dint)
 else
   q = p.q;
-  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\nDouble integral: %g a.u.\n', q, dint);
+  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\n', q, specbg, dint);
 end
 
 % set measurement parameters
