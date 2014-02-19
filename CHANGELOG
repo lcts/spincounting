@@ -13,3 +13,4 @@ v0.9.3
  - included warning if data is not being saved
  - moved manual from spincounting.m head comment to README
  - changed spincounting.m head comment to comply with MATLAB help system
+ - fixed error where spectrum bg indices are not displayed when q is passed

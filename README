@@ -74,7 +74,7 @@ All relevant parameters are printed to stdout as well as saved to a file. Additi
    - red dotted: max/min used for determination of double integral
 These figures are also by default saved to file.
 
-For a good result it is vitally important that the background corrections and fits used are as good as possible. Always check that the program has achieved a good background fit, especially for the double integration. If not, try messing with the areas used for background correction before messing with the fitting models. A good background correction in the double integration is indicated by a zero first and flat second integral in the shaded areas.
+For a good result it is vitally important that the background corrections and fits used are as good as possible. Always check that the program has achieved a good background fit, especially for the double integration. If not, try messing with the areas used for background correction before messing with the fitting models. A good background correction in the double integration is indicated by a flat first and second integral in the shaded areas.
 
 
 Documentation of the various functions can be found within their respective m-files. Some of them might be useful for other purposes as well.
