@@ -118,7 +118,6 @@ switch p.Results.dipmodel
   case 'nofit'		% just use the initial parameters directly
     fwhm = xdip(2);
     resnorm = false;
-    fit = false;
     params = [xdip xbg];
     % use a lorentzian to plot the determined dip. This is rather arbitrary.
     fdip = @(x,xdata) x(1)*x(2)^2/4./((xdata - x(3)).^2 + (x(2)/2)^2);'x';'xdata';
