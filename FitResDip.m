@@ -118,11 +118,10 @@ switch p.Results.dipmodel
   case 'nofit'		% just use the initial parameters directly
     fwhm = xdip(2);
     resnorm = false;
-    fit = false;
     params = [xdip xbg];
     % use a lorentzian to plot the determined dip. This is rather arbitrary.
     fdip = @(x,xdata) x(1)*x(2)^2/4./((xdata - x(3)).^2 + (x(2)/2)^2);'x';'xdata';
-    fbg = @(x,xdata)polyval(x,xdata);'x';'xdata';
+    fbg  = @(x,xdata) polyval(x,xdata);'x';'xdata';
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
     fit(:,1) = func(params,data(:,1));
     fit(:,2) = fbg(params(4:end),data(:,1));
@@ -130,7 +129,7 @@ switch p.Results.dipmodel
   case 'lorentz'	% fit the dip using a lorentz curve
     % define functions, lorentzian, background and both
     fdip = @(x,xdata) x(1)*x(2)^2/4./((xdata - x(3)).^2 + (x(2)/2)^2);'x';'xdata';
-    fbg = @(x,xdata)polyval(x,xdata);'x';'xdata';
+    fbg  = @(x,xdata) polyval(x,xdata);'x';'xdata';
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
     % fit the lorentz curve and background
     xin = [xdip xbg];
@@ -141,7 +140,18 @@ switch p.Results.dipmodel
     fit(:,2) = fbg(params(4:end),data(:,1));
     fit(:,3) = fdip(params(1:3),data(:,1));
   case 'gauss'		% fit the dip using a gaussian curve
-    error('FitResDip:FutureVersion', 'Gaussian dip model will be implemented in a future version')
+  % define functions, lorentzian, background and both
+    fdip = @(x,xdata) x(1)*1/(x(2)*sqrt(2*pi)).*exp(-(xdata - x(3)).^2 / (2*x(2)^2));'x';'xdata';
+    fbg = @(x,xdata)polyval(x,xdata);'x';'xdata';
+    func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
+    % fit the lorentz curve and background
+    xin = [xdip xbg];
+    [params resnorm]= lsqcurvefit(func,xin,data(background(1):background(4),1),data(background(1):background(4),2));
+    % save output parameters
+    fwhm = 2*sqrt(2*log(2))*params(2);
+    fit(:,1) = func(params,data(:,1));
+    fit(:,2) = fbg(params(4:end),data(:,1));
+    fit(:,3) = fdip(params(1:3),data(:,1));
   otherwise
     % throw exception
     message = ['inputParser recognized ' dipmodel ', but the model is not implemented.'];
