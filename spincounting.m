@@ -137,6 +137,7 @@ if ~p.q
   results.tune.data = tunedata;
   results.tune.fit(:,1)   = tunedata(:,1);
   results.tune.fit(:,2:4) = fit;
+  results.tune.fwhm       = fwhm;
 end
 %catch exception
 %end
@@ -150,8 +151,8 @@ else
 end
 results.spec.data(:,1:2) = specdata;
 results.spec.data(:,3:4) = specs(:,2:3);
-results.spec.bgs = bgs;
-results.dint = dint;
+results.spec.bgs         = bgs;
+results.spec.dint        = dint;
 %catch exception
 %end
 
@@ -256,17 +257,17 @@ end
 
 % set measurement parameters
 % calculate actual power from maxpwr and attenuation
-pwr = p.maxpwr * 10^(-specparams.Attenuation/10);
+results.pwr = p.maxpwr * 10^(-specparams.Attenuation/10);
 % calculate Boltzmann population factor from constants and temperature
 h = 6.62606957e-34; % Planck constant
 k = 1.3806488e-23;  % Boltzmann constant
 if ~isfield(specparams, 'Temperature'); specparams.Temperature = 1; end
-nb = exp(h * specparams.Frequency / ( k * specparams.Temperature ));
+results.nb = exp(h * specparams.Frequency / ( k * specparams.Temperature ));
 
 % Calculate normalisation factor and print it with some info
 fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nUsing the following parameters:\n - bridge max power: %.2fW\n - temperature: %.0fK\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n', ...
-        p.maxpwr, specparams.Temperature, nb, p.S);
-dintnorm = dint / (sqrt(pwr) * specparams.ModAmp * results.q * nb * p.S*(p.S+1));
+        p.maxpwr, specparams.Temperature, results.nb, p.S);
+dintnorm = dint / (sqrt(results.pwr) * specparams.ModAmp * results.q * results.nb * p.S*(p.S+1));
 fprintf('\nNormalized double integral = %g a.u.\n', dintnorm);
 
 if ~p.nosave
@@ -278,7 +279,7 @@ if ~p.nosave
   else
     fprintf(fid, '\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', q);
   end
-  fprintf(fid, '\nSPECTRUM PROCESSING\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\nBridge max power: %.2fW\nTemperature: %.0fK\nBoltzmann population factor: %g\nSample spin: S = %.2f\nNormalized double integral = %g a.u.\n', specbg, dint, p.maxpwr, specparams.Temperature, nb, p.S, dintnorm);
+  fprintf(fid, '\nSPECTRUM PROCESSING\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\nBridge max power: %.2fW\nTemperature: %.0fK\nBoltzmann population factor: %g\nSample spin: S = %.2f\nNormalized double integral = %g a.u.\n', specbg, dint, p.maxpwr, specparams.Temperature, results.nb, p.S, dintnorm);
   % save plots to file
   if ~p.q
     set(hTuneFigure,'PaperPositionMode','auto');
