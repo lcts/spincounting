@@ -1,7 +1,7 @@
 spincounting
-Version: v0.9.3
+Version: v1.0
 Author:  Christopher Engelhard
-Date:    2014-02-12
+Date:    2014-07-30
 
 
 SYNTAX:
@@ -9,7 +9,7 @@ spincounting
 nspins = spincounting
 nspins = spincounting('Option', Value, ...)
 nspins = spincounting(paramstruct)
-[nspins tfactor q dintnorm dint] = spincounting(paramstruct) 
+[nspins tfactor dintnorm results] = spincounting(paramstruct) 
 
 INPUTS:
 All top-level parameters can be given as either Option-Value pairs or in the form of a struct.
@@ -40,11 +40,16 @@ paramstruct
 More detailed descriptions of qparams, intparams in their respective functions.
 
 OUTPUTS:
-nspins:   calculated number of spins (only returned for if tfactor is given)
-tfactor:  calculated transfer factor (only returned for if nspins is given)
-q:        quality factor of the cavity
-dintnorm: double integral of background-corrected spectrum, measurement parameters taken into account
-dint:     double integral of background-corrected spectrum, raw
+nspins       : calculated number of spins (returns NaN unless tfactor is given)
+tfactor      : calculated transfer factor (returns NaN unless nspins is given)
+dintnorm     : double integral of background-corrected spectrum, measurement parameters taken into account
+results      : struct containing further results produced by the script. These are:
+       .q    : quality factor of the cavity
+       .pwr  : actual microwave power used for measurement
+       .nb   : boltzmann population factor calculated from temperature
+       .tune : substruct including the tune picture data, the fits and the fwhm
+       .spec : substruct containing the original data and the two integrated spectra,
+               the backgrounds used for correction and the raw double integrals
 
 
 
