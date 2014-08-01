@@ -288,6 +288,8 @@ end
 switch MODE
 case 'integrate' % no further action
   fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
+  nspins = NaN;
+  tfactor = NaN;
   if ~p.nosave
     fprintf(fid, '\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
   end
