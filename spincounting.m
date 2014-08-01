@@ -1,4 +1,4 @@
-function [nspins tfactor q dintnorm dint] = spincounting(varargin)
+function [nspins tfactor dintnorm results] = spincounting(varargin)
 % Evaluate EPR spectra quantitatively
 %
 % USAGE:
@@ -34,17 +34,17 @@ function [nspins tfactor q dintnorm dint] = spincounting(varargin)
 %									 determines # of steps, default [3 3]
 %
 % OUTPUTS:
-% nspins:   calculated number of spins (only returned for known transfer factor)
-% tfactor:  calculated transfer factor (only returned for a known number of spins)
-% q:        quality factor of the cavity
+% nspins:   calculated number of spins (returns NaN if transfer factor unknown)
+% tfactor:  calculated transfer factor (retursn NaN if number of spins unknown)
 % dintnorm: double integral of background-corrected spectrum, measurement parameters
 %           taken into account
-% dint:     double integral of background-corrected spectrum, raw
+% results:  a structure containing internal parameters including the various fits, backgrounds and spectra
+%           the quality factor and double integrals
 %
 % Further help in the README
 %
 
-VERSION = '0.9.4';
+VERSION = '1.0';
 fprintf('\nspincouting v%s\n', VERSION);
 
 %% INPUT HANDLING
@@ -134,6 +134,10 @@ if ~p.q
   else
     [fwhm, ~, tunebg, fit] = FitResDip(tunedata,p.qparams);
   end
+  results.tune.data = tunedata;
+  results.tune.fit(:,1)   = tunedata(:,1);
+  results.tune.fit(:,2:4) = fit;
+  results.tune.fwhm       = fwhm;
 end
 %catch exception
 %end
@@ -145,6 +149,10 @@ if isempty(p.intparams)
 else
   [dint, specs, bgs, ~, specbg] = DoubleInt(specdata, p.intparams);
 end
+results.spec.data(:,1:2) = specdata;
+results.spec.data(:,3:4) = specs(:,2:3);
+results.spec.bgs         = bgs;
+results.spec.dint        = dint;
 %catch exception
 %end
 
@@ -237,29 +245,29 @@ end
 %% CALCULATE RESULTS AND OUTPUT
 % Calculate Q-factor, print fwhm, Q, double integral
 if ~p.q
-  q = specparams.Frequency / fwhm / 1e6;
+  results.q = specparams.Frequency / fwhm / 1e6;
   fprintf('\n\n\n\nTune picture background indices: [%i %i %i %i]\nSpectrum background indices: [%i %i %i %i]\n', ...
           tunebg, specbg)
   fprintf('\nFWHM: %.4f MHz\nq-factor: %.2f\nDouble integral: %g a.u.\n', ...
-          fwhm, q, dint)
+          fwhm, results.q, dint)
 else
-  q = p.q;
-  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\n', q, specbg, dint);
+  results.q = p.q;
+  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\n', results.q, specbg, dint);
 end
 
 % set measurement parameters
 % calculate actual power from maxpwr and attenuation
-pwr = p.maxpwr * 10^(-specparams.Attenuation/10);
+results.pwr = p.maxpwr * 10^(-specparams.Attenuation/10);
 % calculate Boltzmann population factor from constants and temperature
 h = 6.62606957e-34; % Planck constant
 k = 1.3806488e-23;  % Boltzmann constant
 if ~isfield(specparams, 'Temperature'); specparams.Temperature = 1; end
-nb = exp(h * specparams.Frequency / ( k * specparams.Temperature ));
+results.nb = exp(h * specparams.Frequency / ( k * specparams.Temperature ));
 
 % Calculate normalisation factor and print it with some info
 fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nUsing the following parameters:\n - bridge max power: %.2fW\n - temperature: %.0fK\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n', ...
-        p.maxpwr, specparams.Temperature, nb, p.S);
-dintnorm = dint / (sqrt(pwr) * specparams.ModAmp * q * nb * p.S*(p.S+1));
+        p.maxpwr, specparams.Temperature, results.nb, p.S);
+dintnorm = dint / (sqrt(results.pwr) * specparams.ModAmp * results.q * results.nb * p.S*(p.S+1));
 fprintf('\nNormalized double integral = %g a.u.\n', dintnorm);
 
 if ~p.nosave
@@ -271,7 +279,7 @@ if ~p.nosave
   else
     fprintf(fid, '\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', q);
   end
-  fprintf(fid, '\nSPECTRUM PROCESSING\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\nBridge max power: %.2fW\nTemperature: %.0fK\nBoltzmann population factor: %g\nSample spin: S = %.2f\nNormalized double integral = %g a.u.\n', specbg, dint, p.maxpwr, specparams.Temperature, nb, p.S, dintnorm);
+  fprintf(fid, '\nSPECTRUM PROCESSING\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\nBridge max power: %.2fW\nTemperature: %.0fK\nBoltzmann population factor: %g\nSample spin: S = %.2f\nNormalized double integral = %g a.u.\n', specbg, dint, p.maxpwr, specparams.Temperature, results.nb, p.S, dintnorm);
   % save plots to file
   if ~p.q
     set(hTuneFigure,'PaperPositionMode','auto');
@@ -288,6 +296,8 @@ end
 switch MODE
 case 'integrate' % no further action
   fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
+  nspins = NaN;
+  tfactor = NaN;
   if ~p.nosave
     fprintf(fid, '\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
   end
