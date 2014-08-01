@@ -31,7 +31,7 @@ function [fwhm resnorm background fit params func] = FitResDip(data, varargin)
 %              fitted by the background - not good.
 % dipmodel   - shape of the dip to fit.
 %              'lorentz' fits a Lorentz distribution (default)
-%              'gauss' (currently not implemented) fits a Gaussian distribution
+%              'gauss' fits a Gaussian distribution
 %              'nofit' calculates FWHM directly without fitting the dip.
 %
 % Additional Outputs
