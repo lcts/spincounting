@@ -275,9 +275,9 @@ if ~p.nosave
   fprintf(fid, 'spincounting v%s - %s\n', VERSION, datestr(clock));
   if ~p.q
     fprintf(fid, '\nTUNE PICTURE FITTING\nTune picture scaling: %e MHz/us\nTune picture background indices: [%i %i %i %i]\nFWHM: %.4f MHz\nq-factor: %.2f\n', ...
-            p.tunepicscaling, tunebg, fwhm, q);
+            p.tunepicscaling, tunebg, fwhm, results.q);
   else
-    fprintf(fid, '\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', q);
+    fprintf(fid, '\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', results.q);
   end
   fprintf(fid, '\nSPECTRUM PROCESSING\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\nBridge max power: %.2fW\nTemperature: %.0fK\nBoltzmann population factor: %g\nSample spin: S = %.2f\nNormalized double integral = %g a.u.\n', specbg, dint, p.maxpwr, specparams.Temperature, results.nb, p.S, dintnorm);
   % save plots to file
