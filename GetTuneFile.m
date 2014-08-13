@@ -44,5 +44,5 @@ switch extension
    otherwise
       % throw exception
       error('GetTuneFile:TypeChk', ...
-            'Unknwon file type: "%s". Please implement this type in GetTuneFile.m', extension);
+            'Unknown file type: "%s". Please implement this type in GetTuneFile.m', extension);
 end
