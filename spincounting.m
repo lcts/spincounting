@@ -16,6 +16,7 @@ function [nspins tfactor dintnorm results] = spincounting(varargin)
 %            .specfile             : Spectrum file, default: Prompt
 %            .outfile              : Filenameunder which to save output, default: Prompt
 %            .nosave               : boolean, don't save anything if true, default: false
+%            .clobber              : overwrite existing files, default: false
 %            .nspins               : # of spins in sample, default: false
 %            .tfactor              : spectrometer transfer factor, default: false
 %            .q                    : quality factor q. Setting this disables all q-factor 
@@ -54,6 +55,8 @@ pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char'},{'vecto
 pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParamValue('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParamValue('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParamValue('clobber', true, @(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParamValue('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('nspins', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tfactor', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('S', 1/2, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
@@ -84,8 +87,43 @@ pmain.parse(varargin{:});
 p = pmain.Results;
 %% p.qparams = pq.Results
 
-% warn the user his data isn't being saved
-if p.nosave; warning('spincounting:NoSave', 'nosave option set, data is not being saved.\n'); end
+% get a filename for saving unless we're not supposed to
+if ~p.nosave
+  % check if we're missing a filename
+  if ~p.outfile
+    % if so, get one
+    [file, path] = uiputfile('*.log','Save Results to File:');
+    if file == 0; error('spincounting:NoFile', 'Saving requested but no output file selected. Abort.\n'); end;
+    p.outfile = fullfile(path, file);
+  end
+  % remove extension from filename (because we add our own later)
+  [path, file, extension] = fileparts(p.outfile);
+  p.outfile = fullfile(path, file);
+  % check if outfile exists or is a folder
+  switch exist([p.outfile extension])
+    case 2  % outfile exists and is a file
+        if ~p.clobber  % check if we can overwrite it
+            % warn and don't save
+            fprintf('\n\n');
+            warning('spincounting:FileExists', 'Output file exists, data will not be saved. Set "clobber" to override.\n');
+            p.nosave = true;
+        else
+            % warn and overwrite
+            fprintf('\n\n');
+            warning('spincounting:FileExists', 'Existing output files will be overwritten. Unset "clobber" to prevent this.\n');
+            fid = fopen([p.outfile extension], 'w');
+        end
+    case 7  % outfile exists and is a folder
+        % The user has messed up. Abort.
+        error('spincounting:FileIsFolder', 'Saving requested but output file is a folder. Abort.\n');
+    otherwise   % outfile does not exist
+        % good to go
+        fid = fopen([p.outfile extension], 'w');
+  end
+else
+  % warn the user that nothing is being saved
+  warning('spincounting:NoSave', 'nosave option set, data is not being saved.\n');
+end
 
 % set mode
 if ~p.nspins
@@ -101,6 +139,7 @@ else
     MODE = 'check';
   end
 end
+
 
 %% LOAD DATA %%
 % Load tune picture data
@@ -224,22 +263,6 @@ set(hSpecPlot([1 2]), 'Color', [0 0 .8]);
 set(hSpecPlot([3 4]), 'Color', [0 .6 0]);
 set(hSpecPlot( 5   ), 'Color', [.8 0 0]);
 set(hSpecPlot([6 7]), 'Color', 'k');
-
-%% ONCE FINISHED, GET A FILENAME FOR SAVING
-% unless we're not supposed to
-if ~p.nosave
-  % check if we're missing a filename
-  if ~p.outfile
-    % if so, get one
-    [file, path] = uiputfile('*.log','Save Results to File:');
-    if file == 0; error('spincounting:NoFile', 'No output file selected. Data not saved.'); end;
-    p.outfile = fullfile(path, file);
-  end
-  % remove extension from filename
-  [path, file, extension] = fileparts(p.outfile);
-  p.outfile = fullfile(path, file);
-  fid = fopen([p.outfile extension], 'w');
-end
 
 
 %% CALCULATE RESULTS AND OUTPUT
