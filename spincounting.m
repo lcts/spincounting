@@ -17,6 +17,7 @@ function [nspins tfactor dintnorm results] = spincounting(varargin)
 %            .outfile              : Filenameunder which to save output, default: Prompt
 %            .nosave               : boolean, don't save anything if true, default: false
 %            .clobber              : overwrite existing files, default: false
+%            .noplot               : do not display plots. They are still generated and saved, default: false
 %            .nspins               : # of spins in sample, default: false
 %            .tfactor              : spectrometer transfer factor, default: false
 %            .q                    : quality factor q. Setting this disables all q-factor 
@@ -45,7 +46,7 @@ function [nspins tfactor dintnorm results] = spincounting(varargin)
 % Further help in the README
 %
 
-VERSION = '1.0-next';
+VERSION = '1.1-next';
 fprintf('\nspincouting v%s\n', VERSION);
 
 %% INPUT HANDLING
@@ -55,7 +56,7 @@ pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char'},{'vecto
 pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParamValue('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParamValue('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
-pmain.addParamValue('clobber', true, @(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParamValue('clobber', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('nspins', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tfactor', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
@@ -199,7 +200,11 @@ results.spec.dint        = dint;
 % plot tune picture with background corrections and fit
 if ~p.q
   close(findobj('type','figure','name','TuneFigure'))
-  hTuneFigure = figure('name','TuneFigure');
+  if ~p.noplot
+    hTuneFigure = figure('name','TuneFigure', 'Visible', 'on');
+  else
+    hTuneFigure = figure('name','TuneFigure', 'Visible', 'off');
+  end
   xlim = [min(tunedata(:,1)) max(tunedata(:,1))];
   ylim = [1.1*min(tunedata(:,2)) 1.1*max([tunedata(:,2); fit(:,1); fit(:,2)])];
   fill([tunedata(tunebg(1),1) tunedata(tunebg(1),1) tunedata(tunebg(2),1) tunedata(tunebg(2),1)], ...
@@ -222,7 +227,11 @@ if ~p.q
 end
 % plot spectrum with background corrections and integrals
 close(findobj('type','figure','name','SpecFigure'))
-hSpecFigure = figure('name','SpecFigure');
+if ~p.noplot
+  hSpecFigure = figure('name','SpecFigure', 'Visible', 'on');
+else
+  hSpecFigure = figure('name','SpecFigure', 'Visible', 'off');
+end
 hSpecAxes(1) = axes('Tag', 'specaxes');
 hSpecAxes(2) = axes('Tag', 'intaxes');
 
