@@ -44,7 +44,7 @@ function [nspins tfactor dintnorm results] = spincounting(varargin)
 % Further help in the README
 %
 
-VERSION = '1.0';
+VERSION = '1.0-next';
 fprintf('\nspincouting v%s\n', VERSION);
 
 %% INPUT HANDLING
