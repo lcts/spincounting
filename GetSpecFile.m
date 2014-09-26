@@ -55,7 +55,7 @@ extension = lower(extension);                     % convert to lowercase
 
 switch extension
    % fsc2-output of lyra (possibly other fsc2-based programs?)
-   case {'.akku', 'ch1', 'ch2'}
+   case {'.akku', '.ch1', '.ch2'}
       fid = fopen(file); % open file
       params.Comment = '';      % set empty comment
       ISCOMMENT = false;        % and initialize ISCOMMENT
