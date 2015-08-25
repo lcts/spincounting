@@ -1,4 +1,4 @@
-function [fwhm resnorm background fit params func] = FitResDip(data, varargin)
+function [fwhm, resnorm, background, fit, params, func] = FitResDip(data, varargin)
 % Fit a tune picture to extract the FWHM of the dip
 %
 % Syntax
@@ -58,7 +58,7 @@ p.parse(data,varargin{:});
 % Determine noiselvl, generate pseudo-derivative via local standard deviation
 % then find local maxima and minima in local standard deviation
 [noiselvl, ~, localstd] = LocalNoise(data(:,2),p.Results.smoothing);
-[maxtab, mintab] = peakdet(localstd,3*noiselvl);
+[~, mintab] = peakdet(localstd,3*noiselvl);
 
 if ~p.Results.background  
   % Determine starting point for fit
@@ -79,12 +79,8 @@ if ~p.Results.background
     background(3) = mintab(3,1);
   end
 else
-  background = p.Results.background;
+  background = iof(p.Results.data(:,1),p.Results.background);
   BGINVALID = false;
-  if background(4) > length(data(:,1))
-    background(4) = length(data(:,1));
-    BGINVALID = true;
-  end
   for i = 3:-1:1
     if background(i) > background(i+1)
       background(i) = background(i+1);
@@ -133,7 +129,7 @@ switch p.Results.dipmodel
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
     % fit the lorentz curve and background
     xin = [xdip xbg];
-    [params resnorm]= lsqcurvefit(func,xin,data(background(1):background(4),1),data(background(1):background(4),2));
+    [params, resnorm]= lsqcurvefit(func,xin,data(background(1):background(4),1),data(background(1):background(4),2));
     % save output parameters
     fwhm = params(2);
     fit(:,1) = func(params,data(:,1));
@@ -146,7 +142,7 @@ switch p.Results.dipmodel
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
     % fit the lorentz curve and background
     xin = [xdip xbg];
-    [params resnorm]= lsqcurvefit(func,xin,data(background(1):background(4),1),data(background(1):background(4),2));
+    [params, resnorm]= lsqcurvefit(func,xin,data(background(1):background(4),1),data(background(1):background(4),2));
     % save output parameters
     fwhm = 2*sqrt(2*log(2))*params(2);
     fit(:,1) = func(params,data(:,1));

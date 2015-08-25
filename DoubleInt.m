@@ -24,7 +24,8 @@ function [doubleint specs bgs params background] = DoubleInt(data, varargin)
 % specs      - an array of the calculated integrals [xaxis firstint secondint]
 % bgs        - dito for backgrounds
 % params     - the coefficients used for background corrections for use in polyval
-% background - the background indices
+% background - the background limits used for background correction
+% bgindex    - the background limit indices used for background correction
 
 %% ARGUMENT PARSING
 % Check number of arguments and set defaults
@@ -42,12 +43,8 @@ if ~p.Results.background
   background(4) = length(data(:,1));
   background(3) = background(4)-ceil(length(data(:,1))*0.25);
 else
-  background = p.Results.background;
+  background = iof(p.Results.data(:,1),p.Results.background)
   BGINVALID = false;
-  if background(4) > length(data(:,1))
-    background(4) = length(data(:,1));
-    BGINVALID = true;
-  end
   for i = 3:-1:1
     if background(i) > background(i+1)
       background(i) = background(i+1);
@@ -59,14 +56,9 @@ else
   end
 end
 
-if length(p.Results.order) > 3
-   message = ['order has too many elements. A maximum of three background correction steps are supported.'];
+if length(p.Results.order) >= 3
+   message = 'order has too many elements. A maximum of two background correction steps are supported.';
    error('DoubleInt:BackgroundSteps', message);   
-end
-
-if length(p.Results.order) == 3
-   message = ['Triple background correction is currently disabled'];
-   error('DoubleInt:FutureVersion', message);
 end
 
 %% INTEGRATE SPECTRUM

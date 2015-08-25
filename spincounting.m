@@ -1,4 +1,4 @@
-function [nspins tfactor dintnorm results] = spincounting(varargin)
+function [nspins, tfactor, dintnorm, results] = spincounting(varargin)
 % Evaluate EPR spectra quantitatively
 %
 % USAGE:
@@ -46,7 +46,7 @@ function [nspins tfactor dintnorm results] = spincounting(varargin)
 % Further help in the README
 %
 
-VERSION = '1.1-next';
+VERSION = '1.2-next';
 fprintf('\nspincouting v%s\n', VERSION);
 
 %% INPUT HANDLING
@@ -56,6 +56,7 @@ pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char'},{'vecto
 pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParamValue('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParamValue('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParamValue('nospec', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('clobber', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('nspins', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
@@ -77,12 +78,12 @@ pmain.FunctionName = 'spincounting';
 pmain.parse(varargin{:});
 
 % parse input arguments of lower level structs, if needed
-%% if exist('pmain.Results.qparams')
-%%  pq.parse(pmain.Results.qparams)
-%% else
-%%  qparams = {}
-%%  pq.parse(qparams{:})
-%% end
+% if exist('pmain.Results.qparams')
+%  pq.parse(pmain.Results.qparams)
+% else
+%  qparams = {}
+%  pq.parse(qparams{:})
+% end
 
 % and store the result in p
 p = pmain.Results;
@@ -127,20 +128,23 @@ else
 end
 
 % set mode
-if ~p.nspins
-  if ~p.tfactor
-    MODE = 'integrate';
-  else 
-    MODE = 'calc_spins';
+if ~p.nospec
+  if ~p.nspins
+    if ~p.tfactor
+      MODE = 'integrate';
+    else 
+      MODE = 'calc_spins';
+    end
+  else  
+    if ~p.tfactor
+      MODE = 'calc_tfactor';
+    else
+      MODE = 'check';
+    end
   end
-else  
-  if ~p.tfactor
-    MODE = 'calc_tfactor';
-  else
-    MODE = 'check';
-  end
+else
+  MODE = 'none';
 end
-
 
 %% LOAD DATA %%
 % Load tune picture data
@@ -157,10 +161,12 @@ end
 
 % Load spectrum file
 %try
-if ~p.specfile
-  [specdata, specparams] = GetSpecFile;
-else
-  [specdata, specparams] = GetSpecFile(p.specfile);
+if ~p.nospec
+  if ~p.specfile
+    [specdata, specparams] = GetSpecFile;
+  else
+    [specdata, specparams] = GetSpecFile(p.specfile);
+  end
 end
 %catch exception
 %end
@@ -184,15 +190,17 @@ end
 
 % calculate number of spins from spectrum
 %try
-if isempty(p.intparams)
-  [dint, specs, bgs, ~, specbg] = DoubleInt(specdata);
-else
-  [dint, specs, bgs, ~, specbg] = DoubleInt(specdata, p.intparams);
+if ~p.nospec
+  if isempty(p.intparams)
+    [dint, specs, bgs, ~, specbg] = DoubleInt(specdata);
+  else
+    [dint, specs, bgs, ~, specbg] = DoubleInt(specdata, p.intparams);
+  end
+  results.spec.data(:,1:2) = specdata;
+  results.spec.data(:,3:4) = specs(:,2:3);
+  results.spec.bgs         = bgs;
+  results.spec.dint        = dint;
 end
-results.spec.data(:,1:2) = specdata;
-results.spec.data(:,3:4) = specs(:,2:3);
-results.spec.bgs         = bgs;
-results.spec.dint        = dint;
 %catch exception
 %end
 
@@ -226,53 +234,54 @@ if ~p.q
   hold off
 end
 % plot spectrum with background corrections and integrals
-close(findobj('type','figure','name','SpecFigure'))
-if ~p.noplot
-  hSpecFigure = figure('name','SpecFigure', 'Visible', 'on');
-else
-  hSpecFigure = figure('name','SpecFigure', 'Visible', 'off');
+if ~p.nospec
+  close(findobj('type','figure','name','SpecFigure'))
+  if ~p.noplot
+    hSpecFigure = figure('name','SpecFigure', 'Visible', 'on');
+  else
+    hSpecFigure = figure('name','SpecFigure', 'Visible', 'off');
+  end
+  hSpecAxes(1) = axes('Tag', 'specaxes');
+  hSpecAxes(2) = axes('Tag', 'intaxes');
+
+  xlim = [min(specdata(:,1)) max(specdata(:,1))];
+  ylim1 = 1.1*[min([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)]) max([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)])];
+  ylim2 = [min(specs(:,3)) - 0.1*max(specs(:,3)) 1.1*max(specs(:,3))];
+  set(hSpecAxes(1), 'Layer', 'top', ...
+  	                'Xlim', xlim, 'Ylim', ylim1, ...
+                    'XAxisLocation', 'Bottom', 'YAxisLocation', 'Left', ...
+                    'XColor', 'k', 'YColor', 'k');
+  xlabel(hSpecAxes(1), 'field / G');
+  ylabel(hSpecAxes(1), 'intensity / a.u.');
+  set(hSpecAxes(2), 'Position',get(hSpecAxes(1),'Position'), ...
+                    'Layer', 'top', ...
+                    'Xlim', xlim, 'Ylim', ylim2, ...
+                    'XAxisLocation', 'Top', 'YAxisLocation', 'Right', ...
+	                'XTickLabel', '', ...
+	                'Color', 'none', 'XColor', 'k', 'YColor', [.8 0 0]);
+  ylabel(hSpecAxes(2), 'double integral / a.u.');
+  linkaxes(hSpecAxes,'x');
+  set(hSpecAxes, 'nextplot','add');
+  fill([specdata(specbg(1),1) specdata(specbg(1),1) specdata(specbg(2),1) specdata(specbg(2),1)], ...
+       [ylim1(1) ylim1(2) ylim1(2) ylim1(1)], ...
+       [.9 .9 .9],'EdgeColor','none','parent',hSpecAxes(1));
+  fill([specdata(specbg(3),1) specdata(specbg(3),1) specdata(specbg(4),1) specdata(specbg(4),1)], ...
+       [ylim1(1) ylim1(2) ylim1(2) ylim1(1)], ...
+       [.9 .9 .9],'EdgeColor','none','parent',hSpecAxes(1));
+  hSpecPlot(1) = plot(specdata(:,1),specdata(:,2),'parent',hSpecAxes(1));
+  hSpecPlot(2) = plot(bgs(:,1), bgs(:,2),'parent',hSpecAxes(1));
+  hSpecPlot(3) = plot(specs(:,1),specs(:,2),'parent',hSpecAxes(1));
+  hSpecPlot(4) = plot(bgs(:,1),bgs(:,3),'parent',hSpecAxes(1));
+  hSpecPlot(5) = plot(specs(:,1),specs(:,3),'parent',hSpecAxes(2));
+  hSpecPlot(6) = plot(xlim,[0 0],'parent',hSpecAxes(2));
+  hSpecPlot(7) = plot(xlim,[specs(end,3) specs(end,3)],'parent',hSpecAxes(2));
+  set(hSpecPlot( 1:5     ), 'LineWidth', 1.5);
+  set(hSpecPlot([2 4 6 7]), 'LineStyle', ':');
+  set(hSpecPlot([1 2]), 'Color', [0 0 .8]);
+  set(hSpecPlot([3 4]), 'Color', [0 .6 0]);
+  set(hSpecPlot( 5   ), 'Color', [.8 0 0]);
+  set(hSpecPlot([6 7]), 'Color', 'k');
 end
-hSpecAxes(1) = axes('Tag', 'specaxes');
-hSpecAxes(2) = axes('Tag', 'intaxes');
-
-xlim = [min(specdata(:,1)) max(specdata(:,1))];
-ylim1 = 1.1*[min([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)]) max([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)])];
-ylim2 = [min(specs(:,3)) - 0.1*max(specs(:,3)) 1.1*max(specs(:,3))];
-set(hSpecAxes(1), 'Layer', 'top', ...
-				  'Xlim', xlim, 'Ylim', ylim1, ...
-                  'XAxisLocation', 'Bottom', 'YAxisLocation', 'Left', ...
-                  'XColor', 'k', 'YColor', 'k');
-xlabel(hSpecAxes(1), 'field / G');
-ylabel(hSpecAxes(1), 'intensity / a.u.');
-set(hSpecAxes(2), 'Position',get(hSpecAxes(1),'Position'), ...
-                  'Layer', 'top', ...
-                  'Xlim', xlim, 'Ylim', ylim2, ...
-                  'XAxisLocation', 'Top', 'YAxisLocation', 'Right', ...
-	              'XTickLabel', '', ...
-	              'Color', 'none', 'XColor', 'k', 'YColor', [.8 0 0]);
-ylabel(hSpecAxes(2), 'double integral / a.u.');
-linkaxes(hSpecAxes,'x');
-set(hSpecAxes, 'nextplot','add');
-fill([specdata(specbg(1),1) specdata(specbg(1),1) specdata(specbg(2),1) specdata(specbg(2),1)], ...
-     [ylim1(1) ylim1(2) ylim1(2) ylim1(1)], ...
-     [.9 .9 .9],'EdgeColor','none','parent',hSpecAxes(1));
-fill([specdata(specbg(3),1) specdata(specbg(3),1) specdata(specbg(4),1) specdata(specbg(4),1)], ...
-     [ylim1(1) ylim1(2) ylim1(2) ylim1(1)], ...
-     [.9 .9 .9],'EdgeColor','none','parent',hSpecAxes(1));
-hSpecPlot(1) = plot(specdata(:,1),specdata(:,2),'parent',hSpecAxes(1));
-hSpecPlot(2) = plot(bgs(:,1), bgs(:,2),'parent',hSpecAxes(1));
-hSpecPlot(3) = plot(specs(:,1),specs(:,2),'parent',hSpecAxes(1));
-hSpecPlot(4) = plot(bgs(:,1),bgs(:,3),'parent',hSpecAxes(1));
-hSpecPlot(5) = plot(specs(:,1),specs(:,3),'parent',hSpecAxes(2));
-hSpecPlot(6) = plot(xlim,[0 0],'parent',hSpecAxes(2));
-hSpecPlot(7) = plot(xlim,[specs(end,3) specs(end,3)],'parent',hSpecAxes(2));
-set(hSpecPlot( 1:5     ), 'LineWidth', 1.5);
-set(hSpecPlot([2 4 6 7]), 'LineStyle', ':');
-set(hSpecPlot([1 2]), 'Color', [0 0 .8]);
-set(hSpecPlot([3 4]), 'Color', [0 .6 0]);
-set(hSpecPlot( 5   ), 'Color', [.8 0 0]);
-set(hSpecPlot([6 7]), 'Color', 'k');
-
 
 %% CALCULATE RESULTS AND OUTPUT
 % Calculate Q-factor, print fwhm, Q, double integral
@@ -287,21 +296,23 @@ else
   fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\n', results.q, specbg, dint);
 end
 
-% set measurement parameters
-% calculate actual power from maxpwr and attenuation
-results.pwr = p.maxpwr * 10^(-specparams.Attenuation/10);
-% calculate Boltzmann population factor from constants and temperature
-h = 6.62606957e-34; % Planck constant
-k = 1.3806488e-23;  % Boltzmann constant
-if ~isfield(specparams, 'Temperature'); specparams.Temperature = 1; end
-results.nb = exp(h * specparams.Frequency / ( k * specparams.Temperature ));
-
-% Calculate normalisation factor and print it with some info
-fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nUsing the following parameters:\n - bridge max power: %.2fW\n - temperature: %.0fK\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n', ...
-        p.maxpwr, specparams.Temperature, results.nb, p.S);
-dintnorm = dint / (sqrt(results.pwr) * specparams.ModAmp * results.q * results.nb * p.S*(p.S+1));
-fprintf('\nNormalized double integral = %g a.u.\n', dintnorm);
-
+if ~p.nospec
+  % set measurement parameters
+  % calculate actual power from maxpwr and attenuation
+  results.pwr = p.maxpwr * 10^(-specparams.Attenuation/10);
+  % calculate Boltzmann population factor from constants and temperature
+  h = 6.62606957e-34; % Planck constant
+  k = 1.3806488e-23;  % Boltzmann constant
+  if ~isfield(specparams, 'Temperature'); specparams.Temperature = 300; end
+  results.nb = exp(h * specparams.Frequency / ( k * 300 )) * (300 / specparams.Temperature);
+  
+  % Calculate normalisation factor and print it with some info
+  fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nUsing the following parameters:\n - bridge max power: %.2fW\n - temperature: %.0fK\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n', ...
+          p.maxpwr, specparams.Temperature, results.nb, p.S);
+  dintnorm = dint / (sqrt(results.pwr) * specparams.ModAmp * results.q * results.nb * p.S*(p.S+1));
+  fprintf('\nNormalized double integral = %g a.u.\n', dintnorm);
+end
+  
 if ~p.nosave
 % Summarize what we've done to logfile
   fprintf(fid, 'spincounting v%s - %s\n', VERSION, datestr(clock));
@@ -325,43 +336,52 @@ end
 
 
 %% MODE_DEPENDENT ACTIONS
-switch MODE
-case 'integrate' % no further action
-  fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
-  nspins = NaN;
-  tfactor = NaN;
-  if ~p.nosave
-    fprintf(fid, '\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
-  end
-case 'calc_spins' % calculate nspins from tfactor
-  nspins = p.tfactor * dintnorm;
-  tfactor = p.tfactor;
-  fprintf('\nCalculating number of spins.\nUsing transferfactor %e.\nNumber of spins in sample: %e\n', ...
-          tfactor, nspins);
-  if ~p.nosave
-    fprintf(fid, '\nUsing transferfactor %e.\nCalculated number of spins in sample: %e\n', tfactor, nspins);
-  end
-case 'calc_tfactor' % calculate tfactor from nspins
-  tfactor = p.nspins / dintnorm;
-  nspins = p.nspins;
-  fprintf('\nUsing %e spins.\nThe integrated spectrum shows %e spins per a.u.\nSpectrometer transfer factor: # spins = %e * double integral\n', ...
-          nspins, nspins/dintnorm, tfactor);
-  if ~p.nosave
-    fprintf(fid, '\nUsing %e spins.\nThe integrated spectrum shows %e spins per a.u.\nSpectrometer transfer factor: # spins = %e * double integral\n', ...
-          nspins, nspins/dintnorm, tfactor);
-  end
-case 'check' % check calculated against given nspins
-  nspins = p.tfactor * dintnorm;
-  nspinserror = abs(nspins - p.nspins)/ nspins *100;
-  tfactor = p.nspins / dintnorm;
-  fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
-          nspinserror, tfactor);
-  if ~p.nosave
-    fprintf(fid, '\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
+if ~p.nospec
+  switch MODE
+  case 'none' % only determine q
+    fprintf('\nDone.\nNo spin counting requested.\n');
+    nspins = NaN;
+    tfactor = NaN;
+    dintnorm = NaN;
+    if ~p.nosave
+      fprintf(fid, '\nNo spincounting requested.\n');
+    end
+  case 'integrate' % no further action
+    fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
+    nspins = NaN;
+    tfactor = NaN;
+    if ~p.nosave
+      fprintf(fid, '\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
+    end
+  case 'calc_spins' % calculate nspins from tfactor
+    nspins = p.tfactor * dintnorm;
+    tfactor = p.tfactor;
+    fprintf('\nCalculating number of spins.\nUsing transferfactor %e.\nNumber of spins in sample: %e\n', ...
+            tfactor, nspins);
+    if ~p.nosave
+      fprintf(fid, '\nUsing transferfactor %e.\nCalculated number of spins in sample: %e\n', tfactor, nspins);
+    end
+  case 'calc_tfactor' % calculate tfactor from nspins
+    tfactor = p.nspins / dintnorm;
+    nspins = p.nspins;
+    fprintf('\nUsing %e spins.\nThe integrated spectrum shows %e spins per a.u.\nSpectrometer transfer factor: # spins = %e * double integral\n', ...
+            nspins, nspins/dintnorm, tfactor);
+    if ~p.nosave
+      fprintf(fid, '\nUsing %e spins.\nThe integrated spectrum shows %e spins per a.u.\nSpectrometer transfer factor: # spins = %e * double integral\n', ...
+              nspins, nspins/dintnorm, tfactor);
+    end
+  case 'check' % check calculated against given nspins
+    nspins = p.tfactor * dintnorm;
+    nspinserror = abs(nspins - p.nspins)/ nspins *100;
+    tfactor = p.nspins / dintnorm;
+    fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
             nspinserror, tfactor);
+    if ~p.nosave
+      fprintf(fid, '\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
+              nspinserror, tfactor);
+    end
   end
 end
-
 %% CLEANUP AND EXIT
 % close files
 if ~p.nosave
