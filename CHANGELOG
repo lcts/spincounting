@@ -24,4 +24,10 @@ v1.0
 v1.2
  - added dat2 format
  - fixed calculation of Boltzmann factor
- - background now specified by x value instead of index (adds new function iof() from EPR helperfunctions)
+ - background in spectrum now specified by x value instead of index (adds new function iof() from EPR helperfunctions)
+v1.2.1
+ - fixed error where Boltzmann factor would become infinite
+v1.2.2
+ - fixed wrong frequency scaling for dat2-files in GetSpecFile.m
+ - added examples to README
+
