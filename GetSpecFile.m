@@ -144,7 +144,7 @@ switch extension
         [datatemp, paramtemp] = dat2load(file);
         params.Attenuation = paramtemp.attn;
         params.Temperature = paramtemp.temp;
-        params.Frequency   = paramtemp.mwfreq*1e9;
+        params.Frequency   = paramtemp.mwfreq;
         params.ModAmp      = paramtemp.modamp;
         data = [ (paramtemp.bstart:paramtemp.bstep:paramtemp.bstop)' datatemp{1}'];
     case {'.DSC', '.DTA'}
