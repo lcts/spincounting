@@ -1,18 +1,19 @@
-spincounting
-Version: v1.0
+Version: v1.2
 Author:  Christopher Engelhard
-Date:    2014-07-30
+Date:    2015-08-26
+COMMENTS/SUGGESTIONS/BUGS/REQUESTS:
+christopher.engelhard@fu-berlin.de
 
 
 SYNTAX:
 spincounting
 nspins = spincounting
-nspins = spincounting('Option', Value, ...)
+nspins = spincounting('Option1', Value1, 'Option2', Value2, ...)
 nspins = spincounting(paramstruct)
-[nspins tfactor dintnorm results] = spincounting(paramstruct) 
+[nspins, tfactor, dintnorm, results] = spincounting(paramstruct) 
 
 INPUTS:
-All top-level parameters can be given as either Option-Value pairs or in the form of a struct.
+All top-level parameters can be given as either Option-Value pairs or in the form of a struct (see examples).
 The full list of parameters is:
 
 paramstruct
@@ -20,6 +21,7 @@ paramstruct
            .specfile             : Spectrum file, default: Prompt
            .outfile              : Filename under which to save output, default: Prompt
            .nosave               : boolean, don't save anything if true, default: false
+           .noclobber            : boolean, do not silently overwrite existing output files, default: true
            .nspins               : # of spins in sample, default: false
            .tfactor              : spectrometer transfer factor, default: false
            .q                    : quality factor q. Setting this disables all q-factor 
@@ -79,17 +81,45 @@ All relevant parameters are printed to stdout as well as saved to a file. Additi
    - red dotted: max/min used for determination of double integral
 These figures are also by default saved to file.
 
-For a good result it is vitally important that the background corrections and fits used are as good as possible. Always check that the program has achieved a good background fit, especially for the double integration. If not, try messing with the areas used for background correction before messing with the fitting models. A good background correction in the double integration is indicated by a flat first and second integral in the shaded areas.
-
+For a good result it is vitally important that the background corrections and fits used are as good as possible. Always check that the program has achieved a good background fit, especially for the second integration. If not, try messing with the areas used for background correction before messing with the fitting models. A good background correction in the double integration is indicated by a flat first and second integral in the shaded areas.
 
 Documentation of the various functions can be found within their respective m-files. Some of them might be useful for other purposes as well.
 
+
 CURRENT LIMITATIONS:
- - While the dip is autodetected, this has only been tested for cases where the full tune picture is recorded, i.e. there were flat areas to the left and to the right of the tune pic. Always check if the figure to see if the fit makes sense, try specifying the background area manually if not.
+ - there are only a limited amount of input file formats supported. If you need a different format, mail me.
+ - loading of tune pic data should work with any Tektronix Oscilloscope file in CSV format, but this has only been tested for
+   Tektronix TDS 2002C
+ - While the dip is autodetected, this has only been tested for cases where the full tune picture is recorded, i.e. there were flat areas to the left and to the right of the tune pic. Always check the figure to see if the fit makes sense, try specifying the background area manually if not.
  - the time resolution of the tune file is currently not read and therefore needs to be set to 50us/div. Alternatively you can pass 'tunepicscaling' to the program to correct for this.
 
 THIS PROGRAM IS STRICTLY GIGO: GARBAGE IN, GARBAGE OUT.
 If you overmodulate with a badly calibrated modulation amplitude, saturate your sample or, use nonsense background corrections or do other silly stuff, then this is just a random number generator.
 
-COMMENTS/SUGGESTIONS/BUGS:
-christopher.engelhard@fu-berlin.de
+
+EXAMPLES
+ - Determine number of spins automatically, using a known transfer factor of 5.7e4:
+
+nspins = spincounting('tfactor', 5.7e4)
+
+ - Determine the transfer factor from a sample with known number of spins:
+ 
+[~, tfactor] = spincounting('nspins', 3e14)
+
+Since we know that nspins is 3e14, we don't need that return value. By specifying '~' as a variable to save the number of spins to, this return value is dumped by MatLab.
+
+ - specify input files directly, without using the dialog
+ 
+nspins = spincounting('tfactor', 5.7e4, 'tunefile', 'path/to/tunefile.dat', 'specfile', 'path/to/specfile.dat')
+
+ - the same, but using a config struct instead of option-value pairs
+ 
+config.tfactor = 5.7e4;
+config.tunefile = 'path/to/tunefile.dat'
+config.specfile = 'path/to/specfile.dat'
+nspins = spincounting(config)
+
+ - manually change the background values used for correction of the spectrum
+ 
+integration_parameters.background = [3300 3440 3450 3500]
+nspins = spincounting('tfactor', 5.7e4, 'intparams', integration_parameters)
