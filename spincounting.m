@@ -304,7 +304,7 @@ if ~p.nospec
   h = 6.62606957e-34; % Planck constant
   k = 1.3806488e-23;  % Boltzmann constant
   if ~isfield(specparams, 'Temperature'); specparams.Temperature = 300; end
-  results.nb = exp(h * specparams.Frequency / ( k * 300 )) * (300 / specparams.Temperature);
+  results.nb = exp(h * specparams.Frequency / ( k * 300 )) * (300 / specparams.Temperature)
   
   % Calculate normalisation factor and print it with some info
   fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nUsing the following parameters:\n - bridge max power: %.2fW\n - temperature: %.0fK\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n', ...
