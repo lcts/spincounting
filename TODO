@@ -1,0 +1,8 @@
+TODO
+
+v1.5
+- implement loading function for .sctune and .scspec
+- implement import of .mat and of struct directly
+- add example files
+- add .sctune/.scspec template
+
