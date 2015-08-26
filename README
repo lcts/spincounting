@@ -87,7 +87,7 @@ Documentation of the various functions can be found within their respective m-fi
 
 
 CURRENT LIMITATIONS:
- - there are only a limited amount of input file formats supported. If you need a different format, mail me.
+ - there are only a limited amount of input file formats supported. If you need a different format, mail me. In the meantime, transform your data into the special .sc<tune/spec> format (see template files) or pass the data as matlab structs
  - loading of tune pic data should work with any Tektronix Oscilloscope file in CSV format, but this has only been tested for
    Tektronix TDS 2002C
  - While the dip is autodetected, this has only been tested for cases where the full tune picture is recorded, i.e. there were flat areas to the left and to the right of the tune pic. Always check the figure to see if the fit makes sense, try specifying the background area manually if not.
