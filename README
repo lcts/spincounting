@@ -1,4 +1,4 @@
-Version: v1.2
+Version: v1.2.2
 Author:  Christopher Engelhard
 Date:    2015-08-26
 COMMENTS/SUGGESTIONS/BUGS/REQUESTS:
@@ -9,49 +9,45 @@ SYNTAX:
 spincounting
 nspins = spincounting
 nspins = spincounting('Option1', Value1, 'Option2', Value2, ...)
-nspins = spincounting(paramstruct)
-[nspins, tfactor, dintnorm, results] = spincounting(paramstruct) 
+nspins = spincounting(optionstruct)
+[nspins, tfactor, dintnorm, results] = spincounting(optionstruct) 
 
 INPUTS:
 All top-level parameters can be given as either Option-Value pairs or in the form of a struct (see examples).
 The full list of parameters is:
 
-paramstruct
-           .tunefile             : Tune picture file, default: Prompt
-           .specfile             : Spectrum file, default: Prompt
-           .outfile              : Filename under which to save output, default: Prompt
-           .nosave               : boolean, don't save anything if true, default: false
-           .noclobber            : boolean, do not silently overwrite existing output files, default: true
-           .nspins               : # of spins in sample, default: false
-           .tfactor              : spectrometer transfer factor, default: false
-           .q                    : quality factor q. Setting this disables all q-factor 
-                                   calculation related functionality, default: false
-           .S                    : spin of sample, default: 1/2
-           .maxpwr               : maximum microwave power, default: 200mW
-           .tunepicscaling       : scaling of the tune picture in MHz/s, default: 6,94e4
-           .qparams              : parameters passed on to FitResDip
-                   .background   : indices of background, default: auto
-                   .smoothing    : # of points used for smoothing, default 2.5% of total
-                   .order        : order of background correction used, default 3
-                   .dipmodel     : model used for dip fitting, default: lorentz
-           .intparams            : parameters passed on to DoubleInt
-                     .background : indices of background, default: auto
-                     .order      : order of background correction used, # of elements
-                                   determines # of steps, default [3 3]
+optionstruct
+            .tunefile             : Tune picture file, default: Prompt
+            .specfile             : Spectrum file, default: Prompt
+            .outfile              : Filename under which to save output, default: Prompt
+            .nosave               : boolean, don't save anything if true, default: false
+            .clobber              : overwrite existing files, default: false
+            .noplot               : do not display plots. They are still generated and saved, default: false
+            .nspins               : # of spins in sample, default: false
+            .tfactor              : spectrometer transfer factor, default: false
+            .q                    : quality factor q. Setting this disables all q-factor 
+                                    calculation related functionality, default: false
+            .S                    : spin of sample, default: 1/2
+            .maxpwr               : maximum microwave power, default: 200mW
+            .tunepicscaling       : scaling of the tune picture in MHz/s, default: 6,94e4
+            .qparams              : parameters passed on to FitResDip
+                    .background   : indices of background, default: auto
+                    .smoothing    : # of points used for smoothing, default 2.5% of total
+                    .order        : order of background correction used, default 3
+                    .dipmodel     : model used for dip fitting, default: lorentz
+            .intparams            : parameters passed on to DoubleInt
+                      .background : indices of background, default: auto
+                      .order      : order of background correction used, # of elements
+                                    determines # of steps, default [3 3]
 
 More detailed descriptions of qparams, intparams in their respective functions.
 
 OUTPUTS:
-nspins       : calculated number of spins (returns NaN unless tfactor is given)
-tfactor      : calculated transfer factor (returns NaN unless nspins is given)
-dintnorm     : double integral of background-corrected spectrum, measurement parameters taken into account
-results      : struct containing further results produced by the script. These are:
-       .q    : quality factor of the cavity
-       .pwr  : actual microwave power used for measurement
-       .nb   : boltzmann population factor calculated from temperature
-       .tune : substruct including the tune picture data, the fits and the fwhm
-       .spec : substruct containing the original data and the two integrated spectra,
-               the backgrounds used for correction and the raw double integrals
+nspins:   calculated number of spins (returns NaN if transfer factor unknown)
+tfactor:  calculated transfer factor (retursn NaN if number of spins unknown)
+dintnorm: double integral of background-corrected spectrum, measurement parameters taken into account
+results:  a structure containing internal parameters including the various fits, backgrounds and spectra
+          the quality factor and double integrals
 
 
 
@@ -114,10 +110,10 @@ nspins = spincounting('tfactor', 5.7e4, 'tunefile', 'path/to/tunefile.dat', 'spe
 
  - the same, but using a config struct instead of option-value pairs
  
-config.tfactor = 5.7e4;
-config.tunefile = 'path/to/tunefile.dat'
-config.specfile = 'path/to/specfile.dat'
-nspins = spincounting(config)
+options.tfactor = 5.7e4;
+options.tunefile = 'path/to/tunefile.dat'
+options.specfile = 'path/to/specfile.dat'
+nspins = spincounting(options)
 
  - manually change the background values used for correction of the spectrum
  

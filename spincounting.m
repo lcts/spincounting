@@ -6,34 +6,34 @@ function [nspins, tfactor, dintnorm, results] = spincounting(varargin)
 % nspins = spincounting
 % nspins = spincounting('Option', Value, ...)
 % nspins = spincounting(paramstruct)
-% [nspins tfactor q dintnorm dint] = spincounting(paramstruct) 
+% [nspins tfactor q dintnorm results] = spincounting(optionstruct) 
 %
 % All parameters can be given as either Option-Value pairs or in the form of a struct.
 % The full list of parameters is:
 %
-% paramstruct
-%            .tunefile             : Tune picture file, default: Prompt
-%            .specfile             : Spectrum file, default: Prompt
-%            .outfile              : Filenameunder which to save output, default: Prompt
-%            .nosave               : boolean, don't save anything if true, default: false
-%            .clobber              : overwrite existing files, default: false
-%            .noplot               : do not display plots. They are still generated and saved, default: false
-%            .nspins               : # of spins in sample, default: false
-%            .tfactor              : spectrometer transfer factor, default: false
-%            .q                    : quality factor q. Setting this disables all q-factor 
-%                                    calculation related functionality, default: false
-%            .S                    : spin of sample, default: 1/2
-%            .maxpwr               : maximum microwave power, default: 200mW
-%            .tunepicscaling       : scaling of the tune picture in MHz/s, default: 6,94e4
-%            .qparams              : parameters passed on to FitResDip
-%                    .background   : indices of background, default: auto
-%                    .smoothing    : # of points used for smoothing, default 2.5% of total
-%                    .order        : order of background correction used, default 3
-%                    .dipmodel     : model used for dip fitting, default: lorentz
-%            .intparams            : parameters passed on to DoubleInt
-%                      .background : indices of background, default: auto
-%                      .order      : order of background correction used, # of elements
-%									 determines # of steps, default [3 3]
+% optionstruct
+%             .tunefile             : Tune picture file, default: Prompt
+%             .specfile             : Spectrum file, default: Prompt
+%             .outfile              : Filename under which to save output, default: Prompt
+%             .nosave               : boolean, don't save anything if true, default: false
+%             .clobber              : overwrite existing files, default: false
+%             .noplot               : do not display plots. They are still generated and saved, default: false
+%             .nspins               : # of spins in sample, default: false
+%             .tfactor              : spectrometer transfer factor, default: false
+%             .q                    : quality factor q. Setting this disables all q-factor 
+%                                     calculation related functionality, default: false
+%             .S                    : spin of sample, default: 1/2
+%             .maxpwr               : maximum microwave power, default: 200mW
+%             .tunepicscaling       : scaling of the tune picture in MHz/s, default: 6,94e4
+%             .qparams              : parameters passed on to FitResDip
+%                     .background   : indices of background, default: auto
+%                     .smoothing    : # of points used for smoothing, default 2.5% of total
+%                     .order        : order of background correction used, default 3
+%                     .dipmodel     : model used for dip fitting, default: lorentz
+%             .intparams            : parameters passed on to DoubleInt
+%                       .background : indices of background, default: auto
+%                       .order      : order of background correction used, # of elements
+%                                     determines # of steps, default [3 3]
 %
 % OUTPUTS:
 % nspins:   calculated number of spins (returns NaN if transfer factor unknown)
@@ -46,7 +46,7 @@ function [nspins, tfactor, dintnorm, results] = spincounting(varargin)
 % Further help in the README
 %
 
-VERSION = '1.2';
+VERSION = '1.2.2';
 fprintf('\nspincouting v%s\n', VERSION);
 
 %% INPUT HANDLING
