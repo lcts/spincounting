@@ -37,7 +37,9 @@ p.parse(varargin{:});
 
 % String of known formats for filtering the load dialog
 % KNOWNFORMATS =  {'<ext1>; <ext2>', '<description1>'; '<ext3>; <ext4>', '<description2>'; ... }
-KNOWNFORMATS = {'*.akku; *.ch1; *.ch2', 'lyra/isaak-generated spectrum files (*.akku, *.ch1, *.ch2)'; ...
+KNOWNFORMATS = {...
+                '*.scspec', 'spincounting toolbox spectrum file'; ...
+                '*.akku; *.ch1; *.ch2', 'lyra/isaak-generated spectrum files (*.akku, *.ch1, *.ch2)'; ...
                 '*.akku2;', 'lyra/isaak-generated spectrum files (*.akku2)'; ...
                 '*.DTA; *.DSC', 'Bruker Xepr files (*.DTA, *.DSC)'; ...
                 '*.mat', 'MATLAB file (*.mat)'; ...
@@ -87,6 +89,9 @@ end
 
 if ~isstruct(p.Results.file)
     switch extension
+        % spincounting toolbox default format
+        case {'.scspec'}
+            [data, params] = SCloadDefault(file);
         % fsc2-output of lyra (possibly other fsc2-based programs?)
         case {'.akku', '.ch1', '.ch2'}
             fid = fopen(file); % open file
@@ -187,8 +192,13 @@ if ~isstruct(p.Results.file)
             load(file);
             % all other files
         otherwise
+            try
+                [data, params] = SCloadDefault(file);
+            catch ME
+                rethrow ME
+            end
             % throw exception
-            error('GetSpecFile:TypeChk', ...
-                'Unknwon file type: "%s". Please implement this type in GetSpecFile.m', extension);
+            %error('GetSpecFile:TypeChk', ...
+            %    'Unknwon file type: "%s". Please implement this type in GetSpecFile.m', extension);
     end
 end

@@ -25,34 +25,33 @@ p.parse(scaling,varargin{:});
 KNOWNFORMATS = {'*.csv; *.CSV', 'Tektronix TDS2002C files (*.csv, *.CSV)'; ...
                 '*','All Files (*)' ...
                };
-
+           
 if islogical(p.Results.file)
-  [file, filepath] = uigetfile(KNOWNFORMATS,'Select a tune picture file:');              % get the file
-  if file == 0; error('GetTuneFile:NoFile', 'No file selected'); end; % throw exception if cancelled
-  [filepath, file, extension] = fileparts([filepath file]);                                % get file extension
-  file = fullfile(filepath, [file extension]);
-  extension = lower(extension);                     % convert to lowercase
+    [file, filepath] = uigetfile(KNOWNFORMATS,'Select a tune picture file:');              % get the file
+    if file == 0; error('GetTuneFile:NoFile', 'No file selected'); end; % throw exception if cancelled
+    [filepath, file, extension] = fileparts([filepath file]);                                % get file extension
+    file = fullfile(filepath, [file extension]);
+    extension = lower(extension);                     % convert to lowercase
 elseif isnumeric(p.Results.file)
-  data = p.Results.file;
-  if size(data,2) ~= 2
-    error('GetTuneFile:MalformedData', 'Matrix passed, Nx2 matrix expected but Nx%d matrix found', size(data,2));
-  end
+    data = p.Results.file;
+    if size(data,2) ~= 2
+        error('GetTuneFile:MalformedData', 'Matrix passed, Nx2 matrix expected but Nx%d matrix found', size(data,2));
+    end
 else
-  [filepath, file, extension] = fileparts(p.Results.file);
-  file = fullfile(filepath, [file extension]);
-  extension = lower(extension);                     % convert to lowercase
+    [filepath, file, extension] = fileparts(p.Results.file);
+    file = fullfile(filepath, [file extension]);
+    extension = lower(extension);                     % convert to lowercase
 end
 
 if ~isnumeric(p.Results.file)
     switch extension
-       % Tektronix TDS2002C (and other Tektronix?)
-       case '.csv'                               
-          data = dlmread(file,',',0,3); % data is in ,-separated columns 3-4, read those
-          data(:,1) = data(:,1)*scaling;       % convert x-axis to frequency
-          data = data(:,1:2);
-       otherwise
-          % throw exception
-          error('GetTuneFile:TypeChk', ...
-                'Unknown file type: "%s". Please implement this type in GetTuneFile.m', extension);
+        % Tektronix TDS2002C (and other Tektronix?)
+        case '.csv'
+            data = dlmread(file,',',0,3); % data is in ,-separated columns 3-4, read those
+            data(:,1) = data(:,1)*scaling;       % convert x-axis to frequency
+            data = data(:,1:2);
+        otherwise
+            data = load(file);
+            data(:,1) = data(:,1)*scaling;       % convert x-axis to frequency
     end
 end
