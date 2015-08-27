@@ -1,11 +1,11 @@
 function [ data, params] = SCloadDefault(filename)
-% load data from dat2-formatted ascii file
+% load data from scspec-formatted ascii file
 %
 % VERSION 1.0
 %
 % USAGE:
 % data = SCloadDefault(filename)
-% [data, pars, file] = SCloadDefault(filename)
+% [data, pars] = SCloadDefault(filename)
 
 
 %
