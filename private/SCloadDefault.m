@@ -1,4 +1,4 @@
-function [ data, params, file] = SCloadDefault(filename)
+function [ data, params] = SCloadDefault(filename)
 % load data from dat2-formatted ascii file
 %
 % VERSION 1.0
@@ -35,11 +35,11 @@ jj = 0; ll = 0; linenumber = 0;
 while ~feof(fid)       % while not at end of file
     line = fgetl(fid); % get a new line, including \n
     linenumber = linenumber + 1;
-    if length(line) >= 1 % ignore empty lines
+    if length(line) >= 2 % ignore empty lines
         %
         % GET PARAMETERS
         %
-        if strcmp(line(1:2),'%')
+        if strcmp(line(1:2),'%!')
             % increment 'parameter' counter
             jj = jj + 1;
             % try to read parameter in format
@@ -102,24 +102,16 @@ end
 if ~exist('params','var')
     warning('SCloadDefault:NoParams','No parameters were found in file');
 else
-    if isfield(params,'Attenuation');
-        params.Attenuation = params.Attenuation;
-    else
+    if ~isfield(params,'Attenuation');
         error('SCloadDefault:MissingParameter', 'Missing field ''Attenuation''.');
     end
-    if isfield(params,'Temperature');
-        params.Temperature = params.Temperature;
-    else
+    if ~isfield(params,'Temperature');
         error('SCloadDefault:MissingParameter', 'Missing field ''Temperature''.');
     end
-    if isfield(params,'Frequency');
-        params.Frequency = params.Frequency;
-    else
+    if ~isfield(params,'Frequency');
         error('SCloadDefault:MissingParameter', 'Missing field ''Frequency''.');
     end
-    if isfield(params,'ModAmp');
-        params.ModAmp = params.ModAmp;
-    else
+    if ~isfield(params,'ModAmp');
         error('SCloadDefault:MissingParameter', 'Missing field ''ModAmp''.');
     end
 end

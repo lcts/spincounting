@@ -286,7 +286,7 @@ end
 %% CALCULATE RESULTS AND OUTPUT
 % Calculate Q-factor, print fwhm, Q, double integral
 if ~p.q
-  results.q = specparams.Frequency / fwhm / 1e6;
+  results.q = specparams.Frequency / fwhm / 1e6
   fprintf('\n\n\n\nTune picture background indices: [%i %i %i %i]\nSpectrum background indices: [%i %i %i %i]\n', ...
           tunebg, specbg)
   fprintf('\nFWHM: %.4f MHz\nq-factor: %.2f\nDouble integral: %g a.u.\n', ...
