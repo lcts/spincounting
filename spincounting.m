@@ -52,8 +52,8 @@ fprintf('\nspincouting v%s\n', VERSION);
 %% INPUT HANDLING
 % define top-level input arguments
 pmain = inputParser;
-pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char'},{'vector'}));
-pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
+pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
+pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
 pmain.addParamValue('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParamValue('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('nospec', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
@@ -150,7 +150,7 @@ end
 % Load tune picture data
 %try
 if ~p.q
-  if ~p.tunefile
+  if islogical(p.tunefile)
     tunedata = GetTuneFile(p.tunepicscaling);
   else
     tunedata = GetTuneFile(p.tunepicscaling, p.tunefile);
@@ -162,7 +162,7 @@ end
 % Load spectrum file
 %try
 if ~p.nospec
-  if ~p.specfile
+  if islogical(p.specfile)
     [specdata, specparams] = GetSpecFile;
   else
     [specdata, specparams] = GetSpecFile(p.specfile);
@@ -304,7 +304,7 @@ if ~p.nospec
   h = 6.62606957e-34; % Planck constant
   k = 1.3806488e-23;  % Boltzmann constant
   if ~isfield(specparams, 'Temperature'); specparams.Temperature = 300; end
-  results.nb = exp(h * specparams.Frequency / ( k * 300 )) * (300 / specparams.Temperature)
+  results.nb = exp(h * specparams.Frequency / ( k * 300 )) * (300 / specparams.Temperature);
   
   % Calculate normalisation factor and print it with some info
   fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nUsing the following parameters:\n - bridge max power: %.2fW\n - temperature: %.0fK\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n', ...
