@@ -1,0 +1,21 @@
+spincounting v1.5-develop - 27-Aug-2015 16:08:33
+
+TUNE PICTURE FITTING
+Tune picture scaling: 6.940000e+04 MHz/us
+Tune picture background indices: [496 1030 1467 2321]
+FWHM: 1.2914 MHz
+q-factor: 7265.23
+
+SPECTRUM PROCESSING
+Spectrum background indices: [1 64 188 251]
+Double integral: 0.013562 a.u.
+Bridge max power: 0.20W
+Temperature: 297K
+Boltzmann population factor: 1.01162
+Sample spin: S = 0.50
+Normalized double integral = 5.50152e-05 a.u.
+
+Tune figure saved to /home/cengelha/Desktop/EFEPR/P3HT2_tune_picture.png. Double integration figure saved to /home/cengelha/Desktop/EFEPR/P3HT2_spectrum.png
+
+Using transferfactor 1.143389e+06.
+Calculated number of spins in sample: 6.290374e+01
