@@ -183,22 +183,18 @@ if ~isstruct(p.Results.file)
             params.Frequency   = paramtemp.mwfreq;
             params.ModAmp      = paramtemp.modamp;
             data = [ (paramtemp.bstart:paramtemp.bstep:paramtemp.bstop)' datatemp{1}'];
-        case {'.DSC', '.DTA'}
-            %[datax, datay, paramstemp] = eprload(file);
-            %data = [ datax datay ];
-            error('GetSpecFile:TypeChk', ...
-                'File type "%s" not implemented yet.', extension);
+        case {'.dsc', '.dta'}
+            [datax, datay, paramstemp] = eprload(file);
+            data = [ datax datay ];
+            params.Frequency = paramstemp.MWFQ;
+            params.Attenuation = str2double(paramstemp.PowerAtten(1:end-2));
+            params.ModAmp = str2double(paramstemp.ModAmp(1:end-1));
         case '.mat'
             load(file);
             % all other files
         otherwise
-            try
-                [data, params] = SCloadDefault(file);
-            catch ME
-                rethrow ME
-            end
             % throw exception
-            %error('GetSpecFile:TypeChk', ...
-            %    'Unknwon file type: "%s". Please implement this type in GetSpecFile.m', extension);
+            error('GetSpecFile:TypeChk', ...
+                'Unknwon file type: "%s". Please implement this type in GetSpecFile.m', extension);
     end
 end

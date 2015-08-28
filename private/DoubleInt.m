@@ -1,4 +1,4 @@
-function [doubleint specs bgs params background] = DoubleInt(data, varargin)
+function [doubleint, specs, bgs, params, background] = DoubleInt(data, varargin)
 % Calculate the double integral of a spectrum.
 %
 % Syntax

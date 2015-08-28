@@ -286,7 +286,7 @@ end
 %% CALCULATE RESULTS AND OUTPUT
 % Calculate Q-factor, print fwhm, Q, double integral
 if ~p.q
-  results.q = specparams.Frequency / fwhm / 1e6
+  results.q = specparams.Frequency / fwhm / 1e6;
   fprintf('\n\n\n\nTune picture background indices: [%i %i %i %i]\nSpectrum background indices: [%i %i %i %i]\n', ...
           tunebg, specbg)
   fprintf('\nFWHM: %.4f MHz\nq-factor: %.2f\nDouble integral: %g a.u.\n', ...
@@ -307,8 +307,8 @@ if ~p.nospec
   results.nb = exp(h * specparams.Frequency / ( k * 300 )) * (300 / specparams.Temperature);
   
   % Calculate normalisation factor and print it with some info
-  fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nUsing the following parameters:\n - bridge max power: %.2fW\n - temperature: %.0fK\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n', ...
-          p.maxpwr, specparams.Temperature, results.nb, p.S);
+  fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nUsing the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %.6f mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n - modulation amplitude: %.1f\n', ...
+          p.maxpwr*1000, specparams.Attenuation, results.pwr*1000, specparams.Temperature, results.nb, p.S, specparams.ModAmp);
   dintnorm = dint / (sqrt(results.pwr) * specparams.ModAmp * results.q * results.nb * p.S*(p.S+1));
   fprintf('\nNormalized double integral = %g a.u.\n', dintnorm);
 end
