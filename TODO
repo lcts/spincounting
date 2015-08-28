@@ -1,8 +1,7 @@
 TODO
 
 v1.5
-- implement loading function for .sctune and .scspec
-- implement import of .mat and of struct directly
-- add example files
+- extend documentation
+- add import of Xepr files
 - add .sctune/.scspec template
 
