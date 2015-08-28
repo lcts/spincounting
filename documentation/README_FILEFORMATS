@@ -1,0 +1,57 @@
+ ________________________________________________
+|                                                |
+| THE SPINCOUNTING TOOLBOX v1.3                  |
+|                                                |
+| Author: Christopher Engelhard                  |
+| Mail: christopher.engelhard@fu-berlin.de       |
+| Website: http://lcts.github.io/spincounting    |
+|________________________________________________|
+
+
+
+1) SUPPORTED FILE FORMATS
+
+1.1) Data for Q-factor determination (tune picture)
+
+Currently, the toolbox supports as a source for the tune picture
+
+ - Tektronics-oscilloscope .CSV files
+ - generic ascii files with either two lines or two columns containing frequency and intensity data
+ - loading data from a MatLab-file (.mat)
+ - passing data directly to the toolbox as a MatLab variable
+
+1.2) EPR data 
+
+Currently, the toolbox supports the following EPR data files
+
+ - its own format (.scspec)
+ - Bruker Xepr (.DTA, .DSC) via easyspin's eprload() function
+ - two data formats used by software employed at Freie Universität Berlin (.akku and .akku2)
+ - loading data from a MatLab-file (.mat)
+ - passing data directly to the toolbox as a MatLab variable
+ 
+The requirements for the different formats are listed below.
+
+
+2) .SCSPEC FILES
+
+.scspec is a simple, generic ascii file format that can be read by the spincounting toolbox. It is designed to be used when your data files' format is not implemented in the toolbox. Mostly, adding the necessary parameters (see below) to any ascii or .csv data file should be enough for the toolbox to load it as .scspec.
+
+An example -scspec file can be found in the examples-folder, the following explains the format in detail.
+
+2.1) Parameters
+
+Lines containing parameters start with '%!', followed by the parameter name, its value and, optionally, its unit, all separated by spaces, e.g.:
+
+%! Attenuation 30 dB
+
+These lines can appear anywhere in the file. For proper loading into the spincounting toolbox, the following parameters are needed.
+
+Attenuation
+Frequency
+ModAmp
+Temperature
+ 
+2.2) Data
+
+Lines that are not parameters contain the data for the x- (field-) and y- (EPR-signal-) axes. The data can be written as two lines or two columns, values can be separated by space, tab, comma or semicolon.

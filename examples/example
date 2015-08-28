@@ -1,0 +1,27 @@
+
+EXAMPLES
+ - Determine number of spins automatically, using a known transfer factor of 5.7e4:
+
+nspins = spincounting('tfactor', 5.7e4)
+
+ - Determine the transfer factor from a sample with known number of spins:
+ 
+[~, tfactor] = spincounting('nspins', 3e14)
+
+Since we know that nspins is 3e14, we don't need that return value. By specifying '~' as a variable to save the number of spins to, this return value is dumped by MatLab.
+
+ - specify input files directly, without using the dialog
+ 
+nspins = spincounting('tfactor', 5.7e4, 'tunefile', 'path/to/tunefile.dat', 'specfile', 'path/to/specfile.dat')
+
+ - the same, but using a config struct instead of option-value pairs
+ 
+options.tfactor = 5.7e4;
+options.tunefile = 'path/to/tunefile.dat'
+options.specfile = 'path/to/specfile.dat'
+nspins = spincounting(options)
+
+ - manually change the background values used for correction of the spectrum
+ 
+integration_parameters.background = [3300 3440 3450 3500]
+nspins = spincounting('tfactor', 5.7e4, 'intparams', integration_parameters)
