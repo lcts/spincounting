@@ -67,9 +67,9 @@ specs(:,1) = data(:,1);
 bgs(:,1)   = data(:,1);
 
 % initial background correction
-params(:,1) = polyfit(data([background(1):background(2) background(3):background(4)],1), ...
+[params(:,1), ~, mu] = polyfit(data([background(1):background(2) background(3):background(4)],1), ...
                       data([background(1):background(2) background(3):background(4)],2),p.Results.order(1));
-bgs(:,2) = polyval(params(:,1),bgs(:,1));
+bgs(:,2) = polyval(params(:,1),bgs(:,1),[],mu);
 specs(:,2) = data(:,2) - bgs(:,2);
 
 % first integration step
@@ -78,9 +78,9 @@ specs(:,2) = cumtrapz(specs(:,1),specs(:,2));
 % if there is a second value in 'order'
 if length(p.Results.order) >= 2
     % perform second bg correction before second integration
-    params(:,2) = polyfit(specs([background(1):background(2) background(3):background(4)],1), ...
+    [params(:,2), ~, mu] = polyfit(specs([background(1):background(2) background(3):background(4)],1), ...
                           specs([background(1):background(2) background(3):background(4)],2),p.Results.order(2));
-    bgs(:,3) = polyval(params(:,2),bgs(:,1));
+    bgs(:,3) = polyval(params(:,2),bgs(:,1),[],mu);
     specs(:,3) = specs(:,2) - bgs(:,3);
     % then integrate
     specs(:,3) = cumtrapz(specs(:,1),specs(:,3));
@@ -89,16 +89,5 @@ else
     specs(:,3) = cumtrapz(specs(:,1),specs(:,2));
 end
 
-% if there is a third value in 'order'
-if length(p.Results.order) == 3 % CURRENTLY DEACTIVATED
-    % perform third bg correction after second integration
-    params(:,3) = polyfit(specs([background(1):background(2) background(3):background(4)],1), ...
-                          specs([background(1):background(2) background(3):background(4)],3),p.Results.order(3));
-    bgs(:,4) = polyval(params(:,3),bgs(:,1));
-    specs(:,4) = specs(:,3) - bgs(:,4);
-    % then calculate doubleint
-    doubleint = specs(background(3),4) - specs(background(2),4);
-else
-    % else calculate doubleint directly
-    doubleint = specs(background(3),3) - specs(background(2),3);
-end
+% else calculate doubleint directly
+doubleint = specs(background(3),3) - specs(background(2),3);
