@@ -46,8 +46,16 @@ function [nspins, tfactor, dintnorm, results] = spincounting(varargin)
 % Further help in the README
 %
 
-VERSION = '1.5-develop';
+VERSION = '1.3';
 fprintf('\nspincouting v%s\n', VERSION);
+fprintf('This is a development release.\n');
+
+%% DEFAULT VALUES
+                           % unit
+SPIN = 1/2;                %
+BRIDGE_MAX_POWER = 0.2;    % mW
+TUNE_PIC_SCALING = 6.94e4; % MHz/s
+TEMPERATURE = 300;         % K
 
 %% INPUT HANDLING
 % define top-level input arguments
@@ -61,10 +69,10 @@ pmain.addParamValue('clobber', false, @(x)validateattributes(x,{'logical'},{'sca
 pmain.addParamValue('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('nspins', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tfactor', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('S', 1/2, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('S', SPIN, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('q', false, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('maxpwr', 0.2, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('tunepicscaling', 6.94e4, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('maxpwr', BRIDGE_MAX_POWER, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('tunepicscaling', TUNE_PIC_SCALING, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('qparams',[],@isstruct);
 pmain.addParamValue('intparams',[],@isstruct);
 pmain.FunctionName = 'spincounting';
@@ -303,7 +311,7 @@ if ~p.nospec
   % calculate Boltzmann population factor from constants and temperature
   h = 6.62606957e-34; % Planck constant
   k = 1.3806488e-23;  % Boltzmann constant
-  if ~isfield(specparams, 'Temperature'); specparams.Temperature = 300; end
+  if ~isfield(specparams, 'Temperature'); specparams.Temperature = TEMPERATURE; end
   results.nb = exp(h * specparams.Frequency / ( k * 300 )) * (300 / specparams.Temperature);
   
   % Calculate normalisation factor and print it with some info
@@ -347,11 +355,11 @@ if ~p.nospec
       fprintf(fid, '\nNo spincounting requested.\n');
     end
   case 'integrate' % no further action
-    fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
+    fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
     nspins = NaN;
     tfactor = NaN;
     if ~p.nosave
-      fprintf(fid, '\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
+      fprintf(fid, '\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
     end
   case 'calc_spins' % calculate nspins from tfactor
     nspins = p.tfactor * dintnorm;
