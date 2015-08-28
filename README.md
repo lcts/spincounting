@@ -23,7 +23,7 @@ Development branch:
 `git clone http://github.com/lcts/spincounting --branch develop`
 
 ### Installation & first steps
-Extract the downloaded archive to any location on your computer, and add that location to your MatLab search path. The toolbox is invoked by typing 'spincounting' on the MatLab command line. Documentation can be found in the README file and in the functions themselves.
+Add the spincounting folder to your MatLab search path. The toolbox is invoked by typing 'spincounting' on the MatLab command line.
 
 ### Support or Contact
 Having trouble? Questions? Requests? Contact me and I’ll try to help you sort it out.
