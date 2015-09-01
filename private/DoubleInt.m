@@ -1,4 +1,4 @@
-function [doubleint specs bgs params background] = DoubleInt(data, varargin)
+function [doubleint, specs, bgs, params, background] = DoubleInt(data, varargin)
 % Calculate the double integral of a spectrum.
 %
 % Syntax
@@ -31,7 +31,7 @@ function [doubleint specs bgs params background] = DoubleInt(data, varargin)
 % Check number of arguments and set defaults
 p = inputParser;
 p.addRequired('data', @(x)validateattributes(x,{'numeric'},{'2d','real'}));
-p.addParamValue('background',false, @(x)validateattributes(x,{'numeric'},{'positive','size',[1,4],'integer'}));
+p.addParamValue('background',false, @(x)validateattributes(x,{'numeric'},{'positive','size',[1,4]}));
 p.addParamValue('order',[3 3], @(x)validateattributes(x,{'numeric'},{'row','integer'}));
 p.FunctionName = 'DoubleInt';
 p.parse(data,varargin{:});

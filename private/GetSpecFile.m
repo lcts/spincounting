@@ -91,7 +91,7 @@ if ~isstruct(p.Results.file)
     switch extension
         % spincounting toolbox default format
         case {'.scspec'}
-            [data, params] = SCloadDefault(file);
+            [data, params] = LoadSCFormat(file);
         % fsc2-output of lyra (possibly other fsc2-based programs?)
         case {'.akku', '.ch1', '.ch2'}
             fid = fopen(file); % open file
@@ -174,8 +174,7 @@ if ~isstruct(p.Results.file)
             fclose(fid); % close file
             % the rest is simply numeric data, extract it the easy way ...
             data = [ (startfield:fieldstep:endfield)' load(file)];
-            % binary matlab file, must contain variables 'data' and 'params' formatted as described in the help
-            % more variables can be present but will be ignored
+        % new fsc2-Format, see dat2load() for details (*.akku2)
         case '.akku2'
             [datatemp, paramtemp] = dat2load(file);
             params.Attenuation = paramtemp.attn;
@@ -183,22 +182,25 @@ if ~isstruct(p.Results.file)
             params.Frequency   = paramtemp.mwfreq;
             params.ModAmp      = paramtemp.modamp;
             data = [ (paramtemp.bstart:paramtemp.bstep:paramtemp.bstop)' datatemp{1}'];
-        case {'.DSC', '.DTA'}
-            %[datax, datay, paramstemp] = eprload(file);
-            %data = [ datax datay ];
-            error('GetSpecFile:TypeChk', ...
-                'File type "%s" not implemented yet.', extension);
+        % Bruker Xepr BES3T format (*.DTA, *.DSC)
+        % requires eprload() from easyspin toolbox
+        case {'.dsc', '.dta'}
+            % receiver gain, time constant/conversion time and number of
+            % scans are already normalised in Xepr files
+            [datax, datay, paramstemp] = eprload(file);
+            data = [ datax datay ];
+            params.Frequency = paramstemp.MWFQ;
+            params.Attenuation = str2double(paramstemp.PowerAtten(1:end-2));
+            params.ModAmp = str2double(paramstemp.ModAmp(1:end-1));
+            if isfield(paramstemp,'Temperature')
+                params.Temperature = str2double(paramstemp.Temperature(1:end-1));
+            end
         case '.mat'
             load(file);
             % all other files
         otherwise
-            try
-                [data, params] = SCloadDefault(file);
-            catch ME
-                rethrow ME
-            end
             % throw exception
-            %error('GetSpecFile:TypeChk', ...
-            %    'Unknwon file type: "%s". Please implement this type in GetSpecFile.m', extension);
+            error('GetSpecFile:TypeChk', ...
+                'Unknwon file type: "%s". Please implement this type in GetSpecFile.m', extension);
     end
 end
