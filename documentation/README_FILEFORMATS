@@ -29,29 +29,55 @@ Currently, the toolbox supports the following EPR data files
  - two data formats used by software employed at Freie Universität Berlin (.akku and .akku2)
  - loading data from a MatLab-file (.mat)
  - passing data directly to the toolbox as a MatLab variable
+
+2) VALID PARAMETERS
+
+The toolbox understands the following parameters
+
+Attenuation or pwr*
+Frequency*
+ModAmp*
+Temperature*
+S
+maxpwr
+gain
+nscans
+tc
+
+Starred (*) parameters are needed for quantitative analysis. If they are not read from file, they have to be specified manually.
+When the real microwave power 'pwr' is not specified, 'attenuation' has to be. If both are present, 'pwr' takes precedence.
+
+When writing your own loading routine, only read parameters from the file that actually change the signal amplitude. If e.g. your machine automatically averages scans, don't set the 'nscans' parameter or set it to 1 regardless of the number of scans.
  
 The requirements for the different formats are listed below.
 
+3) WRITING YOUR OWN LOADING ROUTINE
 
-2) .SCSPEC FILES
+4) DESCRIPTION OF INDIVIDUAL FORMATS
 
-.scspec is a simple, generic ascii file format that can be read by the spincounting toolbox. It is designed to be used when your data files' format is not implemented in the toolbox. Mostly, adding the necessary parameters (see below) to any ascii or .csv data file should be enough for the toolbox to load it as .scspec.
+4.1) LOADING FROM STRUCT
+
+4.2) .MAT FILES (MATLAB BINARY FILE)
+
+4.1) .SCSPEC FILES (SPINCOUNTING TOOLBOX FORMAT)
+
+.scspec is a simple, generic ascii file format that can be read by the spincounting toolbox. It is designed to be used when your data files' format is not implemented in the toolbox. Usually, adding the necessary parameters (see below) to any ascii or .csv data file should be enough for the toolbox to load it as .scspec.
 
 An example -scspec file can be found in the examples-folder, the following explains the format in detail.
 
-2.1) Parameters
+4.1.1) Parameters
 
 Lines containing parameters start with '%!', followed by the parameter name, its value and, optionally, its unit, all separated by spaces, e.g.:
 
 %! Attenuation 30 dB
 
-These lines can appear anywhere in the file. For proper loading into the spincounting toolbox, the following parameters are needed.
+These lines can appear anywhere in the file.
 
-Attenuation
-Frequency
-ModAmp
-Temperature
- 
-2.2) Data
+4.1.2) Data
 
 Lines that are not parameters contain the data for the x- (field-) and y- (EPR-signal-) axes. The data can be written as two lines or two columns, values can be separated by space, tab, comma or semicolon.
+
+4.2) .DTA/.DSC FILES (BRUKER XEPR BES3T FORMAT)
+
+In order to load .DTA and .DSC files, the function 'eprload()' from Stefan Stoll's easyspin toolbox (www.easyspin.org) is needed. By default, the Xepr software normalises the data for time constant, receiver gain and number of scans. Accordingly, these parameters are not read from the file.
+If Xepr measured the temperature, this parameter is read from the file, otherwise you'll have to specify it manually.

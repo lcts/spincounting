@@ -1,11 +1,11 @@
-function [ data, params] = SCloadDefault(filename)
+function [ data, params ] = LoadSCFormat(filename)
 % load data from scspec-formatted ascii file
 %
 % VERSION 1.0
 %
 % USAGE:
-% data = SCloadDefault(filename)
-% [data, pars] = SCloadDefault(filename)
+% data = LoadSCFormat(filename)
+% [data, pars] = LoadSCFormat(filename)
 
 
 %
@@ -15,13 +15,13 @@ function [ data, params] = SCloadDefault(filename)
 [fid, errmsg] = fopen(filename);
 % if that fails, throw an error
 if fid == -1
-    error('SCloadDefault:OpenFailed','fopen() failed to open ''%s''. Error message:\n %s.',filename, errmsg)
+    error('LoadSCFormat:OpenFailed','fopen() failed to open ''%s''. Error message:\n %s.',filename, errmsg)
 end
 % check if file is binary
 line = fread(fid,256);
 % find non-printable characters except newline, carriage return, tab
 if any( line > 126 & line < 32 & line ~= 13 & line ~= 10 & line ~= 9 )
-    error('SCloadDefault:Binary','This looks like a binary file.')
+    error('LoadSCFormat:OpenFailed','This looks like a binary file.')
 end
 frewind(fid);
 
@@ -50,7 +50,7 @@ while ~feof(fid)       % while not at end of file
                 % increment 'not parsed' counter
                 ll = ll + 1;
                 % and warn
-                warning('SCloadDefault:ParseWarning', 'Parameter in line %d could not be read', linenumber)
+                warning('LoadSCFormat:ParseWarning', 'Parameter in line %d could not be read', linenumber)
             % else put it into parameter struct
             else
                 if isempty(paramsraw{jj}{4})
@@ -79,7 +79,7 @@ fclose(fid);
 try
     data = load(filename, '-ascii');
 catch ME
-    warning('SCloadDefault:OpenFailed','load() failed to read data from ''%s''. Error message:\n %s.',filename)
+    warning('LoadSCFormat:OpenFailed','load() failed to read data from ''%s''. Error message:\n %s.',filename)
     rethrow(ME)
 end
 
@@ -91,31 +91,35 @@ switch unparsed
     case 0
         % do nothing
     case 1 
-        warning('SCloadDefault:UnparsedLine','1 line was not parsed successfully');
+        warning('LoadSCFormat:UnparsedLine','1 line was not parsed successfully');
     otherwise
-        warning('SCloadDefault:UnparsedLine','%d lines were not parsed successfully', unparsed);
+        warning('LoadSCFormat:UnparsedLine','%d lines were not parsed successfully', unparsed);
 end
 
 %
-% WARN IF NO PARAMETERS WERE READ
+% WARN IF PARAMETERS ARE MISSING
 %
 if ~exist('params','var')
-    warning('SCloadDefault:NoParams','No parameters were found in file');
+    warning('LoadSCFormat:NoParams','No parameters were found in file');
 else
     if ~isfield(params,'Attenuation');
-        error('SCloadDefault:MissingParameter', 'Missing field ''Attenuation''.');
+        error('LoadSCFormat:MissingParameter', 'Missing field ''Attenuation''.');
     end
     if ~isfield(params,'Temperature');
-        error('SCloadDefault:MissingParameter', 'Missing field ''Temperature''.');
+        error('LoadSCFormat:MissingParameter', 'Missing field ''Temperature''.');
     end
     if ~isfield(params,'Frequency');
-        error('SCloadDefault:MissingParameter', 'Missing field ''Frequency''.');
+        error('LoadSCFormat:MissingParameter', 'Missing field ''Frequency''.');
     end
     if ~isfield(params,'ModAmp');
-        error('SCloadDefault:MissingParameter', 'Missing field ''ModAmp''.');
+        error('LoadSCFormat:MissingParameter', 'Missing field ''ModAmp''.');
     end
 end
 
 if size(data,2) ~= 2
-    error('SCloadDefault:WrongDataDimension', 'Nx2 matrix as data but Nx%d matrix found', size(data,2));
+    if size(data,1) ~= 2
+        error('LoadSCFormat:WrongDataDimension', 'Nx2 or 2xN matrix as data expected but %dx%d matrix found', size(data,1), size(data,2));
+    else
+        data = data';
+    end
 end
