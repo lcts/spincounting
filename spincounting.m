@@ -66,6 +66,7 @@ pmain = inputParser;
 pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
 pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
 pmain.addParamValue('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
+pmain.addParamValue('outformat', 'pdf', @(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
 pmain.addParamValue('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('clobber', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 % program behaviour
@@ -112,25 +113,28 @@ if ~p.nosave
   [path, file, extension] = fileparts(p.outfile);
   p.outfile = fullfile(path, file);
   % check if outfile exists or is a folder
-  switch exist([p.outfile extension])
-    case 2  % outfile exists and is a file
-        if ~p.clobber  % check if we can overwrite it
-            % warn and don't save
-            fprintf('\n\n');
-            warning('spincounting:FileExists', 'Output file exists, data will not be saved. Set "clobber" to override.\n');
-            p.nosave = true;
-        else
-            % warn and overwrite
-            fprintf('\n\n');
-            warning('spincounting:FileExists', 'Existing output files will be overwritten. Unset "clobber" to prevent this.\n');
-            fid = fopen([p.outfile extension], 'w');
-        end
-    case 7  % outfile exists and is a folder
-        % The user has messed up. Abort.
-        error('spincounting:FileIsFolder', 'Saving requested but output file is a folder. Abort.\n');
-    otherwise   % outfile does not exist
-        % good to go
-        fid = fopen([p.outfile extension], 'w');
+  if exist([p.outfile extension], 'file')
+    if ~p.clobber  % check if we can overwrite it
+      % warn
+      fprintf('\n\n');
+      warning('spincounting:FileExists', 'Output file exists, data will not be saved. Set "clobber" to override.\n');
+      % and don't save
+      p.nosave = true;
+    else
+      % warn
+      fprintf('\n\n');
+      warning('spincounting:FileExists', 'Existing output files will be overwritten. Unset "clobber" to prevent this.\n');
+      % remember the old diary file
+      olddiary = get(0,'DiaryFile');
+      % and overwrite diary file
+      delete([p.outfile extension]);
+      diary([p.outfile extension]);
+    end
+  else   % outfile does not exist
+    % remember the old diary file
+    olddiary = get(0,'DiaryFile');
+    % log all output to file
+    diary([p.outfile extension]);
   end
 else
   % warn the user that nothing is being saved
@@ -158,7 +162,6 @@ end
 
 %% LOAD DATA %%
 % Load tune picture data
-%try
 if ~p.q
   if islogical(p.tunefile)
     tunedata = GetTuneFile(p.tunepicscaling);
@@ -166,11 +169,8 @@ if ~p.q
     tunedata = GetTuneFile(p.tunepicscaling, p.tunefile);
   end
 end
-%catch exception
-%end
 
 % Load spectrum file
-%try
 if ~p.nospec
   if islogical(p.specfile)
     [specdata, specparams] = GetSpecFile;
@@ -178,8 +178,6 @@ if ~p.nospec
     [specdata, specparams] = GetSpecFile(p.specfile);
   end
 end
-%catch exception
-%end
 
 %% FIT TUNE & SPECTRUM DATA %%
 % fit the tune picture
@@ -234,8 +232,8 @@ if ~p.nospec
   else
     hSpecFigure = figure('name','SpecFigure', 'Visible', 'off');
   end
-  hSpecAxes(1) = axes('Tag', 'specaxes');
-  hSpecAxes(2) = axes('Tag', 'intaxes');
+  hSpecAxes(1) = axes('Tag', 'specaxes', 'Parent', hSpecFigure);
+  hSpecAxes(2) = axes('Tag', 'intaxes', 'Parent', hSpecFigure);
   PlotSpecFigure(hSpecAxes, specdata, specbg, specs, bgs);
 end
 
@@ -263,24 +261,16 @@ if ~p.nospec
 end
   
 if ~p.nosave
-% Summarize what we've done to logfile
-  fprintf(fid, 'spincounting v%s - %s\n', VERSION, datestr(clock));
-  if ~p.q
-    fprintf(fid, '\nTUNE PICTURE FITTING\nTune picture scaling: %e MHz/us\nTune picture background indices: [%i %i %i %i]\nFWHM: %.4f MHz\nq-factor: %.2f\n', ...
-            p.tunepicscaling, tunebg, fwhm, results.q);
-  else
-    fprintf(fid, '\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', results.q);
-  end
-  fprintf(fid, '\nSPECTRUM PROCESSING\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\nBridge max power: %.2fW\nTemperature: %.0fK\nBoltzmann population factor: %g\nSample spin: S = %.2f\nNormalized double integral = %g a.u.\n', specbg, dint, p.maxpwr, specparams.Temperature, results.nb, p.S, dintnorm);
   % save plots to file
+  outformat = ['-d' p.outformat];
   if ~p.q
     set(hTuneFigure,'PaperPositionMode','auto');
-    print(hTuneFigure, '-dpng', '-r300', strcat(p.outfile, '_tune_picture.png'));
-    fprintf(fid, '\nTune figure saved to %s. ', [p.outfile, '_tune_picture.png']);
+    print(hTuneFigure, outformat, '-r300', strcat(p.outfile, '_tune_picture'));
+    fprintf('\nTune figure saved to %s. ', [p.outfile, '_tune_picture.', p.outformat, '\n']);
   end
   set(hSpecFigure,'PaperPositionMode','auto');
-  print(hSpecFigure, '-dpng', '-r300', strcat(p.outfile, '_spectrum.png'));
-  fprintf(fid, 'Double integration figure saved to %s\n', [p.outfile, '_spectrum.png']);
+  print(hSpecFigure, outformat, '-r300', strcat(p.outfile, '_spectrum'));
+  fprintf('Double integration figure saved to %s\n', [p.outfile, '_spectrum.', p.outformat, '\n']);
 end
 
 
@@ -291,50 +281,34 @@ if ~p.nospec
     fprintf('\nDone.\nNo spin counting requested.\n');
     nspins = NaN;
     tfactor = NaN;
-    if ~p.nosave
-      fprintf(fid, '\nNo spincounting requested.\n');
-    end
   case 'integrate' % no further action
     fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
     nspins = NaN;
     tfactor = NaN;
-    if ~p.nosave
-      fprintf(fid, '\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
-    end
   case 'calc_spins' % calculate nspins from tfactor
     nspins = CalcSpins(dint, p.tfactor, 1, 1, 1, results.pwr, specparams.ModAmp, results.q, results.nb, p.S);
     tfactor = p.tfactor;
-    fprintf('\nUsing transferfactor ''tfactor'' = %e.\nCalculated number of spins in sample: %e\n', ...
+    fprintf('\nUsing transferfactor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
             tfactor, nspins);
-    if ~p.nosave
-      fprintf(fid, '\nUsing transferfactor ''tfactor'' = %e.\nCalculated number of spins in sample: %e\n', tfactor, nspins);
-    end
   case 'calc_tfactor' % calculate tfactor from nspins
     tfactor = CalcSpins(dint, p.nspins, 1, 1, 1, results.pwr, specparams.ModAmp, results.q, results.nb, p.S);
     nspins = p.nspins;
-    fprintf('\nUsing ''nspins'' = %e spins as reference.\n\nSpectrometer transferfactor ''tfactor'' = %e\n( double integral = %e * # spins )\n', ...
+    fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transferfactor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
             nspins, tfactor, tfactor);
-    if ~p.nosave
-      fprintf(fid, '\nUsing ''nspins'' = %e spins as reference.\n\nSpectrometer transferfactor ''tfactor'' = %e\n( double integral = %e * # spins )\n', ...
-            nspins, tfactor, tfactor);
-    end
   case 'check' % check calculated against given nspins
     nspins = CalcSpins(dint, p.tfactor, 1, 1, 1, results.pwr, specparams.ModAmp, results.q, results.nb, p.S);
     nspinserror = abs(nspins - p.nspins)/ nspins * 100;
     tfactor = CalcSpins(dint, p.nspins, 1, 1, 1, results.pwr, specparams.ModAmp, results.q, results.nb, p.S);
     fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
             nspinserror, tfactor);
-    if ~p.nosave
-      fprintf(fid, '\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
-              nspinserror, tfactor);
-    end
   end
 end
 
 %% CLEANUP AND EXIT
-% close files
 if ~p.nosave
-  fclose(fid);
+  % end diary and reset DiaryFile to what it was
+  diary off;
+  set(0,'DiaryFile', olddiary);
 end
 
 % ... and the rest is silence
