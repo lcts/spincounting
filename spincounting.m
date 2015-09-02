@@ -5,46 +5,65 @@ function [nspins, tfactor, results] = spincounting(varargin)
 % spincounting
 % nspins = spincounting
 % nspins = spincounting('Option', Value, ...)
-% nspins = spincounting(paramstruct)
+% nspins = spincounting(struct)
 % [nspins, tfactor, results] = spincounting(___)
 %
-% All parameters can be given as either Option-Value pairs or in the form of a struct.
-% The full list of parameters is:
+% All options can be given as either Option-Value pairs or in the form of a struct
+% with struct.<Option> = <Value>
 %
-% optionstruct
-%             .tunefile             : Tune picture file, default: Prompt
-%             .specfile             : Spectrum file, default: Prompt
-%             .outfile              : Filename under which to save output, default: Prompt
-%             .nosave               : boolean, don't save anything if true, default: false
-%             .clobber              : overwrite existing files, default: false
-%             .noplot               : do not display plots. They are still generated and saved, default: false
-%             .nspins               : # of spins in sample, default: false
-%             .tfactor              : spectrometer transfer factor, default: false
-%             .q                    : quality factor q. Setting this disables all q-factor 
-%                                     calculation related functionality, default: false
-%             .S                    : spin of sample, default: 1/2
-%             .maxpwr               : maximum microwave power, default: 200mW
-%             .tunepicscaling       : scaling of the tune picture in MHz/s, default: 6,94e4
-%             .qparams              : parameters passed on to FitResDip
-%                     .background   : indices of background, default: auto
-%                     .smoothing    : # of points used for smoothing, default 2.5% of total
-%                     .order        : order of background correction used, default 3
-%                     .dipmodel     : model used for dip fitting, default: lorentz
-%             .intparams            : parameters passed on to DoubleInt
-%                       .background : indices of background, default: auto
-%                       .order      : order of background correction used, # of elements
-%                                     determines # of steps, default [3 3]
+% 
+% OPTIONS:
+% Files
+% tunefile         : string, tune picture file, default: Prompt
+% specfile         : string, spectrum file, default: Prompt
+% outfile          : string, output files, default: Prompt
+% outformat        : string, output format for plots, default: 'pdf'
+% nosave           : boolean, don't save anything if true, default: false
+%
+% Program behaviour
+% nospec           : boolean, only determine q, default: false
+% noplot           : boolean, do not display plots. They are still generated 
+%                    and saved, default: false
+% nspins           : float, # of spins in sample, default: false
+% tfactor          : float, spectrometer transfer factor, default: false
+% q                : float, quality factor q. Setting this disables all q-factor 
+%                    calculation related functionality, default: false
+%
+% Measurement/sample parameters
+% S                : float, spin of sample, default: 1/2
+% maxpwr           : float, maximum microwave power in mW, default: 200mW
+% gain             : float, receiver gain factor, default: 1
+% tc               : float, time constant in ms, default: 1
+% nscans           : integer, # of scans, default: 1
+% pwr              : float, microwave power in mW
+% attenuation      : float, attenuation in dB
+% temperature      : float, temperature in K
+% modamp           : float, modulation amplitude in G
+% mwfreq           : float, microwave frequency in Hz
+%
+% Tune picture evaluation
+% tunepicscaling   : float, scaling of the tune picture in MHz/s, default: 6,94e4
+% tunebglimits     : 1x4 integer, indices of background, default: auto
+% tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
+% tunebgorder      : integer, order of background correction used, default 3
+% dipmodel         : string, model used for dip fitting, default: lorentz
+%
+% Integration
+% intbglimits      : 1x4 integer, indices of background, default: auto
+% intbgorder       : integer, order of background correction used, # of elements
+%                    determines # of steps, default [3 3]
 %
 % OUTPUTS:
-% nspins:   calculated number of spins (returns NaN if transfer factor unknown)
-% tfactor:  calculated transfer factor (retursn NaN if number of spins unknown)
+% nspins  : calculated number of spins (returns NaN if transfer factor unknown)
+% tfactor : calculated transfer factor (retursn NaN if number of spins unknown)
 %           taken into account
-% results:  a structure containing internal parameters including the various fits, backgrounds and spectra
+% results : a structure containing internal parameters including the various fits, backgrounds and spectra
 %           the quality factor and double integrals
 %
 % Further help in the README
 %
 
+%% VERSION AND INFO
 VERSION = '1.3';
 fprintf('\nspincouting v%s\n\n', VERSION);
 fprintf('This is a development release.\n\n');
@@ -86,13 +105,11 @@ pmain.addParamValue('modamp', [], @(x)validateattributes(x,{'numeric'},{'positiv
 pmain.addParamValue('mwfreq', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 % tune picture evaluation
 pmain.addParamValue('tunepicscaling', TUNE_PIC_SCALING, @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('qparams',[],@isstruct);
 pmain.addParamValue('tunebglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
 pmain.addParamValue('tunebgorder',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tunepicsmoothing',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('dipmodel',[], @ischar);
 % spectrum integration
-pmain.addParamValue('intparams',[],@isstruct);
 pmain.addParamValue('intbglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
 pmain.addParamValue('intbgorder',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
 % add the name of the function
