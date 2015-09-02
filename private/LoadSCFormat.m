@@ -1,4 +1,4 @@
-function [ data, params ] = LoadSCFormat(filename)
+function [ data, pars ] = LoadSCFormat(filename)
 % load data from scspec-formatted ascii file
 %
 % VERSION 1.0
@@ -53,13 +53,7 @@ while ~feof(fid)       % while not at end of file
                 warning('LoadSCFormat:ParseWarning', 'Parameter in line %d could not be read', linenumber)
             % else put it into parameter struct
             else
-                if isempty(paramsraw{jj}{4})
-                    paramsraw{jj}{4} = '';
-                else
-                    paramsraw{jj}{4} = paramsraw{jj}{4}{1};
-                end
-                params.(paramsraw{jj}{2}{1}) = paramsraw{jj}{3};
-                params.units.(paramsraw{jj}{2}{1}) = paramsraw{jj}{4};
+                pars.(paramsraw{jj}{2}{1}) = paramsraw{jj}{3};
             end
         else
             % increment 'not parsed' counter
@@ -73,9 +67,6 @@ end
 % close the file
 fclose(fid);
 % read any numerical data directly using load
-%
-% GET THE DATA
-%
 try
     data = load(filename, '-ascii');
 catch ME
@@ -94,32 +85,4 @@ switch unparsed
         warning('LoadSCFormat:UnparsedLine','1 line was not parsed successfully');
     otherwise
         warning('LoadSCFormat:UnparsedLine','%d lines were not parsed successfully', unparsed);
-end
-
-%
-% WARN IF PARAMETERS ARE MISSING
-%
-if ~exist('params','var')
-    warning('LoadSCFormat:NoParams','No parameters were found in file');
-else
-    if ~isfield(params,'Attenuation');
-        error('LoadSCFormat:MissingParameter', 'Missing field ''Attenuation''.');
-    end
-    if ~isfield(params,'Temperature');
-        error('LoadSCFormat:MissingParameter', 'Missing field ''Temperature''.');
-    end
-    if ~isfield(params,'Frequency');
-        error('LoadSCFormat:MissingParameter', 'Missing field ''Frequency''.');
-    end
-    if ~isfield(params,'ModAmp');
-        error('LoadSCFormat:MissingParameter', 'Missing field ''ModAmp''.');
-    end
-end
-
-if size(data,2) ~= 2
-    if size(data,1) ~= 2
-        error('LoadSCFormat:WrongDataDimension', 'Nx2 or 2xN matrix as data expected but %dx%d matrix found', size(data,1), size(data,2));
-    else
-        data = data';
-    end
 end

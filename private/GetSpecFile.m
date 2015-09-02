@@ -39,10 +39,9 @@ p.parse(varargin{:});
 % KNOWNFORMATS =  {'<ext1>; <ext2>', '<description1>'; '<ext3>; <ext4>', '<description2>'; ... }
 KNOWNFORMATS = {...
                 '*.scspec', 'spincounting toolbox spectrum file (*.scspec)'; ...
-                '*.akku; *.ch1; *.ch2', 'lyra/isaak-generated spectrum files (*.akku, *.ch1, *.ch2)'; ...
-                '*.akku2;', 'lyra/isaak-generated spectrum files (*.akku2)'; ...
+                '*.akku; *.akku2; *.dat2; *.ch1; *.ch2', 'dat2 and other FU Berlin files (*.dat2, *.akku, *.akku2, *.ch1, *.ch2)'; ...
                 '*.DTA; *.DSC', 'Bruker Xepr files (*.DTA, *.DSC)'; ...
-                '*.mat', 'MATLAB file (*.mat)'; ...
+                '*.mat', 'MatLab file (*.mat)'; ...
                 '*','All Files (*)' ...
                };
 
@@ -52,34 +51,20 @@ if islogical(p.Results.file)
     [filepath, file, extension] = fileparts([filepath file]);                                % get file extension
     file = fullfile(filepath, [file extension]);
     extension = lower(extension);                     % convert to lowercase
-elseif isstruct(p.Results.file) % file passed is really a struct
-    if isfield(p.Results.file,'Data');
-        data = p.Results.file.Data;
+elseif isstruct(p.Results.file) % 'file' passed is a struct
+    % get data from struct, if present
+    if isfield(p.Results.file,'data');
+        data = p.Results.file.data;
     else
-        error('GetSpecFile:MalformedStruct', 'Struct passed is missing field ''Data''.');
+        % otherwise error
+        error('GetSpecFile:MalformedStruct', 'Struct passed is missing field ''data''.');
     end
-    if isfield(p.Results.file,'Attenuation');
-        params.Attenuation = p.Results.file.Attenuation;
+    % get params from struct if present
+    if isfield(p.Results.file,'params');
+        params = p.Results.file.params;
     else
-        error('GetSpecFile:MalformedStruct', 'Struct passed is missing field ''Attenuation''.');
-    end
-    if isfield(p.Results.file,'Temperature');
-        params.Temperature = p.Results.file.Temperature;
-    else
-        error('GetSpecFile:MalformedStruct', 'Struct passed is missing field ''Temperature''.');
-    end
-    if isfield(p.Results.file,'Frequency');
-        params.Frequency = p.Results.file.Frequency;
-    else
-        error('GetSpecFile:MalformedStruct', 'Struct passed is missing field ''Frequency''.');
-    end
-    if isfield(p.Results.file,'ModAmp');
-        params.ModAmp = p.Results.file.ModAmp;
-    else
-        error('GetSpecFile:MalformedStruct', 'Struct passed is missing field ''ModAmp''.');
-    end
-    if size(data,2) ~= 2
-        error('GetSpecFile:MalformedStruct', 'Nx2 matrix expected for field ''Data'', Nx%d matrix found', size(data,2));
+        % otherwise error
+        error('GetSpecFile:MalformedStruct', 'Struct passed is missing field ''params''.');
     end
 else    
     [filepath, file, extension] = fileparts(p.Results.file);
@@ -92,36 +77,36 @@ if ~isstruct(p.Results.file)
         % spincounting toolbox default format
         case {'.scspec'}
             [data, params] = LoadSCFormat(file);
-        % fsc2-output of lyra (possibly other fsc2-based programs?)
-        case {'.akku', '.ch1', '.ch2'}
-            [data, params] = LoadOldFUcw(file);
-        % new fsc2-Format, see dat2load() for details (*.akku2)
-        case '.akku2'
-            [datatemp, paramtemp] = dat2load(file);
-            params.Attenuation = paramtemp.attn;
-            params.Temperature = paramtemp.temp;
-            params.Frequency   = paramtemp.mwfreq;
-            params.ModAmp      = paramtemp.modamp;
-            data = [ (paramtemp.bstart:paramtemp.bstep:paramtemp.bstop)' datatemp{1}'];
+        % dat2 and various FU Berlin formats
+        % requires dat2load()
+        case {'.akku', '.ch1', '.ch2', '.akku2', '.dat2'}
+            [data, params] = LoadFsc2(file);
         % Bruker Xepr BES3T format (*.DTA, *.DSC)
         % requires eprload() from easyspin toolbox
         case {'.dsc', '.dta'}
-            % receiver gain, time constant/conversion time and number of
-            % scans are already normalised in Xepr files
-            [datax, datay, paramstemp] = eprload(file);
-            data = [ datax datay ];
-            params.Frequency = paramstemp.MWFQ;
-            params.Attenuation = str2double(paramstemp.PowerAtten(1:end-2));
-            params.ModAmp = str2double(paramstemp.ModAmp(1:end-1));
-            if isfield(paramstemp,'Temperature')
-                params.Temperature = str2double(paramstemp.Temperature(1:end-1));
-            end
+            [data, params] = LoadBrukerBES3T(file);
+        % MatLab file (*.mat)
         case '.mat'
             load(file);
-            % all other files
+            % check if the file contained the relevant variables
+            if ~exist('data','var')
+                error('GetSpecFile:MissingVariable', 'mat-File does not contain variable ''data''.');
+            end
+            if ~exist('params','var')
+                error('GetSpecFile:MissingVariable', 'mat-File does not contain variable ''params''.');
+            end
+        % all other files
         otherwise
             % throw exception
             error('GetSpecFile:TypeChk', ...
                 'Unknwon file type: "%s". Please implement this type in GetSpecFile.m', extension);
+    end
+end
+
+if size(data,2) ~= 2
+    if size(data,1) ~= 2
+        error('GetSpecFile:WrongDataDimension', 'Nx2 or 2xN matrix as data expected but %dx%d matrix found', size(data,1), size(data,2));
+    else
+        data = data';
     end
 end

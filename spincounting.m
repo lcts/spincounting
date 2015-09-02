@@ -90,7 +90,7 @@ pmain.addParamValue('qparams',[],@isstruct);
 pmain.addParamValue('tunebglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
 pmain.addParamValue('tunebgorder',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tunepicsmoothing',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('dipmodel',[], @(x)ischar);
+pmain.addParamValue('dipmodel',[], @ischar);
 % spectrum integration
 pmain.addParamValue('intparams',[],@isstruct);
 pmain.addParamValue('intbglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
@@ -202,6 +202,12 @@ if ~isempty(p.intbgorder)
 end
 
 %% HANDLE PARAMETERS FOR NORMALISATION %%
+% frequency is needed for q as well
+if ~(p.q && p.nospec)
+    if ~isempty(p.mwfreq); sp.Frequency = p.mwfreq; end
+    if ~isfield(sp, 'Frequency'); error('missing mwfreq'); end
+end
+% the rest is only important for normalisation
 if ~p.nospec
     % parameters passed to the script explicitly override those read from
     % file / list of default values
@@ -214,11 +220,9 @@ if ~p.nospec
     if ~isempty(p.tc); sp.tc = p.tc; end
     if ~isempty(p.gain); sp.gain = p.gain; end
     if ~isempty(p.nscans); sp.nscans = p.nscans; end
-    if ~isempty(p.mwfreq); sp.Frequency = p.mwfreq; end
     
     % some parameters have to be known, throw error if missing
     if ~isfield(sp, 'Temperature'); error('missing temperature'); end
-    if ~isfield(sp, 'Frequency'); error('missing mwfreq'); end
     if ~isfield(sp, 'ModAmp'); error('missing modamp'); end
     if ~isfield(sp, 'pwr')
         if ~isfield(sp, 'Attenuation') || ~isfield(sp, 'maxpwr')
@@ -282,19 +286,25 @@ if ~p.nospec
 end
 
 %% CALCULATE RESULTS AND OUTPUT
-% Calculate Q-factor, print fwhm, Q, double integral
+% Calculate Q-factor, print fwhm, Q
 if ~p.q
-  results.q = sp.Frequency / fwhm / 1e6;
-  fprintf('\n\n\n\nTune picture background indices: [%i %i %i %i]\nSpectrum background indices: [%i %i %i %i]\n', ...
-          tunebg, specbg)
-  fprintf('\nFWHM: %.4f MHz\nq-factor: %.2f\nDouble integral: %g a.u.\n', ...
-          fwhm, results.q, dint)
+    fprintf('\n\n\nTune picture background indices: [%i %i %i %i]\n', tunebg);
+    if isfield(sp,'Frequency')
+        results.q = sp.Frequency / fwhm / 1e6;
+        fprintf('FWHM: %.4f MHz\nq-factor: %.2f\n', fwhm, results.q);
+    else
+        fprintf('FWHM: %.4f MHz\n', fwhm);
+        fprintf('Microwave frequency needed for q-factor calculation.\n');
+    end
 else
   results.q = p.q;
-  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\n', results.q, specbg, dint);
+  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', results.q);
 end
 
 if ~p.nospec
+  % print double integral and spec background indices
+  fprintf('\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\n', ...
+                specbg, dint);
   % set measurement parameters
   % calculate actual power from maxpwr and attenuation
   sp.nb = PopulationDiff(sp.Temperature, sp.Frequency);
@@ -318,38 +328,37 @@ end
 
 
 %% MODE_DEPENDENT ACTIONS
-if ~p.nospec
-  switch results.mode
-  case 'none' % only determine q
-    fprintf('\nDone.\nNo spin counting requested.\n');
-    nspins = NaN;
-    tfactor = NaN;
-  case 'integrate' % no further action
-    fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
-    nspins = NaN;
-    tfactor = NaN;
-  case 'calc_spins' % calculate nspins from tfactor
-    nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
-    tfactor = p.tfactor;
-    fprintf('\nUsing transferfactor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
-            tfactor, nspins);
-  case 'calc_tfactor' % calculate tfactor from nspins
-    tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
-    nspins = p.nspins;
-    fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transferfactor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
-            nspins, tfactor, tfactor);
-  case 'check' % check calculated against given nspins
-    nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
-    nspinserror = abs(nspins - p.nspins)/ nspins * 100;
-    tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
-    fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
-            nspinserror, tfactor);
-  end
-  results.nspins = nspins;
-  results.tfactor = tfactor;
-  results.dint = dint;
-  results.params = sp;
+switch results.mode
+    case 'none' % only determine q
+        fprintf('\nDone.\nNo spin counting requested.\n');
+        nspins = NaN;
+        tfactor = NaN;
+        dint = NaN;
+    case 'integrate' % no further action
+        fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
+        nspins = NaN;
+        tfactor = NaN;
+    case 'calc_spins' % calculate nspins from tfactor
+        nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
+        tfactor = p.tfactor;
+        fprintf('\nUsing transferfactor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
+                tfactor, nspins);
+    case 'calc_tfactor' % calculate tfactor from nspins
+        tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
+        nspins = p.nspins;
+        fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transferfactor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
+                nspins, tfactor, tfactor);
+    case 'check' % check calculated against given nspins
+        nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
+        nspinserror = abs(nspins - p.nspins)/ nspins * 100;
+        tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
+        fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
+                nspinserror, tfactor);
 end
+results.nspins = nspins;
+results.tfactor = tfactor;
+results.dint = dint;
+results.params = sp;
 
 %% CLEANUP AND EXIT
 if ~p.nosave

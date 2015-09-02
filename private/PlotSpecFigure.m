@@ -8,7 +8,11 @@ int2color = [.8 0 0];
 
 % get plot limits
 xlim = [min(specdata(:,1)) max(specdata(:,1))];
-ylim1 = 1.1*[min([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)]) max([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)])];
+if size(bgs,2) >= 3
+    ylim1 = 1.1*[min([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)]) max([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)])];
+else
+    ylim1 = 1.1*[min([specdata(:,2);specs(:,2);bgs(:,2)]) max([specdata(:,2);specs(:,2);bgs(:,2)])];
+end
 ylim2 = [min(specs(:,3)) - 0.1*max(specs(:,3)) 1.1*max(specs(:,3))];
 
 % set up axes
@@ -38,10 +42,33 @@ rectangle('Position', [ specdata(specbg(3),1), ylim1(1), specdata(specbg(4),1) -
           'FaceColor', bgcolor, ...
           'Parent', hSpecAxes(1));
 % plot data
-line('XData',specdata(:,1),'YData',specdata(:,2), 'LineWidth', 1.5, 'LineStyle', '-', 'Color', datacolor, 'Parent', hSpecAxes(1))
-line('XData',bgs(:,1),'YData',bgs(:,2), 'LineWidth', 1.5, 'LineStyle', ':', 'Color', datacolor, 'Parent', hSpecAxes(1))
-line('XData',specs(:,1),'YData',specs(:,2), 'LineWidth', 1.5, 'LineStyle', '-', 'Color', intcolor, 'Parent', hSpecAxes(1))
-line('XData',bgs(:,1),'YData',bgs(:,3), 'LineWidth', 1.5, 'LineStyle', ':', 'Color', intcolor, 'Parent', hSpecAxes(1))
-line('XData',specs(:,1),'YData',specs(:,3), 'LineWidth', 1.5, 'LineStyle', '-', 'Color', int2color, 'Parent', hSpecAxes(2))
-line('XData',xlim,'YData',[0 0], 'LineWidth', 1, 'LineStyle', ':', 'Color', int2color, 'Parent', hSpecAxes(2))
-line('XData',xlim,'YData',[specs(end,3) specs(end,3)], 'LineWidth', 1, 'LineStyle', ':', 'Color', int2color, 'Parent', hSpecAxes(2))
+% spectrum
+line('XData',specdata(:,1),'YData',specdata(:,2), ...
+     'LineWidth', 1.5, 'LineStyle', '-', 'Color', datacolor, ...
+     'Parent', hSpecAxes(1))
+% first background
+line('XData',bgs(:,1),'YData',bgs(:,2), ...
+     'LineWidth', 1.5, 'LineStyle', ':', 'Color', datacolor, ...
+     'Parent', hSpecAxes(1))
+% first integral
+line('XData',specs(:,1),'YData',specs(:,2), ...
+     'LineWidth', 1.5, 'LineStyle', '-', 'Color', intcolor, ...
+     'Parent', hSpecAxes(1))
+% second background
+if size(bgs,2) >= 3
+    line('XData',bgs(:,1),'YData',bgs(:,3), ...
+         'LineWidth', 1.5, 'LineStyle', ':', 'Color', intcolor, ...
+         'Parent', hSpecAxes(1))
+end
+% second integral
+line('XData',specs(:,1),'YData',specs(:,3), ...
+     'LineWidth', 1.5, 'LineStyle', '-', 'Color', int2color, ...
+     'Parent', hSpecAxes(2))
+% min line in 2nd int
+line('XData',xlim,'YData',[specs(specbg(2),3) specs(specbg(2),3)], ...
+     'LineWidth', 1, 'LineStyle', ':', 'Color', int2color, ...
+     'Parent', hSpecAxes(2))
+% max line in 2nd int
+line('XData',xlim,'YData',[specs(specbg(3),3) specs(specbg(3),3)], ...
+     'LineWidth', 1, 'LineStyle', ':', 'Color', int2color, ...
+     'Parent', hSpecAxes(2))

@@ -94,19 +94,19 @@ end
 
 %% FIND STARTING VALUES FOR FIT
 % First, calculate initial background
-xbg=polyfit(data([background(1):background(2) background(3):background(4)],1), ...
-            data([background(1):background(2) background(3):background(4)],2), ...
-            p.Results.order ...
-	   );
+[xbg, ~, mu] = polyfit(data([background(1):background(2) background(3):background(4)],1), ...
+                       data([background(1):background(2) background(3):background(4)],2), ...
+                       p.Results.order ...
+	                  );
 % determine approximate maximum height xdip(1) and dip offset xdip(3) from background-corrected data
 [xdip(1),xdip(3)] = min(data(background(2):background(3),2) ...
-                        - polyval(xbg,data(background(2):background(3),1)) ...
+                        - polyval(xbg,data(background(2):background(3),1),[],mu) ...
 		       );
 xdip(3) = data(background(2) + xdip(3),1);
 
 % get initial FWHM xdip(2)
-xdip(2) = (data(find(data(background(2):background(3),2) - polyval(xbg,data(background(2):background(3),1)) <= xdip(1)/2,1,'last'),1) ...
-           - data(find(data(background(2):background(3),2) - polyval(xbg,data(background(2):background(3),1)) <= xdip(1)/2,1,'first'),1) ...
+xdip(2) = (data(find(data(background(2):background(3),2) - polyval(xbg,data(background(2):background(3),1),[],mu) <= xdip(1)/2,1,'last'),1) ...
+           - data(find(data(background(2):background(3),2) - polyval(xbg,data(background(2):background(3),1),[],mu) <= xdip(1)/2,1,'first'),1) ...
 	  );
 
 %% FIT THE DATA USING DIFFERENT MODELS
@@ -117,7 +117,7 @@ switch p.Results.dipmodel
     params = [xdip xbg];
     % use a lorentzian to plot the determined dip. This is rather arbitrary.
     fdip = @(x,xdata) x(1)*x(2)^2/4./((xdata - x(3)).^2 + (x(2)/2)^2);'x';'xdata';
-    fbg  = @(x,xdata) polyval(x,xdata);'x';'xdata';
+    fbg  = @(x,xdata) polyval(x,xdata,[],mu);'x';'xdata';
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
     fit(:,1) = func(params,data(:,1));
     fit(:,2) = fbg(params(4:end),data(:,1));
@@ -125,26 +125,26 @@ switch p.Results.dipmodel
   case 'lorentz'	% fit the dip using a lorentz curve
     % define functions, lorentzian, background and both
     fdip = @(x,xdata) x(1)*x(2)^2/4./((xdata - x(3)).^2 + (x(2)/2)^2);'x';'xdata';
-    fbg  = @(x,xdata) polyval(x,xdata);'x';'xdata';
+    fbg  = @(x,xdata) polyval(x,xdata,[],mu);'x';'xdata';
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
     % fit the lorentz curve and background
     xin = [xdip xbg];
     [params, resnorm]= lsqcurvefit(func,xin,data(background(1):background(4),1),data(background(1):background(4),2));
     % save output parameters
-    fwhm = params(2);
+    fwhm = abs(params(2));
     fit(:,1) = func(params,data(:,1));
     fit(:,2) = fbg(params(4:end),data(:,1));
     fit(:,3) = fdip(params(1:3),data(:,1));
   case 'gauss'		% fit the dip using a gaussian curve
   % define functions, lorentzian, background and both
     fdip = @(x,xdata) x(1)*1/(x(2)*sqrt(2*pi)).*exp(-(xdata - x(3)).^2 / (2*x(2)^2));'x';'xdata';
-    fbg = @(x,xdata)polyval(x,xdata);'x';'xdata';
+    fbg = @(x,xdata)polyval(x,xdata,[],mu);'x';'xdata';
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
     % fit the lorentz curve and background
     xin = [xdip xbg];
     [params, resnorm]= lsqcurvefit(func,xin,data(background(1):background(4),1),data(background(1):background(4),2));
     % save output parameters
-    fwhm = 2*sqrt(2*log(2))*params(2);
+    fwhm = 2*sqrt(2*log(2)) * abs(params(2));
     fit(:,1) = func(params,data(:,1));
     fit(:,2) = fbg(params(4:end),data(:,1));
     fit(:,3) = fdip(params(1:3),data(:,1));

@@ -18,7 +18,7 @@ function [doubleint, specs, bgs, params, background] = DoubleInt(data, varargin)
 %              for background fit. Take care to include as much background as possible in your spectrum but no signal.
 %              If this parameter is not given, DoubleInt will use the left and right 25% of the data as background.
 % order      - a vector the orders of the polynomials for background correction. The number of elements determines the number
-%              of correction steps (1 or 2). Default [3 3].
+%              of correction steps (1 or 2). Default [1 3].
 %
 % Additional Outputs
 % specs      - an array of the calculated integrals [xaxis firstint secondint]
@@ -32,7 +32,7 @@ function [doubleint, specs, bgs, params, background] = DoubleInt(data, varargin)
 p = inputParser;
 p.addRequired('data', @(x)validateattributes(x,{'numeric'},{'2d','real'}));
 p.addParamValue('background',false, @(x)validateattributes(x,{'numeric'},{'positive','size',[1,4]}));
-p.addParamValue('order',[3 3], @(x)validateattributes(x,{'numeric'},{'row','integer'}));
+p.addParamValue('order',[1 3], @(x)validateattributes(x,{'numeric'},{'row','integer'}));
 p.FunctionName = 'DoubleInt';
 p.parse(data,varargin{:});
 

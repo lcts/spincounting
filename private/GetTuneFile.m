@@ -25,6 +25,7 @@ p.parse(scaling,varargin{:});
 KNOWNFORMATS = {...
                 '*.sctune', 'spincounting toolbox tune file (*.sctune)'; ...
                 '*.csv; *.CSV', 'Tektronix TDS2002C files (*.csv, *.CSV)'; ...
+                '*.mat', 'MatLab file (*.mat)'; ...
                 '*','All Files (*)' ...
                };
            
@@ -35,9 +36,12 @@ if islogical(p.Results.file)
     file = fullfile(filepath, [file extension]);
     extension = lower(extension);                     % convert to lowercase
 elseif isnumeric(p.Results.file)
-    data = p.Results.file;
-    if size(data,2) ~= 2
-        error('GetTuneFile:MalformedData', 'Matrix passed, Nx2 matrix expected but Nx%d matrix found', size(data,2));
+    % get data from struct, if present
+    if isfield(p.Results.file,'data');
+        data = p.Results.file.data;
+    else
+        % otherwise error
+        error('GetTuneFile:MalformedStruct', 'Struct passed is missing field ''data''.');
     end
 else
     [filepath, file, extension] = fileparts(p.Results.file);
@@ -52,8 +56,22 @@ if ~isnumeric(p.Results.file)
             data = dlmread(file,',',0,3); % data is in ,-separated columns 3-4, read those
             data(:,1) = data(:,1)*scaling;       % convert x-axis to frequency
             data = data(:,1:2);
+        case '.mat'
+            load(file);
+            % check if the file contained the relevant variables
+            if ~exist('data','var')
+                error('GetTuneFile:MissingVariable', 'mat-File does not contain variable ''data''.');
+            end
         otherwise
             data = load(file);
             data(:,1) = data(:,1)*scaling;       % convert x-axis to frequency
+    end
+end
+
+if size(data,2) ~= 2
+    if size(data,1) ~= 2
+        error('GetTuneFile:WrongDataDimension', 'Nx2 or 2xN matrix as data expected but %dx%d matrix found', size(data,1), size(data,2));
+    else
+        data = data';
     end
 end
