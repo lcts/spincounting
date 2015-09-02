@@ -67,9 +67,9 @@ specs(:,1) = data(:,1);
 bgs(:,1)   = data(:,1);
 
 % initial background correction
-[params(:,1), ~, mu] = polyfit(data([background(1):background(2) background(3):background(4)],1), ...
+[params{1}, ~, mu] = polyfit(data([background(1):background(2) background(3):background(4)],1), ...
                       data([background(1):background(2) background(3):background(4)],2),p.Results.order(1));
-bgs(:,2) = polyval(params(:,1),bgs(:,1),[],mu);
+bgs(:,2) = polyval(params{1},bgs(:,1),[],mu);
 specs(:,2) = data(:,2) - bgs(:,2);
 
 % first integration step
@@ -78,9 +78,9 @@ specs(:,2) = cumtrapz(specs(:,1),specs(:,2));
 % if there is a second value in 'order'
 if length(p.Results.order) >= 2
     % perform second bg correction before second integration
-    [params(:,2), ~, mu] = polyfit(specs([background(1):background(2) background(3):background(4)],1), ...
+    [params{2}, ~, mu] = polyfit(specs([background(1):background(2) background(3):background(4)],1), ...
                           specs([background(1):background(2) background(3):background(4)],2),p.Results.order(2));
-    bgs(:,3) = polyval(params(:,2),bgs(:,1),[],mu);
+    bgs(:,3) = polyval(params{2},bgs(:,1),[],mu);
     specs(:,3) = specs(:,2) - bgs(:,3);
     % then integrate
     specs(:,3) = cumtrapz(specs(:,1),specs(:,3));

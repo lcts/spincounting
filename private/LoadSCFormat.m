@@ -35,29 +35,21 @@ jj = 0; ll = 0; linenumber = 0;
 while ~feof(fid)       % while not at end of file
     line = fgetl(fid); % get a new line, including \n
     linenumber = linenumber + 1;
-    if length(line) >= 2 % ignore empty lines
-        %
-        % GET PARAMETERS
-        %
-        if strcmp(line(1:2),'%!')
-            % increment 'parameter' counter
-            jj = jj + 1;
-            % try to read parameter in format
-            % '%! <parname> <parvalue> <parunit>'
-            paramsraw{jj} = textscan(line, '%s %s %f %s');
-            % if it does not work
-            if isempty(paramsraw{jj}{2}) || isempty(paramsraw{jj}{3})
-                % increment 'not parsed' counter
-                ll = ll + 1;
-                % and warn
-                warning('LoadSCFormat:ParseWarning', 'Parameter in line %d could not be read', linenumber)
-            % else put it into parameter struct
-            else
-                pars.(paramsraw{jj}{2}{1}) = paramsraw{jj}{3};
-            end
-        else
+    if length(line) >= 2 && strcmp(line(1:2),'%!')
+        % increment 'parameter' counter
+        jj = jj + 1;
+        % try to read parameter in format
+        % '%! <parname> <parvalue> <parunit>'
+        paramsraw{jj} = textscan(line, '%s %s %f %s');
+        % if it does not work
+        if isempty(paramsraw{jj}{2}) || isempty(paramsraw{jj}{3})
             % increment 'not parsed' counter
             ll = ll + 1;
+            % and warn
+            warning('LoadSCFormat:ParseWarning', 'Parameter in line %d could not be read', linenumber)
+            % else put it into parameter struct
+        else
+            pars.(paramsraw{jj}{2}{1}) = paramsraw{jj}{3};
         end
     else
         % increment 'not parsed' counter
@@ -82,7 +74,7 @@ switch unparsed
     case 0
         % do nothing
     case 1 
-        warning('LoadSCFormat:UnparsedLine','1 line was not parsed successfully');
+        warning('LoadSCFormat:UnparsedLine','1 line was empty, a comment or not parsed successfully.');
     otherwise
-        warning('LoadSCFormat:UnparsedLine','%d lines were not parsed successfully', unparsed);
+        warning('LoadSCFormat:UnparsedLine','%d lines were empty, comments or not parsed successfully.', unparsed);
 end

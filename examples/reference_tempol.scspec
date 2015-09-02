@@ -1,7 +1,28 @@
-%! Attenuation 20 dB
-%! Temperature 297 K
-%! Frequency 9.37993601e09
-%! ModAmp 1 G
+% Comments are indicated by lines starting with '% ' and can appear anywhere in the file. The following 
+% lines are comments and are ignored by the load routine.
+%
+% Parameters are indicated by lines starting with '%!'. The following are parameters:
+%
+%! attn 20 dB
+%! T 297 K
+%! mwfreq 9.37993601e09
+%! modamp 1 G
+%
+% The proper format for parameters is
+% '%! <name> <value> <unit>'
+% Units are optional, for information only and ignored by the loading function. The toolbox uses the
+% following parameter names:
+% 
+% gain, tc, nscans, modamp, attn, T, mwfreq, pwr, maxpwr, S
+%
+% You can use other names, but they are ignored. All of the above parameters are taken into account by the
+% toolbox, so if you don't need them (nscans, for example - spectra are often averaged automatically), 
+% don't include them.
+%
+% Empty lines are OK too, they are ignored:
+
+% Everything else is data. You can store your data as either two rows or two columns, the first of which contains
+% the field axis, the second the ESR signal.
 3250 -0.000183106000000000
 3250.20000000000 -0.000200273000000000
 3250.40000000000 -0.000200273000000000

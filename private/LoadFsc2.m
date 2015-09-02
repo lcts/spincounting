@@ -13,10 +13,10 @@ if ~isempty(regexp(fileread(filename),'% Date/Time','once'))
     [data, parstemp] = LoadOldFUcw(filename);
     % save parameters
     % gain, nscans, tc are normalised already
-    pars.Attenuation = parstemp.Attenuation;
-    pars.Temperature = parstemp.Temperature;
-    pars.Frequency   = parstemp.Frequency;
-    pars.ModAmp      = parstemp.ModAmp;
+    pars.attn = parstemp.Attenuation;
+    pars.T = parstemp.Temperature;
+    pars.mwfreq = parstemp.Frequency;
+    pars.modamp = parstemp.ModAmp;
 else
     % try treating it as a dat2-type file
     [datatemp, parstemp, id] = dat2load(filename);
@@ -31,8 +31,8 @@ else
     data = [ (parstemp.bstart:parstemp.bstep:parstemp.bstop)' real(datatemp{1}')];
     % save parameters
     % gain, nscans, tc are normalised already
-    pars.Attenuation = parstemp.attn;
-    pars.Temperature = parstemp.temp;
-    pars.Frequency   = parstemp.mwfreq;
-    pars.ModAmp      = parstemp.modamp;
+    pars.attn = parstemp.attn;
+    pars.T = parstemp.temp;
+    pars.mwfreq = parstemp.mwfreq;
+    pars.modamp = parstemp.modamp;
 end

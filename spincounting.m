@@ -36,8 +36,8 @@ function [nspins, tfactor, results] = spincounting(varargin)
 % tc               : float, time constant in ms, default: 1
 % nscans           : integer, # of scans, default: 1
 % pwr              : float, microwave power in mW
-% attenuation      : float, attenuation in dB
-% temperature      : float, temperature in K
+% attn             : float, attenuation in dB
+% T                : float, temperature in K
 % modamp           : float, modulation amplitude in G
 % mwfreq           : float, microwave frequency in Hz
 %
@@ -99,8 +99,8 @@ pmain.addParamValue('gain', [], @(x)validateattributes(x,{'numeric'},{'scalar'})
 pmain.addParamValue('tc', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('nscans', [], @(x)validateattributes(x,{'numeric'},{'positive','integer'}));
 pmain.addParamValue('pwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('attenuation', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('temperature', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('attn', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('T', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('modamp', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('mwfreq', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 % tune picture evaluation
@@ -221,17 +221,17 @@ end
 %% HANDLE PARAMETERS FOR NORMALISATION %%
 % frequency is needed for q as well
 if ~(p.q && p.nospec)
-    if ~isempty(p.mwfreq); sp.Frequency = p.mwfreq; end
-    if ~isfield(sp, 'Frequency'); error('missing mwfreq'); end
+    if ~isempty(p.mwfreq); sp.mwfreq = p.mwfreq; end
+    if ~isfield(sp, 'mwfreq'); error('missing mwfreq'); end
 end
 % the rest is only important for normalisation
 if ~p.nospec
     % parameters passed to the script explicitly override those read from
     % file / list of default values
-    if ~isempty(p.temperature); sp.Temperature = p.temperature; end
-    if ~isempty(p.modamp); sp.ModAmp = p.modamp; end
+    if ~isempty(p.T); sp.T = p.T; end
+    if ~isempty(p.modamp); sp.modamp = p.modamp; end
     if ~isempty(p.pwr); sp.pwr = p.pwr; end
-    if ~isempty(p.attenuation); sp.Attenuation = p.attenuation; end
+    if ~isempty(p.attn); sp.attn = p.attn; end
     if ~isempty(p.maxpwr); sp.maxpwr = p.maxpwr; end
     if ~isempty(p.S); sp.S = p.S; end
     if ~isempty(p.tc); sp.tc = p.tc; end
@@ -239,13 +239,13 @@ if ~p.nospec
     if ~isempty(p.nscans); sp.nscans = p.nscans; end
     
     % some parameters have to be known, throw error if missing
-    if ~isfield(sp, 'Temperature'); error('missing temperature'); end
-    if ~isfield(sp, 'ModAmp'); error('missing modamp'); end
+    if ~isfield(sp, 'T'); error('missing temperature'); end
+    if ~isfield(sp, 'modamp'); error('missing modamp'); end
     if ~isfield(sp, 'pwr')
-        if ~isfield(sp, 'Attenuation') || ~isfield(sp, 'maxpwr')
+        if ~isfield(sp, 'attn') || ~isfield(sp, 'maxpwr')
             error('pass pwr or maxpwr and attenuation');
         else
-            sp.pwr = sp.maxpwr * 10^(-sp.Attenuation/10);
+            sp.pwr = sp.maxpwr * 10^(-sp.attn/10);
         end
     end
 end
@@ -306,8 +306,8 @@ end
 % Calculate Q-factor, print fwhm, Q
 if ~p.q
     fprintf('\n\n\nTune picture background indices: [%i %i %i %i]\n', tunebg);
-    if isfield(sp,'Frequency')
-        results.q = sp.Frequency / fwhm / 1e6;
+    if isfield(sp,'mwfreq')
+        results.q = sp.mwfreq / fwhm / 1e6;
         fprintf('FWHM: %.4f MHz\nq-factor: %.2f\n', fwhm, results.q);
     else
         fprintf('FWHM: %.4f MHz\n', fwhm);
@@ -324,10 +324,10 @@ if ~p.nospec
                 specbg, dint);
   % set measurement parameters
   % calculate actual power from maxpwr and attenuation
-  sp.nb = PopulationDiff(sp.Temperature, sp.Frequency);
+  sp.nb = PopulationDiff(sp.T, sp.mwfreq);
   % Calculate normalisation factor and print it with some info
   fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %.6f mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n - modulation amplitude: %.1f\n', ...
-          sp.maxpwr*1000, sp.Attenuation, sp.pwr*1000, sp.Temperature, sp.nb, sp.S, sp.ModAmp);
+          sp.maxpwr*1000, sp.attn, sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
 end
   
 if ~p.nosave
@@ -356,19 +356,19 @@ switch results.mode
         nspins = NaN;
         tfactor = NaN;
     case 'calc_spins' % calculate nspins from tfactor
-        nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
+        nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         tfactor = p.tfactor;
         fprintf('\nUsing transferfactor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
                 tfactor, nspins);
     case 'calc_tfactor' % calculate tfactor from nspins
-        tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
+        tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         nspins = p.nspins;
         fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transferfactor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
                 nspins, tfactor, tfactor);
     case 'check' % check calculated against given nspins
-        nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
+        nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         nspinserror = abs(nspins - p.nspins)/ nspins * 100;
-        tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.ModAmp, results.q, sp.nb, sp.S);
+        tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
                 nspinserror, tfactor);
 end
