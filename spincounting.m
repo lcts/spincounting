@@ -68,13 +68,6 @@ VERSION = '1.3';
 fprintf('\nspincouting v%s\n\n', VERSION);
 fprintf('This is a development release.\n\n');
 
-% %% LIST OF DEFAULT VALUES
-% sp.S = 1/2;                % sample spin
-% sp.maxpwr = 200;           % bridge max power (mW)
-% sp.gain = 1;               % receiver gain, given as a factor
-% sp.nscans = 1;             % number of scans
-% sp.tc = 1;                 % time constant (ms)
-% 
 TUNE_PIC_SCALING = 6.94e4; % MHz/s
 
 %% INPUT HANDLING
@@ -121,8 +114,11 @@ pmain.parse(varargin{:});
 p = pmain.Results;
 
 %% LOAD DEFAULTS
+% initialise parameter struct
 sp = struct();
+% load confid
 scconfig
+% populate parameter struct
 for ii = 1:size(DEFAULTS,1)
     sp.(DEFAULTS{ii,1}) = DEFAULTS{ii,2};
 end
@@ -190,7 +186,16 @@ if ~p.q
   end
 end
 
-% Load spectrum file
+% if ~p.q
+%   if islogical(p.tunefile)
+%     tdata = GettuneFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS);
+%   else
+%     tdata = GetTuneFile(TUNE_LOADFUNCTIONS, {}, p.specfile);
+%   end
+%   tdata(:,1) = tdata(:,1) * p.tunepicscaling;
+% end
+
+% Load spectrum data
 if ~p.nospec
   if islogical(p.specfile)
     [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS);
