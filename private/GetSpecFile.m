@@ -26,13 +26,11 @@ LOADFUNC = {...
            
 % parse inputs
 p = inputParser;
-%p.addRequired('functions', @(x)validateattributes(x,{'cell'},{'ncols', 2}));
+p.addRequired('functions', @(x)validateattributes(x,{'cell'},{'ncols', 2}));
+p.addOptional('knownformats', false, @iscell);
 p.addOptional('file', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
-%p.addOptional('knownformats', @(x)validateattributes(x,{'cell'},{'ncols', 2}));
 p.FunctionName = 'GetSpecFile';
 p.parse(varargin{:});
-
-%p.Results.knownformats
 
 if islogical(p.Results.file)
     [file, filepath] = uigetfile(KNOWNFORMATS,'Select a spectrum file:');              % get the file
@@ -52,43 +50,34 @@ elseif isstruct(p.Results.file) % 'file' passed is a struct
     if isfield(p.Results.file,'params');
         params = p.Results.file.params;
     else
-        % otherwise error
-        error('GetSpecFile:MalformedStruct', 'Struct passed is missing field ''params''.');
+        % otherwise warn
+        warning('GetSpecFile:MalformedStruct', 'Struct passed is missing field ''params''.');
+        params = struct();
     end
 else    
     [filepath, file, extension] = fileparts(p.Results.file);
     file = fullfile(filepath, [file extension]);
-    extension = lower(extension);                     % convert to lowercase
 end
 
 if ~isstruct(p.Results.file)
-    switch extension
-        % spincounting toolbox default format
-        case {'.scs'}
-            [data, params] = LoadSCFormat(file);
-        % dat2 and various FU Berlin formats
-        % requires dat2load()
-        case {'.akku', '.ch1', '.ch2', '.akku2', '.dat2'}
-            [data, params] = LoadFsc2(file);
-        % Bruker Xepr BES3T format (*.DTA, *.DSC)
-        % requires eprload() from easyspin toolbox
-        case {'.dsc', '.dta'}
-            [data, params] = LoadBrukerBES3T(file);
-        % MatLab file (*.mat)
-        case '.mat'
-            load(file);
-            % check if the file contained the relevant variables
-            if ~exist('data','var')
-                error('GetSpecFile:MissingVariable', 'mat-File does not contain variable ''data''.');
-            end
-            if ~exist('params','var')
-                error('GetSpecFile:MissingVariable', 'mat-File does not contain variable ''params''.');
-            end
-        % all other files
-        otherwise
-            % throw exception
-            error('GetSpecFile:TypeChk', ...
-                'Unknwon file type: "%s". Please implement this type in GetSpecFile.m', extension);
+    % check if we know about this extension
+    [ir,~] = find(strcmpi(p.Results.functions, extension));
+    % if we do
+    if ir ~= 0
+        % run the appropriate loading function
+        [data, params] = feval(p.Results.functions{ir,2},file);
+    else
+        % try to get data with load()
+        warning('GetSpecFile:UnknownFormat', 'Unknown file format, trying to get data with load().')
+        try
+            data = load(file);
+        catch ME
+            warning('GetSpecFile:LoadFailed', 'load() failed with error:')
+            rethrow(ME)
+        end
+        % and return an empty struct as params
+        warning('GetSpecFile:UnknownFormat', 'No parameters read. Specify them manually.')
+        params = struct();
     end
 end
 

@@ -68,6 +68,28 @@ if ~isnumeric(p.Results.file)
     end
 end
 
+% if ~isstruct(p.Results.file)
+%     % check if we know about this extension
+%     [ir,~] = find(strcmpi(p.Results.functions, extension));
+%     % if we do
+%     if ir ~= 0
+%         % run the appropriate loading function
+%         [data, params] = feval(p.Results.functions{ir,2},file);
+%     else
+%         % try to get data with load()
+%         warning('GetSpecFile:UnknownFormat', 'Unknown file format, trying to get data with load().')
+%         try
+%             data = load(file);
+%         catch ME
+%             warning('GetSpecFile:LoadFailed', 'load() failed with error:')
+%             rethrow(ME)
+%         end
+%         % and return an empty struct as params
+%         warning('GetSpecFile:UnknownFormat', 'No parameters read. Specify them manually.')
+%         params = struct();
+%     end
+% end
+
 if size(data,2) ~= 2
     if size(data,1) ~= 2
         error('GetTuneFile:WrongDataDimension', 'Nx2 or 2xN matrix as data expected but %dx%d matrix found', size(data,1), size(data,2));

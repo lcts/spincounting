@@ -43,7 +43,7 @@ if ~p.Results.background
   background(4) = length(data(:,1));
   background(3) = background(4)-ceil(length(data(:,1))*0.25);
 else
-  background = iof(p.Results.data(:,1),p.Results.background)
+  background = iof(p.Results.data(:,1),p.Results.background);
   BGINVALID = false;
   for i = 3:-1:1
     if background(i) > background(i+1)

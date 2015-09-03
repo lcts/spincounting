@@ -83,7 +83,6 @@ pmain = inputParser;
 % files and file handling
 pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
 pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
-pmain.addParamValue('configfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
 pmain.addParamValue('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParamValue('outformat', 'pdf', @(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
 pmain.addParamValue('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
@@ -122,12 +121,8 @@ pmain.parse(varargin{:});
 p = pmain.Results;
 
 %% LOAD DEFAULTS
-if ~p.configfile
-    scconfig
-else
-    config = fileread(p.configfile);
-    eval(config)
-end
+sp = struct();
+scconfig
 for ii = 1:size(DEFAULTS,1)
     sp.(DEFAULTS{ii,1}) = DEFAULTS{ii,2};
 end
@@ -198,9 +193,9 @@ end
 % Load spectrum file
 if ~p.nospec
   if islogical(p.specfile)
-    [sdata, sptemp] = GetSpecFile;
+    [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS);
   else
-    [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS,p.specfile, SPECTRUM_KNOWN_FORMATS);
+    [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, {}, p.specfile);
   end
   % merge paramstruct sptemp into existing paramstruct sp
   fnames = fieldnames(sptemp);
