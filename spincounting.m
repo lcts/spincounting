@@ -68,13 +68,13 @@ VERSION = '1.3';
 fprintf('\nspincouting v%s\n\n', VERSION);
 fprintf('This is a development release.\n\n');
 
-%% LIST OF DEFAULT VALUES
-sp.S = 1/2;                % sample spin
-sp.maxpwr = 0.2;           % bridge max power (mW)
-sp.gain = 1;               % receiver gain, given as a factor
-sp.nscans = 1;             % number of scans
-sp.tc = 1;                 % time constant (ms)
-
+% %% LIST OF DEFAULT VALUES
+% sp.S = 1/2;                % sample spin
+% sp.maxpwr = 200;           % bridge max power (mW)
+% sp.gain = 1;               % receiver gain, given as a factor
+% sp.nscans = 1;             % number of scans
+% sp.tc = 1;                 % time constant (ms)
+% 
 TUNE_PIC_SCALING = 6.94e4; % MHz/s
 
 %% INPUT HANDLING
@@ -83,6 +83,7 @@ pmain = inputParser;
 % files and file handling
 pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
 pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
+pmain.addParamValue('configfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
 pmain.addParamValue('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParamValue('outformat', 'pdf', @(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
 pmain.addParamValue('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
@@ -120,6 +121,18 @@ pmain.parse(varargin{:});
 % and store the result in p
 p = pmain.Results;
 
+%% LOAD DEFAULTS
+if ~p.configfile
+    scconfig
+else
+    config = fileread(p.configfile);
+    eval(config)
+end
+for ii = 1:size(DEFAULTS,1)
+    sp.(DEFAULTS{ii,1}) = DEFAULTS{ii,2};
+end
+
+%% SET UP OUTPUT
 % get a filename for saving unless we're not supposed to
 if ~p.nosave
   % check if we're missing a filename
@@ -153,7 +166,7 @@ else
   warning('spincounting:NoSave', 'nosave option set, data is not being saved.\n');
 end
 
-% set mode
+%% SET OPERATION MODE
 if ~p.nospec
   if ~p.nspins
     if ~p.tfactor
@@ -187,7 +200,7 @@ if ~p.nospec
   if islogical(p.specfile)
     [sdata, sptemp] = GetSpecFile;
   else
-    [sdata, sptemp] = GetSpecFile(p.specfile);
+    [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS,p.specfile, SPECTRUM_KNOWN_FORMATS);
   end
   % merge paramstruct sptemp into existing paramstruct sp
   fnames = fieldnames(sptemp);
@@ -326,8 +339,8 @@ if ~p.nospec
   % calculate actual power from maxpwr and attenuation
   sp.nb = PopulationDiff(sp.T, sp.mwfreq);
   % Calculate normalisation factor and print it with some info
-  fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %.6f mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n - modulation amplitude: %.1f\n', ...
-          sp.maxpwr*1000, sp.attn, sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
+  fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %f mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n - modulation amplitude: %.1f\n', ...
+          sp.maxpwr, sp.attn, sp.pwr, sp.T, sp.nb, sp.S, sp.modamp);
 end
   
 if ~p.nosave

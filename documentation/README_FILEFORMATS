@@ -24,7 +24,7 @@ Currently, the toolbox supports as a source for the tune picture
 
 Currently, the toolbox supports the following EPR data files
 
- - its own format (.scspec)
+ - its own format (.scs)
  - Bruker Xepr (.DTA, .DSC) via easyspin's eprload() function
  - two data formats used by software employed at Freie Universität Berlin (.akku and .akku2)
  - loading data from a MatLab-file (.mat)
