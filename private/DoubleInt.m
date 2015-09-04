@@ -90,5 +90,5 @@ else
     specs(:,3) = cumtrapz(specs(:,1),specs(:,2));
 end
 
-% else calculate doubleint directly
+% calculate second integral
 doubleint = specs(background(3),3) - specs(background(2),3);
