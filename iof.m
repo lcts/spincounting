@@ -12,8 +12,6 @@ function [ index, element ] = iof(varargin)
 % 'smaller': closest element smaller than value
 % 'larger':  closest element larger than value
 %
-VERSION = '1.1';
-
 p = inputParser;
 p.addRequired('vector', @(x)validateattributes(x,{'numeric'},{'vector', 'real'}));
 p.addRequired('value', @(x)validateattributes(x,{'numeric'},{'vector', 'real'}));
