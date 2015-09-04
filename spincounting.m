@@ -58,7 +58,7 @@ function [nspins, tfactor, results] = spincounting(varargin)
 %
 
 %% VERSION AND INFO
-VERSION = '1.3';
+VERSION = '2.1';
 fprintf('\nspincouting v%s\n\n', VERSION);
 fprintf('This is a development release.\n\n');
 
