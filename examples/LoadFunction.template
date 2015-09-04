@@ -1,0 +1,24 @@
+function [ data, pars ] = LoadFunction(filename)
+% load data from <type> file
+%
+% USAGE:
+% [data, pars] = LoadFunction(filename)
+
+
+% THIS IS - OBVIOUSLY - ONLY PSEUDOCODE
+
+% read data
+readdata = get_data_from_file(filename)
+
+% then set return values
+% data needs to have proper format
+data = <Nx2 or 2xN numeric matrix>
+
+% pars can be empty, but has to be struct
+if <no parameters>
+    pars = struct()
+else
+    pars.name1 = value1
+    pars.name1 = value1
+    ...
+end

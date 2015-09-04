@@ -1,94 +1,126 @@
-function [nspins, tfactor, dintnorm, results] = spincounting(varargin)
+function [nspins, tfactor, results] = spincounting(varargin)
 % Evaluate EPR spectra quantitatively
 %
 % USAGE:
 % spincounting
-% nspins = spincounting
-% nspins = spincounting('Option', Value, ...)
-% nspins = spincounting(paramstruct)
-% [nspins tfactor q dintnorm results] = spincounting(optionstruct) 
+% nspins = spincounting('tfactor',<value>)
+% [ ~, tfactor] = spincounting('nspins', <value>)
+% [nspins, tfactor, results] = spincounting(___, '<option>', <value>)
+% [nspins, tfactor, results] = spincounting(struct)
 %
-% All parameters can be given as either Option-Value pairs or in the form of a struct.
-% The full list of parameters is:
+% OPTIONS:
+% tunefile         : string, tune picture file, default: Prompt
+% specfile         : string, spectrum file, default: Prompt
+% outfile          : string, output files, default: Prompt
+% outformat        : string, output format for plots, default: 'pdf'
+% nosave           : boolean, don't save anything if true, default: false
 %
-% optionstruct
-%             .tunefile             : Tune picture file, default: Prompt
-%             .specfile             : Spectrum file, default: Prompt
-%             .outfile              : Filename under which to save output, default: Prompt
-%             .nosave               : boolean, don't save anything if true, default: false
-%             .clobber              : overwrite existing files, default: false
-%             .noplot               : do not display plots. They are still generated and saved, default: false
-%             .nspins               : # of spins in sample, default: false
-%             .tfactor              : spectrometer transfer factor, default: false
-%             .q                    : quality factor q. Setting this disables all q-factor 
-%                                     calculation related functionality, default: false
-%             .S                    : spin of sample, default: 1/2
-%             .maxpwr               : maximum microwave power, default: 200mW
-%             .tunepicscaling       : scaling of the tune picture in MHz/s, default: 6,94e4
-%             .qparams              : parameters passed on to FitResDip
-%                     .background   : indices of background, default: auto
-%                     .smoothing    : # of points used for smoothing, default 2.5% of total
-%                     .order        : order of background correction used, default 3
-%                     .dipmodel     : model used for dip fitting, default: lorentz
-%             .intparams            : parameters passed on to DoubleInt
-%                       .background : indices of background, default: auto
-%                       .order      : order of background correction used, # of elements
-%                                     determines # of steps, default [3 3]
+% nspins           : float, # of spins in sample, default: false
+% tfactor          : float, spectrometer transfer factor, default: false
+% nospec           : boolean, only determine q, default: false
+% noplot           : boolean, do not display plots. They are still generated 
+%                    and saved, default: false
+% q                : float, quality factor q. Setting this disables all q-factor 
+%                    calculation related functionality, default: false
+%
+% S                : float, spin of sample, default: 1/2
+% maxpwr           : float, maximum microwave power in W, default: 0.2W
+% rgain            : float, receiver gain factor, default: 1
+% tc               : float, time constant in ms, default: 1
+% nscans           : integer, # of scans, default: 1
+% pwr              : float, microwave power in mW
+% attn             : float, attenuation in dB
+% T                : float, temperature in K
+% modamp           : float, modulation amplitude in G
+% mwfreq           : float, microwave frequency in Hz
+%
+% tunepicscaling   : float, scaling of the tune picture in MHz/s, default: 6,94e4
+% tunebglimits     : 1x4 integer, indices of background, default: auto
+% tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
+% tunebgorder      : integer, order of background correction used, default 3
+% dipmodel         : string, model used for dip fitting, default: lorentz
+%
+% intbglimits      : 1x4 integer, indices of background, default: auto
+% intbgorder       : integer, order of background correction used, # of elements
+%                    determines # of steps, default [1 3]
+%
+% All options can be given as either Option-Value pairs or in the form of a struct
+% with struct.<Option> = <Value>
 %
 % OUTPUTS:
-% nspins:   calculated number of spins (returns NaN if transfer factor unknown)
-% tfactor:  calculated transfer factor (retursn NaN if number of spins unknown)
-% dintnorm: double integral of background-corrected spectrum, measurement parameters
+% nspins  : calculated number of spins (returns NaN if transfer factor unknown)
+% tfactor : calculated transfer factor (retursn NaN if number of spins unknown)
 %           taken into account
-% results:  a structure containing internal parameters including the various fits, backgrounds and spectra
+% results : a structure containing internal parameters including the various fits, backgrounds and spectra
 %           the quality factor and double integrals
 %
-% Further help in the README
+% Further help in the documentation folder
 %
 
-VERSION = '1.2.2';
-fprintf('\nspincouting v%s\n', VERSION);
+%% VERSION AND INFO
+VERSION = '1.3';
+fprintf('\nspincouting v%s\n\n', VERSION);
+fprintf('This is a development release.\n\n');
 
 %% INPUT HANDLING
-% define top-level input arguments
+% define input arguments
 pmain = inputParser;
-pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char'},{'vector'}));
-pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
+% files and file handling
+pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
+pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
 pmain.addParamValue('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
+pmain.addParamValue('outformat', 'pdf', @(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
 pmain.addParamValue('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
+% program behaviour
 pmain.addParamValue('nospec', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
-pmain.addParamValue('clobber', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('nspins', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tfactor', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('S', 1/2, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('q', false, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('maxpwr', 0.2, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('tunepicscaling', 6.94e4, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('qparams',[],@isstruct);
-pmain.addParamValue('intparams',[],@isstruct);
+% measurement parameters (override those read from file or set by default)
+pmain.addParamValue('S', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('maxpwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('rgain', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParamValue('tc', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('nscans', [], @(x)validateattributes(x,{'numeric'},{'positive','integer'}));
+pmain.addParamValue('pwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('attn', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('T', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('modamp', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('mwfreq', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+% tune picture evaluation
+pmain.addParamValue('tunepicscaling', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParamValue('tunebglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
+pmain.addParamValue('tunebgorder',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParamValue('tunepicsmoothing',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParamValue('dipmodel',[], @ischar);
+% spectrum integration
+pmain.addParamValue('intbglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
+pmain.addParamValue('intbgorder',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
+% add the name of the function
 pmain.FunctionName = 'spincounting';
-
-% define arguments passed on to lower-level functions
-% (only used to assign defaults for required input to functions. Low-level functions do 
-% their own sanity checks)
-% Currently none
 
 % parse input arguments
 pmain.parse(varargin{:});
-
-% parse input arguments of lower level structs, if needed
-% if exist('pmain.Results.qparams')
-%  pq.parse(pmain.Results.qparams)
-% else
-%  qparams = {}
-%  pq.parse(qparams{:})
-% end
-
 % and store the result in p
 p = pmain.Results;
-%% p.qparams = pq.Results
 
+%% LOAD DEFAULTS
+% initialise parameter struct
+sp = struct();
+% ignore rgain, nscans, tc unless someone sets them somewhere
+sp.rgain = 1;
+sp.nscans = 1;
+sp.tc = 1;
+
+% load confid
+scconfig
+% populate parameter struct
+for ii = 1:size(DEFAULTS,1)
+    sp.(DEFAULTS{ii,1}) = DEFAULTS{ii,2};
+end
+
+%% SET UP OUTPUT
 % get a filename for saving unless we're not supposed to
 if ~p.nosave
   % check if we're missing a filename
@@ -102,107 +134,181 @@ if ~p.nosave
   [path, file, extension] = fileparts(p.outfile);
   p.outfile = fullfile(path, file);
   % check if outfile exists or is a folder
-  switch exist([p.outfile extension])
-    case 2  % outfile exists and is a file
-        if ~p.clobber  % check if we can overwrite it
-            % warn and don't save
-            fprintf('\n\n');
-            warning('spincounting:FileExists', 'Output file exists, data will not be saved. Set "clobber" to override.\n');
-            p.nosave = true;
-        else
-            % warn and overwrite
-            fprintf('\n\n');
-            warning('spincounting:FileExists', 'Existing output files will be overwritten. Unset "clobber" to prevent this.\n');
-            fid = fopen([p.outfile extension], 'w');
-        end
-    case 7  % outfile exists and is a folder
-        % The user has messed up. Abort.
-        error('spincounting:FileIsFolder', 'Saving requested but output file is a folder. Abort.\n');
-    otherwise   % outfile does not exist
-        % good to go
-        fid = fopen([p.outfile extension], 'w');
+  if exist([p.outfile extension], 'file')
+    % warn
+    fprintf('\n\n');
+    warning('spincounting:FileExists', 'Existing output files will be overwritten.\n');
+    % remember the old diary file
+    olddiary = get(0,'DiaryFile');
+    % and overwrite diary file
+    delete([p.outfile extension]);
+    diary([p.outfile extension]);
+  else   % outfile does not exist
+    % remember the old diary file
+    olddiary = get(0,'DiaryFile');
+    % log all output to file
+    diary([p.outfile extension]);
   end
 else
   % warn the user that nothing is being saved
   warning('spincounting:NoSave', 'nosave option set, data is not being saved.\n');
 end
 
-% set mode
+%% SET OPERATION MODE
 if ~p.nospec
   if ~p.nspins
     if ~p.tfactor
-      MODE = 'integrate';
+      results.mode = 'integrate';
     else 
-      MODE = 'calc_spins';
+      results.mode = 'calc_spins';
     end
   else  
     if ~p.tfactor
-      MODE = 'calc_tfactor';
+      results.mode = 'calc_tfactor';
     else
-      MODE = 'check';
+      results.mode = 'check';
     end
   end
 else
-  MODE = 'none';
+  results.mode = 'none';
 end
 
 %% LOAD DATA %%
 % Load tune picture data
-%try
+% if ~p.q
+%   if islogical(p.tunefile)
+%     tdata = GetTuneFile(p.tunepicscaling);
+%   else
+%     tdata = GetTuneFile(p.tunepicscaling, p.tunefile);
+%   end
+% end
+
 if ~p.q
-  if ~p.tunefile
-    tunedata = GetTuneFile(p.tunepicscaling);
+  if islogical(p.tunefile)
+    tdata = GetFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS, 'Select a tune picture file:');
   else
-    tunedata = GetTuneFile(p.tunepicscaling, p.tunefile);
+    tdata = GetFile(TUNE_LOADFUNCTIONS, p.tunefile);
   end
 end
-%catch exception
-%end
 
-% Load spectrum file
-%try
+% % Load spectrum data
+% if ~p.nospec
+%   if islogical(p.specfile)
+%     [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS);
+%   else
+%     [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, {}, p.specfile);
+%   end
+%   % merge paramstruct sptemp into existing paramstruct sp
+%   fnames = fieldnames(sptemp);
+%   for ii = 1:length(fnames); sp.(fnames{ii}) = sptemp.(fnames{ii}); end
+% end
+
 if ~p.nospec
-  if ~p.specfile
-    [specdata, specparams] = GetSpecFile;
+  if islogical(p.specfile)
+    [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS, 'Select a spectrum file:');
   else
-    [specdata, specparams] = GetSpecFile(p.specfile);
+    [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, p.specfile);
   end
+  % merge paramstruct sptemp into existing paramstruct sp
+  fnames = fieldnames(sptemp);
+  for ii = 1:length(fnames); sp.(fnames{ii}) = sptemp.(fnames{ii}); end
 end
-%catch exception
-%end
 
-%% FIT TUNE & SPECTRUM DATA %%
-% fit the tune picture
-%try
+%% HANDLE FITTING AND INTEGRATION PARAMETERS %%
+
+% get parameters for tune picture fitting and put them into results struct
+if ~isempty(p.tunebglimits)
+    results.tune.background = p.tunebglimits;
+end
+if ~isempty(p.tunebgorder)
+    results.tune.order = p.tunebgorder;
+end
+if ~isempty(p.tunepicsmoothing)
+    results.tune.smoothing = p.tunepicsmoothing;
+end
+if ~isempty(p.dipmodel)
+    results.tune.dipmodel = p.dipmodel;
+end
+
+% get parameters for spectrum integration and put them into results struct
+if ~isempty(p.intbglimits)
+    results.spec.background = p.intbglimits;
+end
+if ~isempty(p.intbgorder)
+    results.spec.order = p.intbgorder;
+end
+
+%% CHECK PARAMETERS %%
+% parameters passed to the script explicitly override those read from
+% file / list of default values
+
+% tunepicscaling is needed for q
 if ~p.q
-  if isempty(p.qparams)
-    [fwhm, ~, tunebg, fit] = FitResDip(tunedata);
+    % override defaults/read-from-file
+    if ~isempty(p.tunepicscaling); sp.tunepicscaling = p.tunepicscaling; end
+    % check that we have a parameter
+    if ~isfield(sp, 'tunepicscaling'); error('missing tunepicscaling'); end
+    tdata(:,1) = tdata(:,1) * sp.tunepicscaling;
+end
+% unless we're doing nothing (nospec and q are set), we need the mw
+% frequency
+if ~(p.q && p.nospec)
+    if ~isempty(p.mwfreq); sp.mwfreq = p.mwfreq; end
+    if ~isfield(sp, 'mwfreq'); error('missing mwfreq'); end
+end
+% the rest is only important for normalisation
+if ~p.nospec
+    if ~isempty(p.T); sp.T = p.T; end
+    if ~isempty(p.modamp); sp.modamp = p.modamp; end
+    if ~isempty(p.pwr); sp.pwr = p.pwr; end
+    if ~isempty(p.attn); sp.attn = p.attn; end
+    if ~isempty(p.maxpwr); sp.maxpwr = p.maxpwr; end
+    if ~isempty(p.S); sp.S = p.S; end
+    if ~isempty(p.tc); sp.tc = p.tc; end
+    if ~isempty(p.rgain); sp.rgain = p.rgain; end
+    if ~isempty(p.nscans); sp.nscans = p.nscans; end
+    
+    if ~isfield(sp, 'T'); error('missing temperature'); end
+    if ~isfield(sp, 'S'); error('missing spin'); end
+    if ~isfield(sp, 'tc'); error('missing time constant'); end
+    if ~isfield(sp, 'rgain'); error('missing receiver gain'); end
+    if ~isfield(sp, 'nscans'); error('missing number of scans'); end
+    if ~isfield(sp, 'modamp'); error('missing modamp'); end
+    if ~isfield(sp, 'pwr')
+        if ~isfield(sp, 'attn') || ~isfield(sp, 'maxpwr')
+            error('pass pwr or maxpwr and attenuation');
+        else
+            sp.pwr = db2level(-sp.attn,sp.maxpwr);
+        end
+    end
+end
+
+
+%% FIT DIP & INTEGRATE SPECTRUM %%
+if ~p.q
+  if isfield(results,'tune')
+    [fwhm, ~, tunebg, fit] = FitResDip(tdata,results.tune);
   else
-    [fwhm, ~, tunebg, fit] = FitResDip(tunedata,p.qparams);
+    [fwhm, ~, tunebg, fit] = FitResDip(tdata);
   end
-  results.tune.data = tunedata;
-  results.tune.fit(:,1)   = tunedata(:,1);
+  results.tune.data = tdata;
+  results.tune.fit(:,1)   = tdata(:,1);
   results.tune.fit(:,2:4) = fit;
   results.tune.fwhm       = fwhm;
 end
-%catch exception
-%end
 
 % calculate number of spins from spectrum
-%try
 if ~p.nospec
-  if isempty(p.intparams)
-    [dint, specs, bgs, ~, specbg] = DoubleInt(specdata);
+  if isfield(results,'spec')
+    [dint, specs, bgs, ~, specbg] = DoubleInt(sdata, results.spec);
   else
-    [dint, specs, bgs, ~, specbg] = DoubleInt(specdata, p.intparams);
+    [dint, specs, bgs, ~, specbg] = DoubleInt(sdata);
   end
-  results.spec.data(:,1:2) = specdata;
+  results.spec.data(:,1:2) = sdata;
   results.spec.data(:,3:4) = specs(:,2:3);
   results.spec.bgs         = bgs;
   results.spec.dint        = dint;
 end
-%catch exception
-%end
 
 %% PLOT THE LOT %%
 % plot tune picture with background corrections and fit
@@ -213,25 +319,8 @@ if ~p.q
   else
     hTuneFigure = figure('name','TuneFigure', 'Visible', 'off');
   end
-  xlim = [min(tunedata(:,1)) max(tunedata(:,1))];
-  ylim = [1.1*min(tunedata(:,2)) 1.1*max([tunedata(:,2); fit(:,1); fit(:,2)])];
-  fill([tunedata(tunebg(1),1) tunedata(tunebg(1),1) tunedata(tunebg(2),1) tunedata(tunebg(2),1)], ...
-       [ylim(1) ylim(2) ylim(2) ylim(1)], ...
-       [.9 .9 .9],'EdgeColor','none');
-  hold on;
-  fill([tunedata(tunebg(3),1) tunedata(tunebg(3),1) tunedata(tunebg(4),1) tunedata(tunebg(4),1)], ...
-       [ylim(1) ylim(2) ylim(2) ylim(1)], ...
-       [.9 .9 .9],'EdgeColor','none');
-  hTunePlot(1) = plot(tunedata(:,1),tunedata(:,2));
-  hTunePlot(2) = plot(tunedata(:,1), fit(:,1));
-  hTunePlot(3) = plot(tunedata(:,1), fit(:,2));
-  set(hTunePlot(1), 'LineWidth', 1, 'LineStyle', '-', 'Color', [0 0 .8]);
-  set(hTunePlot(2), 'LineWidth', 2, 'LineStyle', '--', 'Color', [.8 0 0]);
-  set(hTunePlot(3), 'LineWidth', 1, 'LineStyle', '--', 'Color', [.8 0 0]);
-  set(gca,'Layer','top','YTickLabel','');
-  xlabel(gca, 'frequency / MHz');
-  axis([xlim ylim]);
-  hold off
+  hTuneAxes = axes('Parent',hTuneFigure);
+  PlotTuneFigure(hTuneAxes, tdata, fit, tunebg);
 end
 % plot spectrum with background corrections and integrals
 if ~p.nospec
@@ -241,151 +330,91 @@ if ~p.nospec
   else
     hSpecFigure = figure('name','SpecFigure', 'Visible', 'off');
   end
-  hSpecAxes(1) = axes('Tag', 'specaxes');
-  hSpecAxes(2) = axes('Tag', 'intaxes');
-
-  xlim = [min(specdata(:,1)) max(specdata(:,1))];
-  ylim1 = 1.1*[min([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)]) max([specdata(:,2);specs(:,2);bgs(:,2);bgs(:,3)])];
-  ylim2 = [min(specs(:,3)) - 0.1*max(specs(:,3)) 1.1*max(specs(:,3))];
-  set(hSpecAxes(1), 'Layer', 'top', ...
-  	                'Xlim', xlim, 'Ylim', ylim1, ...
-                    'XAxisLocation', 'Bottom', 'YAxisLocation', 'Left', ...
-                    'XColor', 'k', 'YColor', 'k');
-  xlabel(hSpecAxes(1), 'field / G');
-  ylabel(hSpecAxes(1), 'intensity / a.u.');
-  set(hSpecAxes(2), 'Position',get(hSpecAxes(1),'Position'), ...
-                    'Layer', 'top', ...
-                    'Xlim', xlim, 'Ylim', ylim2, ...
-                    'XAxisLocation', 'Top', 'YAxisLocation', 'Right', ...
-	                'XTickLabel', '', ...
-	                'Color', 'none', 'XColor', 'k', 'YColor', [.8 0 0]);
-  ylabel(hSpecAxes(2), 'double integral / a.u.');
-  linkaxes(hSpecAxes,'x');
-  set(hSpecAxes, 'nextplot','add');
-  fill([specdata(specbg(1),1) specdata(specbg(1),1) specdata(specbg(2),1) specdata(specbg(2),1)], ...
-       [ylim1(1) ylim1(2) ylim1(2) ylim1(1)], ...
-       [.9 .9 .9],'EdgeColor','none','parent',hSpecAxes(1));
-  fill([specdata(specbg(3),1) specdata(specbg(3),1) specdata(specbg(4),1) specdata(specbg(4),1)], ...
-       [ylim1(1) ylim1(2) ylim1(2) ylim1(1)], ...
-       [.9 .9 .9],'EdgeColor','none','parent',hSpecAxes(1));
-  hSpecPlot(1) = plot(specdata(:,1),specdata(:,2),'parent',hSpecAxes(1));
-  hSpecPlot(2) = plot(bgs(:,1), bgs(:,2),'parent',hSpecAxes(1));
-  hSpecPlot(3) = plot(specs(:,1),specs(:,2),'parent',hSpecAxes(1));
-  hSpecPlot(4) = plot(bgs(:,1),bgs(:,3),'parent',hSpecAxes(1));
-  hSpecPlot(5) = plot(specs(:,1),specs(:,3),'parent',hSpecAxes(2));
-  hSpecPlot(6) = plot(xlim,[0 0],'parent',hSpecAxes(2));
-  hSpecPlot(7) = plot(xlim,[specs(end,3) specs(end,3)],'parent',hSpecAxes(2));
-  set(hSpecPlot( 1:5     ), 'LineWidth', 1.5);
-  set(hSpecPlot([2 4 6 7]), 'LineStyle', ':');
-  set(hSpecPlot([1 2]), 'Color', [0 0 .8]);
-  set(hSpecPlot([3 4]), 'Color', [0 .6 0]);
-  set(hSpecPlot( 5   ), 'Color', [.8 0 0]);
-  set(hSpecPlot([6 7]), 'Color', 'k');
+  hSpecAxes(1) = axes('Tag', 'specaxes', 'Parent', hSpecFigure);
+  hSpecAxes(2) = axes('Tag', 'intaxes', 'Parent', hSpecFigure);
+  PlotSpecFigure(hSpecAxes, sdata, specbg, specs, bgs);
 end
 
 %% CALCULATE RESULTS AND OUTPUT
-% Calculate Q-factor, print fwhm, Q, double integral
+% Calculate Q-factor, print fwhm, Q
 if ~p.q
-  results.q = specparams.Frequency / fwhm / 1e6;
-  fprintf('\n\n\n\nTune picture background indices: [%i %i %i %i]\nSpectrum background indices: [%i %i %i %i]\n', ...
-          tunebg, specbg)
-  fprintf('\nFWHM: %.4f MHz\nq-factor: %.2f\nDouble integral: %g a.u.\n', ...
-          fwhm, results.q, dint)
+    fprintf('\n\n\nTune picture background indices: [%i %i %i %i]\n', tunebg);
+    if isfield(sp,'mwfreq')
+        results.q = sp.mwfreq / fwhm / 1e6;
+        fprintf('FWHM: %.4f MHz\nq-factor: %.2f\n', fwhm, results.q);
+    else
+        fprintf('FWHM: %.4f MHz\n', fwhm);
+        fprintf('Microwave frequency needed for q-factor calculation.\n');
+    end
 else
   results.q = p.q;
-  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\n', results.q, specbg, dint);
+  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', results.q);
 end
 
 if ~p.nospec
+  % print double integral and spec background indices
+  fprintf('\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\n', ...
+                specbg, dint);
   % set measurement parameters
   % calculate actual power from maxpwr and attenuation
-  results.pwr = p.maxpwr * 10^(-specparams.Attenuation/10);
-  % calculate Boltzmann population factor from constants and temperature
-  h = 6.62606957e-34; % Planck constant
-  k = 1.3806488e-23;  % Boltzmann constant
-  if ~isfield(specparams, 'Temperature'); specparams.Temperature = 300; end
-  results.nb = exp(h * specparams.Frequency / ( k * 300 )) * (300 / specparams.Temperature)
-  
+  sp.nb = PopulationDiff(sp.T, sp.mwfreq);
   % Calculate normalisation factor and print it with some info
-  fprintf('\nCalculating measurement-parameter-corrected (normalized) integral.\nUsing the following parameters:\n - bridge max power: %.2fW\n - temperature: %.0fK\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n', ...
-          p.maxpwr, specparams.Temperature, results.nb, p.S);
-  dintnorm = dint / (sqrt(results.pwr) * specparams.ModAmp * results.q * results.nb * p.S*(p.S+1));
-  fprintf('\nNormalized double integral = %g a.u.\n', dintnorm);
+  fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n - modulation amplitude: %.1f\n', ...
+          sp.maxpwr*1000, sp.attn, sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
 end
   
 if ~p.nosave
-% Summarize what we've done to logfile
-  fprintf(fid, 'spincounting v%s - %s\n', VERSION, datestr(clock));
-  if ~p.q
-    fprintf(fid, '\nTUNE PICTURE FITTING\nTune picture scaling: %e MHz/us\nTune picture background indices: [%i %i %i %i]\nFWHM: %.4f MHz\nq-factor: %.2f\n', ...
-            p.tunepicscaling, tunebg, fwhm, results.q);
-  else
-    fprintf(fid, '\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', results.q);
-  end
-  fprintf(fid, '\nSPECTRUM PROCESSING\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\nBridge max power: %.2fW\nTemperature: %.0fK\nBoltzmann population factor: %g\nSample spin: S = %.2f\nNormalized double integral = %g a.u.\n', specbg, dint, p.maxpwr, specparams.Temperature, results.nb, p.S, dintnorm);
   % save plots to file
+  outformat = ['-d' p.outformat];
   if ~p.q
     set(hTuneFigure,'PaperPositionMode','auto');
-    print(hTuneFigure, '-dpng', '-r300', strcat(p.outfile, '_tune_picture.png'));
-    fprintf(fid, '\nTune figure saved to %s. ', [p.outfile, '_tune_picture.png']);
+    print(hTuneFigure, outformat, '-r300', strcat(p.outfile, '_tune_picture'));
+    fprintf('\nTune figure saved to %s. ', [p.outfile, '_tune_picture.', p.outformat, '\n']);
   end
   set(hSpecFigure,'PaperPositionMode','auto');
-  print(hSpecFigure, '-dpng', '-r300', strcat(p.outfile, '_spectrum.png'));
-  fprintf(fid, 'Double integration figure saved to %s\n', [p.outfile, '_spectrum.png']);
+  print(hSpecFigure, outformat, '-r300', strcat(p.outfile, '_spectrum'));
+  fprintf('Double integration figure saved to %s\n', [p.outfile, '_spectrum.', p.outformat, '\n']);
 end
 
 
 %% MODE_DEPENDENT ACTIONS
-if ~p.nospec
-  switch MODE
-  case 'none' % only determine q
-    fprintf('\nDone.\nNo spin counting requested.\n');
-    nspins = NaN;
-    tfactor = NaN;
-    dintnorm = NaN;
-    if ~p.nosave
-      fprintf(fid, '\nNo spincounting requested.\n');
-    end
-  case 'integrate' % no further action
-    fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
-    nspins = NaN;
-    tfactor = NaN;
-    if ~p.nosave
-      fprintf(fid, '\nTo calculate absolute number of spins, call spincounting with the "tfactor" option.\nTo calculate the transfer factor, call spincounting with the "nspins" option.\n');
-    end
-  case 'calc_spins' % calculate nspins from tfactor
-    nspins = p.tfactor * dintnorm;
-    tfactor = p.tfactor;
-    fprintf('\nCalculating number of spins.\nUsing transferfactor %e.\nNumber of spins in sample: %e\n', ...
-            tfactor, nspins);
-    if ~p.nosave
-      fprintf(fid, '\nUsing transferfactor %e.\nCalculated number of spins in sample: %e\n', tfactor, nspins);
-    end
-  case 'calc_tfactor' % calculate tfactor from nspins
-    tfactor = p.nspins / dintnorm;
-    nspins = p.nspins;
-    fprintf('\nUsing %e spins.\nThe integrated spectrum shows %e spins per a.u.\nSpectrometer transfer factor: # spins = %e * double integral\n', ...
-            nspins, nspins/dintnorm, tfactor);
-    if ~p.nosave
-      fprintf(fid, '\nUsing %e spins.\nThe integrated spectrum shows %e spins per a.u.\nSpectrometer transfer factor: # spins = %e * double integral\n', ...
-              nspins, nspins/dintnorm, tfactor);
-    end
-  case 'check' % check calculated against given nspins
-    nspins = p.tfactor * dintnorm;
-    nspinserror = abs(nspins - p.nspins)/ nspins *100;
-    tfactor = p.nspins / dintnorm;
-    fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
-            nspinserror, tfactor);
-    if ~p.nosave
-      fprintf(fid, '\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
-              nspinserror, tfactor);
-    end
-  end
+switch results.mode
+    case 'none' % only determine q
+        fprintf('\nDone.\nNo spin counting requested.\n');
+        nspins = NaN;
+        tfactor = NaN;
+        dint = NaN;
+    case 'integrate' % no further action
+        fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
+        nspins = NaN;
+        tfactor = NaN;
+    case 'calc_spins' % calculate nspins from tfactor
+        nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        tfactor = p.tfactor;
+        fprintf('\nUsing transferfactor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
+                tfactor, nspins);
+    case 'calc_tfactor' % calculate tfactor from nspins
+        tfactor = CalcSpins(dint, p.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        nspins = p.nspins;
+        fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transferfactor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
+                nspins, tfactor, tfactor);
+    case 'check' % check calculated against given nspins
+        nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        nspinserror = abs(nspins - p.nspins)/ nspins * 100;
+        tfactor = CalcSpins(dint, p.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
+                nspinserror, tfactor);
 end
+results.nspins = nspins;
+results.tfactor = tfactor;
+results.dint = dint;
+results.params = sp;
+
 %% CLEANUP AND EXIT
-% close files
 if ~p.nosave
-  fclose(fid);
+  % end diary and reset DiaryFile to what it was
+  diary off;
+  set(0,'DiaryFile', olddiary);
 end
 
 % ... and the rest is silence
