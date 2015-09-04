@@ -1,8 +1,6 @@
 function [ data, pars ] = LoadMat(filename)
 % load data from .mat-file
 %
-% VERSION 1.0
-% 
 % USAGE:
 % [data, pars] = LoadMat(filename)
 

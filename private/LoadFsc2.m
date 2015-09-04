@@ -1,8 +1,6 @@
 function [ data, pars] = LoadFsc2(filename)
 % load data from various FU Berlin fsc2  ascii files
 %
-% VERSION 1.0
-%
 % USAGE:
 % data = LoadFsc2(filename)
 % [data, pars] = LoadFsc2(filename)

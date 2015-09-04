@@ -1,8 +1,6 @@
 function [ data, pars ] = LoadSCFormat(filename)
 % load data from scspec-formatted ascii file
 %
-% VERSION 1.0
-%
 % USAGE:
 % data = LoadSCFormat(filename)
 % [data, pars] = LoadSCFormat(filename)
