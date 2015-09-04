@@ -89,16 +89,5 @@ else
     specs(:,3) = cumtrapz(specs(:,1),specs(:,2));
 end
 
-% if there is a third value in 'order'
-if length(p.Results.order) == 3 % CURRENTLY DEACTIVATED
-    % perform third bg correction after second integration
-    params(:,3) = polyfit(specs([background(1):background(2) background(3):background(4)],1), ...
-                          specs([background(1):background(2) background(3):background(4)],3),p.Results.order(3));
-    bgs(:,4) = polyval(params(:,3),bgs(:,1));
-    specs(:,4) = specs(:,3) - bgs(:,4);
-    % then calculate doubleint
-    doubleint = specs(background(3),4) - specs(background(2),4);
-else
-    % else calculate doubleint directly
-    doubleint = specs(background(3),3) - specs(background(2),3);
-end
+% calculate second integral
+doubleint = specs(background(3),3) - specs(background(2),3);
