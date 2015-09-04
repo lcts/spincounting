@@ -1,4 +1,4 @@
-CHANGES FROM PREVIOUS VERSION
+CHANGES FROM PREVIOUS VERSION v1.2.3
 
 CAUTION: THIS RELEASE CHANGES THE API. YOU WILL HAVE TO ADAPT YOUR SCRIPTS.
 
@@ -12,5 +12,5 @@ v2.0.0
  - universal interface for new loading functions
  - extended documentation
  - CAUTION: Some syntax changes: intparams.optionname & qparams.optionname replaced by direct options
- - CAUTION: tfactor's definition is changed to follow convention in literature
-            tfactor_new = 1/tfactor_old
+ - CAUTION: tfactor's definition is changed to follow convention in literature (DI = tfactor * constants * spins)
+            tfactor_new = 1 / tfactor_old
