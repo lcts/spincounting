@@ -3,36 +3,29 @@ function [nspins, tfactor, results] = spincounting(varargin)
 %
 % USAGE:
 % spincounting
-% nspins = spincounting
-% nspins = spincounting('Option', Value, ...)
-% nspins = spincounting(struct)
-% [nspins, tfactor, results] = spincounting(___)
+% nspins = spincounting('tfactor',<value>)
+% [ ~, tfactor] = spincounting('nspins', <value>)
+% [nspins, tfactor, results] = spincounting(___, '<option>', <value>)
+% [nspins, tfactor, results] = spincounting(struct)
 %
-% All options can be given as either Option-Value pairs or in the form of a struct
-% with struct.<Option> = <Value>
-%
-% 
 % OPTIONS:
-% Files
 % tunefile         : string, tune picture file, default: Prompt
 % specfile         : string, spectrum file, default: Prompt
 % outfile          : string, output files, default: Prompt
 % outformat        : string, output format for plots, default: 'pdf'
 % nosave           : boolean, don't save anything if true, default: false
 %
-% Program behaviour
+% nspins           : float, # of spins in sample, default: false
+% tfactor          : float, spectrometer transfer factor, default: false
 % nospec           : boolean, only determine q, default: false
 % noplot           : boolean, do not display plots. They are still generated 
 %                    and saved, default: false
-% nspins           : float, # of spins in sample, default: false
-% tfactor          : float, spectrometer transfer factor, default: false
 % q                : float, quality factor q. Setting this disables all q-factor 
 %                    calculation related functionality, default: false
 %
-% Measurement/sample parameters
 % S                : float, spin of sample, default: 1/2
-% maxpwr           : float, maximum microwave power in mW, default: 200mW
-% gain             : float, receiver gain factor, default: 1
+% maxpwr           : float, maximum microwave power in W, default: 0.2W
+% rgain            : float, receiver gain factor, default: 1
 % tc               : float, time constant in ms, default: 1
 % nscans           : integer, # of scans, default: 1
 % pwr              : float, microwave power in mW
@@ -41,17 +34,18 @@ function [nspins, tfactor, results] = spincounting(varargin)
 % modamp           : float, modulation amplitude in G
 % mwfreq           : float, microwave frequency in Hz
 %
-% Tune picture evaluation
 % tunepicscaling   : float, scaling of the tune picture in MHz/s, default: 6,94e4
 % tunebglimits     : 1x4 integer, indices of background, default: auto
 % tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
 % tunebgorder      : integer, order of background correction used, default 3
 % dipmodel         : string, model used for dip fitting, default: lorentz
 %
-% Integration
 % intbglimits      : 1x4 integer, indices of background, default: auto
 % intbgorder       : integer, order of background correction used, # of elements
-%                    determines # of steps, default [3 3]
+%                    determines # of steps, default [1 3]
+%
+% All options can be given as either Option-Value pairs or in the form of a struct
+% with struct.<Option> = <Value>
 %
 % OUTPUTS:
 % nspins  : calculated number of spins (returns NaN if transfer factor unknown)
@@ -60,15 +54,13 @@ function [nspins, tfactor, results] = spincounting(varargin)
 % results : a structure containing internal parameters including the various fits, backgrounds and spectra
 %           the quality factor and double integrals
 %
-% Further help in the README
+% Further help in the documentation folder
 %
 
 %% VERSION AND INFO
 VERSION = '1.3';
 fprintf('\nspincouting v%s\n\n', VERSION);
 fprintf('This is a development release.\n\n');
-
-TUNE_PIC_SCALING = 6.94e4; % MHz/s
 
 %% INPUT HANDLING
 % define input arguments
@@ -88,7 +80,7 @@ pmain.addParamValue('q', false, @(x)validateattributes(x,{'numeric'},{'positive'
 % measurement parameters (override those read from file or set by default)
 pmain.addParamValue('S', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('maxpwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('gain', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParamValue('rgain', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tc', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('nscans', [], @(x)validateattributes(x,{'numeric'},{'positive','integer'}));
 pmain.addParamValue('pwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
@@ -97,7 +89,7 @@ pmain.addParamValue('T', [], @(x)validateattributes(x,{'numeric'},{'positive','s
 pmain.addParamValue('modamp', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('mwfreq', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 % tune picture evaluation
-pmain.addParamValue('tunepicscaling', TUNE_PIC_SCALING, @(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParamValue('tunepicscaling', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tunebglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
 pmain.addParamValue('tunebgorder',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tunepicsmoothing',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
@@ -116,6 +108,11 @@ p = pmain.Results;
 %% LOAD DEFAULTS
 % initialise parameter struct
 sp = struct();
+% ignore rgain, nscans, tc unless someone sets them somewhere
+sp.rgain = 1;
+sp.nscans = 1;
+sp.tc = 1;
+
 % load confid
 scconfig
 % populate parameter struct
@@ -178,29 +175,39 @@ end
 
 %% LOAD DATA %%
 % Load tune picture data
+% if ~p.q
+%   if islogical(p.tunefile)
+%     tdata = GetTuneFile(p.tunepicscaling);
+%   else
+%     tdata = GetTuneFile(p.tunepicscaling, p.tunefile);
+%   end
+% end
+
 if ~p.q
   if islogical(p.tunefile)
-    tdata = GetTuneFile(p.tunepicscaling);
+    tdata = GetFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS, 'Select a tune picture file:');
   else
-    tdata = GetTuneFile(p.tunepicscaling, p.tunefile);
+    tdata = GetFile(TUNE_LOADFUNCTIONS, p.tunefile);
   end
 end
 
-% if ~p.q
-%   if islogical(p.tunefile)
-%     tdata = GettuneFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS);
+% % Load spectrum data
+% if ~p.nospec
+%   if islogical(p.specfile)
+%     [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS);
 %   else
-%     tdata = GetTuneFile(TUNE_LOADFUNCTIONS, {}, p.specfile);
+%     [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, {}, p.specfile);
 %   end
-%   tdata(:,1) = tdata(:,1) * p.tunepicscaling;
+%   % merge paramstruct sptemp into existing paramstruct sp
+%   fnames = fieldnames(sptemp);
+%   for ii = 1:length(fnames); sp.(fnames{ii}) = sptemp.(fnames{ii}); end
 % end
 
-% Load spectrum data
 if ~p.nospec
   if islogical(p.specfile)
-    [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS);
+    [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS, 'Select a spectrum file:');
   else
-    [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, {}, p.specfile);
+    [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, p.specfile);
   end
   % merge paramstruct sptemp into existing paramstruct sp
   fnames = fieldnames(sptemp);
@@ -231,16 +238,26 @@ if ~isempty(p.intbgorder)
     results.spec.order = p.intbgorder;
 end
 
-%% HANDLE PARAMETERS FOR NORMALISATION %%
-% frequency is needed for q as well
+%% CHECK PARAMETERS %%
+% parameters passed to the script explicitly override those read from
+% file / list of default values
+
+% tunepicscaling is needed for q
+if ~p.q
+    % override defaults/read-from-file
+    if ~isempty(p.tunepicscaling); sp.tunepicscaling = p.tunepicscaling; end
+    % check that we have a parameter
+    if ~isfield(sp, 'tunepicscaling'); error('missing tunepicscaling'); end
+    tdata(:,1) = tdata(:,1) * sp.tunepicscaling;
+end
+% unless we're doing nothing (nospec and q are set), we need the mw
+% frequency
 if ~(p.q && p.nospec)
     if ~isempty(p.mwfreq); sp.mwfreq = p.mwfreq; end
     if ~isfield(sp, 'mwfreq'); error('missing mwfreq'); end
 end
 % the rest is only important for normalisation
 if ~p.nospec
-    % parameters passed to the script explicitly override those read from
-    % file / list of default values
     if ~isempty(p.T); sp.T = p.T; end
     if ~isempty(p.modamp); sp.modamp = p.modamp; end
     if ~isempty(p.pwr); sp.pwr = p.pwr; end
@@ -248,17 +265,20 @@ if ~p.nospec
     if ~isempty(p.maxpwr); sp.maxpwr = p.maxpwr; end
     if ~isempty(p.S); sp.S = p.S; end
     if ~isempty(p.tc); sp.tc = p.tc; end
-    if ~isempty(p.gain); sp.gain = p.gain; end
+    if ~isempty(p.rgain); sp.rgain = p.rgain; end
     if ~isempty(p.nscans); sp.nscans = p.nscans; end
     
-    % some parameters have to be known, throw error if missing
     if ~isfield(sp, 'T'); error('missing temperature'); end
+    if ~isfield(sp, 'S'); error('missing spin'); end
+    if ~isfield(sp, 'tc'); error('missing time constant'); end
+    if ~isfield(sp, 'rgain'); error('missing receiver gain'); end
+    if ~isfield(sp, 'nscans'); error('missing number of scans'); end
     if ~isfield(sp, 'modamp'); error('missing modamp'); end
     if ~isfield(sp, 'pwr')
         if ~isfield(sp, 'attn') || ~isfield(sp, 'maxpwr')
             error('pass pwr or maxpwr and attenuation');
         else
-            sp.pwr = sp.maxpwr * 10^(-sp.attn/10);
+            sp.pwr = db2level(-sp.attn,sp.maxpwr);
         end
     end
 end
@@ -339,8 +359,8 @@ if ~p.nospec
   % calculate actual power from maxpwr and attenuation
   sp.nb = PopulationDiff(sp.T, sp.mwfreq);
   % Calculate normalisation factor and print it with some info
-  fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %f mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n - modulation amplitude: %.1f\n', ...
-          sp.maxpwr, sp.attn, sp.pwr, sp.T, sp.nb, sp.S, sp.modamp);
+  fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n - modulation amplitude: %.1f\n', ...
+          sp.maxpwr*1000, sp.attn, sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
 end
   
 if ~p.nosave
@@ -369,19 +389,19 @@ switch results.mode
         nspins = NaN;
         tfactor = NaN;
     case 'calc_spins' % calculate nspins from tfactor
-        nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         tfactor = p.tfactor;
         fprintf('\nUsing transferfactor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
                 tfactor, nspins);
     case 'calc_tfactor' % calculate tfactor from nspins
-        tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        tfactor = CalcSpins(dint, p.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         nspins = p.nspins;
         fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transferfactor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
                 nspins, tfactor, tfactor);
     case 'check' % check calculated against given nspins
-        nspins = CalcSpins(dint, p.tfactor, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         nspinserror = abs(nspins - p.nspins)/ nspins * 100;
-        tfactor = CalcSpins(dint, p.nspins, sp.gain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        tfactor = CalcSpins(dint, p.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
                 nspinserror, tfactor);
 end

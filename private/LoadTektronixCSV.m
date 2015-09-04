@@ -10,4 +10,4 @@ function [ data, pars ] = LoadTektronixCSV(filename)
 data = dlmread(filename,',',0,3); % data is in ,-separated columns 3-4, read those
 data = data(:,1:2);
 % there are no parameters to be read
-pars = [];
+pars = struct();

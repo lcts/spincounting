@@ -30,7 +30,8 @@ frewind(fid);
 %
 % generate some index counters
 jj = 0; ll = 0; linenumber = 0;
-% initialise temporary variables and flags
+% initialise parameter struct
+pars = struct();
 % loop through lines in file
 while ~feof(fid)       % while not at end of file
     line = fgetl(fid); % get a new line, including \n

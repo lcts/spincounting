@@ -30,4 +30,15 @@ v1.2.1
 v1.2.2
  - fixed wrong frequency scaling for dat2-files in GetSpecFile.m
  - added examples to README
-
+v1.4
+ - near-complete overhaul
+ - improved background fitting and choice of default values
+ - more paramters taken into account
+ - new file formats (Bruker Xepr, MatLab .mat, struct input, generic ascii)
+ - all parameters can be set via input option or read from file
+ - new configuration file to set defaults
+ - universal interface for new loading functions
+ - extended documentation
+ - CAUTION: Some syntax changes: intparams.optionname & qparams.optionname replaced by direct options
+ - CAUTION: tfactor's definition is changed to follow convention in literature
+            tfactor_new = 1/tfactor_old

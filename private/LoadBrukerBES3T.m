@@ -18,6 +18,7 @@ data = [ datax datay ];
 % scans are already normalised in Xepr files
 pars.mwfreq = paramstemp.MWFQ;
 pars.attn = str2double(paramstemp.PowerAtten(1:end-2));
+pars.pwr = paramstemp.MWPW;
 pars.modamp = str2double(paramstemp.ModAmp(1:end-1));
 if isfield(paramstemp,'Temperature')
     pars.T = str2double(paramstemp.Temperature(1:end-1));

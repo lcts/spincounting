@@ -22,7 +22,9 @@
 % Empty lines are OK too, they are ignored:
 
 % Everything else is data. You can store your data as either two rows or two columns, the first of which contains
-% the field axis, the second the ESR signal.
+% the field axis, the second the ESR signal. Any format that the matlab load()-function can read is fine, which in
+% my experience means that it does not matter one bit what you use as delimiters and as number format - they all work.
+% If they don't, write your own loading routine based on the matlab dlmread() function.
 3250 -0.000183106000000000
 3250.20000000000 -0.000200273000000000
 3250.40000000000 -0.000200273000000000

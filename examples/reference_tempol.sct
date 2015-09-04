@@ -1,3 +1,6 @@
+% the .sct format is identical to .scs, see that example file for details
+% currently, no parameters have to be read from the tune file, so there aren't
+% any here.
 -0.000020000000 -4.56000,
 -0.000019800000 -4.56000,
 -0.000019600000 -4.72000,
