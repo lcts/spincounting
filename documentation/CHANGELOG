@@ -30,8 +30,9 @@ v1.2.1
 v1.2.2
  - fixed wrong frequency scaling for dat2-files in GetSpecFile.m
  - added examples to README
+v1.2.3
+ - fixed error when using different orders for first and second bg correction in DoubleInt
 v2.0
- - near-complete overhaul
  - improved background fitting and choice of default values
  - more paramters taken into account
  - new file formats (Bruker Xepr, MatLab .mat, struct input, generic ascii)
@@ -42,4 +43,3 @@ v2.0
  - CAUTION: Some syntax changes: intparams.optionname & qparams.optionname replaced by direct options
  - CAUTION: tfactor's definition is changed to follow convention in literature (DI = tfactor * constants * spins)
             tfactor_new = 1/tfactor_old
-v2.1
