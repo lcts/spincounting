@@ -58,7 +58,7 @@ function [nspins, tfactor, results] = spincounting(varargin)
 %
 
 %% VERSION AND INFO
-VERSION = '2.0.0-git';
+VERSION = '2.0-git';
 fprintf('\nspincouting v%s\n\n', VERSION);
 
 %% INPUT HANDLING

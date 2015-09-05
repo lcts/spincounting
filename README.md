@@ -10,7 +10,7 @@ This MatLab toolbox is designed to facilitate and automate the evaluation of qua
 
 ### System Requirements
  * MatLab 2012 or later
- * Optimisation Toolbox (for functions polyfit() and lsqcurvefit())
+ * Curve Fitting Toolbox (for functions polyfit() and lsqcurvefit())
  * For use with Bruker Xepr data files, [easyspin](http://easyspin.org) is needed as well.
 
 ### Versions
