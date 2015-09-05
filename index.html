@@ -48,19 +48,19 @@
 <p>There have been some changes to the API that require you to update your scripts:</p>
 
 <ul>
-<li>tfactor's definition changed (it now follows the definition in <a href="https://www.springer.com/us/book/9783211929476">Eaton &amp; Eaton - Quantitative EPR</a>). Adapt your old calibration factors according to tfactor_v2 = 1 / tfactor_v2 .</li>
+<li>tfactor's definition changed (it now follows the definition in <a href="https://www.springer.com/us/book/9783211929476">Eaton &amp; Eaton - Quantitative EPR</a>). Adapt your old calibration factors according to <code>tfactor_v2 = 1 / tfactor_v2</code>.</li>
 <li>the parameter structs intparams and qparams have been replaced by individual options
 
 <ul>
-<li>qparams.background → tunebglimits</li>
-<li>qparams.smoothing → tunepicsmoothing</li>
-<li>qparams.order → tunebgorder</li>
-<li>qparams.dipmodel → dipmodel</li>
-<li>intparams.background → intbglimits</li>
-<li>intparams.order → intbgorder</li>
+<li><code>qparams.background</code> → <code>tunebglimits</code></li>
+<li><code>qparams.smoothing</code> → <code>tunepicsmoothing</code></li>
+<li><code>qparams.order</code> → <code>tunebgorder</code></li>
+<li><code>qparams.dipmodel</code> → <code>dipmodel</code></li>
+<li><code>intparams.background</code> → <code>intbglimits</code></li>
+<li><code>intparams.order</code>> → <code>intbgorder</code></li>
 </ul>
 </li>
-<li>the default order for background correction during integration is now [1 3]</li>
+<li>the default order for background correction during integration is now <code>[1 3]</code></li>
 </ul>
 </blockquote>
 
@@ -92,26 +92,15 @@
 <h3>
 <a id="development-versions" class="anchor" href="#development-versions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Development versions</h3>
 
-<p>There are two development versions available:</p>
-
-<ul>
-<li><p>Dev version of the current stable version (v2.0.x). Contains all the latest bugfixes, but might not be entirely stable - Download | <a href="https://github.com/lcts/spincounting/zipball/master">.zip</a> | <a href="https://github.com/lcts/spincounting/tarball/master">.tar.gz</a> |</p></li>
-<li><p>Dev version of the current development version (v2.1). Contains all the newest features, but is very untested - Download | <a href="https://github.com/lcts/spincounting/zipball/develop"> .zip</a> | <a href="https://github.com/lcts/spincounting/tarball/develop">.tar.gz</a> |</p></li>
-</ul>
-
-<p>If you want to stay up-to-date with development, I suggest you use git:</p>
-
-<p><code>git clone http://github.com/lcts/spincounting</code> (v2.0.x)</p>
-
-<p><code>git clone http://github.com/lcts/spincounting --branch develop</code> (v2.1)</p>
+<p>Page for dev versions coming soon.</p>
 
 <h2>
 <a id="installation--first-steps" class="anchor" href="#installation--first-steps" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation &amp; first steps</h2>
 
-<p>Extract the downloaded archive to any location on your computer, and add that location to your MatLab search path. (In MatLab -&gt; 'Set Path ...' or by editing MatLab's pathdef.m). The toolbox can be invoked by typing 'spincounting' on the MatLab command line. Further information/documentation can be found in the README file and in the functions themselves.</p>
+<p>Extract the downloaded archive to any location on your computer, and add that location to your MatLab search path. (In MatLab → 'Set Path ...' or by editing MatLab's <i>pathdef.m</i>). The toolbox can be invoked by typing <code>spincounting</code> on the MatLab command line. Further information can be found in the <i>documentation/</i> and <i>examples/</i> subfolders.</p>
 
 <h2>
-<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h2>
+<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contact and Support</h2>
 
 <p>Having trouble? Questions? Requests? Contact me and I’ll try to help you sort it out.</p>
 
