@@ -12,7 +12,7 @@
   <body>
     <section class="page-header">
       <h1 class="project-name">Spincounting</h1>
-      <h2 class="project-tagline">A ESR spincounting script for MATLAB</h2>
+      <h2 class="project-tagline">A MatLab program for quantitative EPR - current version: v2.0.0</h2>
       <a href="https://github.com/lcts/spincounting" class="btn">View on GitHub</a>
       <a href="https://github.com/lcts/spincounting/zipball/master" class="btn">Download .zip</a>
       <a href="https://github.com/lcts/spincounting/tarball/master" class="btn">Download .tar.gz</a>
@@ -20,62 +20,98 @@
 
     <section class="main-content">
       <h2>
-<a id="this-software-is-still-under-development" class="anchor" href="#this-software-is-still-under-development" aria-hidden="true"><span class="octicon octicon-link"></span></a>This software is still under development</h2>
+<a id="new-version-released---v200" class="anchor" href="#new-version-released---v200" aria-hidden="true"><span class="octicon octicon-link"></span></a>New version released - v2.0.0</h2>
+
+<p><strong>Major new features</strong></p>
+
+<ul>
+<li>full support for Bruker Xepr format</li>
+<li>new interface allows users to easily implement their own data formats</li>
+<li>improved background fitting</li>
+<li>all parameters influencing EPR signal intensity can now be set as options</li>
+</ul>
+
+<p><strong>Documentation</strong></p>
+
+<ul>
+<li>the README has been extended and brought up-to-date </li>
+<li>toolbox now includes examples, testfiles and templates</li>
+</ul>
+
+<p>See the <a href="changelog.html"><strong>Changelog</strong></a> for details.</p>
 
 <h3>
-<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h3>
+<a id="important-note-to-users-of-v1x" class="anchor" href="#important-note-to-users-of-v1x" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>Important note to users of v1.x</strong>
+</h3>
+
+<blockquote>
+<p>There have been some changes to the API that require you to update your scripts:</p>
+
+<ul>
+<li>tfactor's definition changed (it now follows the definition in <a href="https://www.springer.com/us/book/9783211929476">Eaton &amp; Eaton - Quantitative EPR</a>). Adapt your old calibration factors according to tfactor_v2 = 1 / tfactor_v2 .</li>
+<li>the parameter structs intparams and qparams have been replaced by individual options
+
+<ul>
+<li>qparams.background → tunebglimits</li>
+<li>qparams.smoothing → tunepicsmoothing</li>
+<li>qparams.order → tunebgorder</li>
+<li>qparams.dipmodel → dipmodel</li>
+<li>intparams.background → intbglimits</li>
+<li>intparams.order → intbgorder</li>
+</ul>
+</li>
+<li>the default order for background correction during integration is now [1 3]</li>
+</ul>
+</blockquote>
+
+<h2>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h2>
 
 <p>This MatLab toolbox is designed to facilitate and automate the evaluation of quantitative EPR data. In can be used both to calibrate an EPR spectrometer for future quantitative measurements and to calculate the number of spins from a spectrum obtained on a calibrated machine.</p>
 
 <p>Additionally, when given a file containing a tune picture, it can perform automatic calculation of the quality factor Q.</p>
 
-<h3>
-<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h3>
-
-<ul>
-<li>spincounting v1.5
+<h2>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h2>
 
 <ul>
 <li>MatLab 2012 or later</li>
-<li>tested on MatLab 2013b and Matlab 2015</li>
+<li>MatLab Curve Fitting Toolbox</li>
+<li>
+<a href="www.easyspin.org">easyspin</a>'s eprload() function for import of Bruker Xepr files</li>
 </ul>
-</li>
-</ul>
+
+<h2>
+<a id="versions" class="anchor" href="#versions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Versions</h2>
 
 <h3>
-<a id="versions" class="anchor" href="#versions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Versions</h3>
+<a id="release-versions" class="anchor" href="#release-versions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Release Versions</h3>
 
-<p>The current stable release version is v1.5. It can be downloaded from the link above.</p>
-
-<p>The current development release is v2.0. It is available here.
-
-<p>Or you can use the git version:</p>
-
-<ul>
-<li>Current stable branch:</li>
-</ul>
-
-<p><code>git clone http://github.com/lcts/spincounting</code></p>
-
-<ul>
-<li>Only released versions:</li>
-</ul>
-
-<p><code>git clone http://github.com/lcts/spincounting --branch release</code></p>
-
-<ul>
-<li>Development branch:</li>
-</ul>
-
-<p><code>git clone http://github.com/lcts/spincounting --branch develop</code></p>
+<p>The current stable release version is v2.0.0. It can be downloaded from the links above. Previous releases are available on the <a href="https://github.com/lcts/spincounting/releases">Releases</a> page.</p>
 
 <h3>
-<a id="installation--first-steps" class="anchor" href="#installation--first-steps" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation &amp; first steps</h3>
+<a id="development-versions" class="anchor" href="#development-versions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Development versions</h3>
+
+<p>There are two development versions available:</p>
+
+<ul>
+<li><p>Dev version of the current stable version (v2.0.x). Contains all the latest bugfixes, but might not be entirely stable - Download | <a href="https://github.com/lcts/spincounting/zipball/master">.zip</a> | <a href="https://github.com/lcts/spincounting/tarball/master">.tar.gz</a> |</p></li>
+<li><p>Dev version of the current development version (v2.1). Contains all the newest features, but is very untested - Download | <a href="https://github.com/lcts/spincounting/zipball/develop"> .zip</a> | <a href="https://github.com/lcts/spincounting/tarball/develop">.tar.gz</a> |</p></li>
+</ul>
+
+<p>If you want to stay up-to-date with development, I suggest you use git:</p>
+
+<p><code>git clone http://github.com/lcts/spincounting</code> (v2.0.x)</p>
+
+<p><code>git clone http://github.com/lcts/spincounting --branch develop</code> (v2.1)</p>
+
+<h2>
+<a id="installation--first-steps" class="anchor" href="#installation--first-steps" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation &amp; first steps</h2>
 
 <p>Extract the downloaded archive to any location on your computer, and add that location to your MatLab search path. (In MatLab -&gt; 'Set Path ...' or by editing MatLab's pathdef.m). The toolbox can be invoked by typing 'spincounting' on the MatLab command line. Further information/documentation can be found in the README file and in the functions themselves.</p>
 
-<h3>
-<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<h2>
+<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h2>
 
 <p>Having trouble? Questions? Requests? Contact me and I’ll try to help you sort it out.</p>
 
