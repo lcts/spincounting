@@ -72,23 +72,26 @@ if ~p.Results.background
     background(2) = background(1)+ceil(length(data(:,1))*0.2);
     background(3) = background(4)-ceil(length(data(:,1))*0.2);
     % and warn the user that he should check the choice is OK.
-    warning('FitResDip:UsingDefaultBG', 'Dip autodetection failed, using default background area. Use option "background" to override.')
+    warning('FitResDip:UsingDefaultBG', 'Dip autodetection failed, using default background area. Use option "tunebglimits" to override.')
   else % else we're good.
     % fit the background using the detected minima
     background(2) = mintab(1,1);
     background(3) = mintab(3,1);
   end
 else
+  % convert from values to indices
   background = iof(p.Results.data(:,1),p.Results.background);
   BGINVALID = false;
+  % sanity checks
   for i = 3:-1:1
+    % background indices should be ordered
     if background(i) > background(i+1)
       background(i) = background(i+1);
       BGINVALID = true;
     end
   end
   if BGINVALID
-    warning('DoubleInt:BGInvalid','Invalid background. Set to [%i %i %i %i].\n\n', background(1), background(2),background(3),background(4));
+    warning('FitResDip:BGInvalid','Invalid background indices. Set to [%i %i %i %i].\n\n', background(1), background(2),background(3),background(4));
   end
 end
 
