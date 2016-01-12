@@ -43,3 +43,6 @@ v2.0
  - CAUTION: Some syntax changes: intparams.optionname & qparams.optionname replaced by direct options
  - CAUTION: tfactor's definition is changed to follow convention in literature (DI = tfactor * constants * spins)
             tfactor_new = 1/tfactor_old
+v2.1
+ - fixed in loading functions: variable for parameters in struct/mat-file is 'params', not 'pars'
+ 

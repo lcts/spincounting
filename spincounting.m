@@ -174,14 +174,6 @@ end
 
 %% LOAD DATA %%
 % Load tune picture data
-% if ~p.q
-%   if islogical(p.tunefile)
-%     tdata = GetTuneFile(p.tunepicscaling);
-%   else
-%     tdata = GetTuneFile(p.tunepicscaling, p.tunefile);
-%   end
-% end
-
 if ~p.q
   if islogical(p.tunefile)
     tdata = GetFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS, 'Select a tune picture file:');
@@ -191,17 +183,6 @@ if ~p.q
 end
 
 % % Load spectrum data
-% if ~p.nospec
-%   if islogical(p.specfile)
-%     [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS);
-%   else
-%     [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, {}, p.specfile);
-%   end
-%   % merge paramstruct sptemp into existing paramstruct sp
-%   fnames = fieldnames(sptemp);
-%   for ii = 1:length(fnames); sp.(fnames{ii}) = sptemp.(fnames{ii}); end
-% end
-
 if ~p.nospec
   if islogical(p.specfile)
     [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS, 'Select a spectrum file:');
@@ -277,7 +258,7 @@ if ~p.nospec
         if ~isfield(sp, 'attn') || ~isfield(sp, 'maxpwr')
             error('pass pwr or maxpwr and attenuation');
         else
-            sp.pwr = db2level(-sp.attn,sp.maxpwr);
+            sp.pwr = db2level(-sp.attn, sp.maxpwr);
         end
     end
 end
