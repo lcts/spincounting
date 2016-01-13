@@ -21,10 +21,13 @@ else
     % create proper akkumulated data if it wasn't already
     if isempty(regexp(id.type,'akku','once'))
         dataakku = 0;
+        mwfreq = 0;
         for ii = 1:length(datatemp)
             dataakku = dataakku + datatemp{ii};
+            mwfreq = mwfreq + parstemp.mwfreq(ii);
         end
         datatemp{1} = dataakku / length(datatemp);
+        parstemp.mwfreq = mwfreq / length(datatemp);
     end
     data = [ (parstemp.bstart:parstemp.bstep:parstemp.bstop)' real(datatemp{1}')];
     % save parameters

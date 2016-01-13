@@ -263,7 +263,6 @@ if ~p.nospec
     end
 end
 
-
 %% FIT DIP & INTEGRATE SPECTRUM %%
 if ~p.q
   if isfield(results,'tune')
@@ -339,7 +338,8 @@ if ~p.nospec
   % calculate actual power from maxpwr and attenuation
   sp.nb = PopulationDiff(sp.T, sp.mwfreq);
   % Calculate normalisation factor and print it with some info
-  fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n - modulation amplitude: %.1f\n', ...
+
+  fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.1f\n - modulation amplitude: %.2f\n', ...
           sp.maxpwr*1000, sp.attn, sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
 end
   
