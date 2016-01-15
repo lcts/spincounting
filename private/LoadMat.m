@@ -1,8 +1,6 @@
 function [ data, pars ] = LoadMat(filename)
 % load data from .mat-file
 %
-% VERSION 1.0
-% 
 % USAGE:
 % [data, pars] = LoadMat(filename)
 
@@ -15,4 +13,6 @@ end
 if ~exist('params','var')
     warning('LoadMat:MissingVariable', 'mat-File does not contain variable ''params''.');
     pars = struct();
+else
+    pars = params;
 end

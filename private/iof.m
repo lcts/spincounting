@@ -3,6 +3,8 @@ function [ index, element ] = iof(varargin)
 % value. If value is a vector, the function returns a vector of 
 % indices/elements of 'vector' closest to the elements of 'value'.
 %
+% VERSION 1.1
+%
 % USAGE:
 % index = iof(vector, value)
 % [index, element] = iof(vector, value, mode)
@@ -12,7 +14,6 @@ function [ index, element ] = iof(varargin)
 % 'smaller': closest element smaller than value
 % 'larger':  closest element larger than value
 %
-VERSION = '1.1';
 
 p = inputParser;
 p.addRequired('vector', @(x)validateattributes(x,{'numeric'},{'vector', 'real'}));

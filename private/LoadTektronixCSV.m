@@ -1,8 +1,6 @@
 function [ data, pars ] = LoadTektronixCSV(filename)
 % load data from Tektronix .csv-file
 %
-% VERSION 1.0
-% 
 % USAGE:
 % [data, pars] = LoadTektronixCSV(filename)
 

@@ -1,6 +1,6 @@
  ________________________________________________
 |                                                |
-| THE SPINCOUNTING TOOLBOX v2.1                  |
+| THE SPINCOUNTING TOOLBOX v2.1-devel            |
 |                                                |
 | Author: Christopher Engelhard                  |
 | Mail: christopher.engelhard@fu-berlin.de       |
@@ -9,7 +9,8 @@
 
  ________________________________________________
 |                                                |
-| THIS IS A DEVELOPMENT VERSION, USE AT OWN RISK |
+| This is the git version of the spincounting-   |
+| toolbox (development branch).                  |
 |________________________________________________|
 
  ___________________________________________________________

@@ -78,6 +78,7 @@ specs(:,2) = cumtrapz(specs(:,1),specs(:,2));
 % if there is a second value in 'order'
 if length(p.Results.order) >= 2
     % perform second bg correction before second integration
+
     [params{2}, ~, mu] = polyfit(specs([background(1):background(2) background(3):background(4)],1), ...
                           specs([background(1):background(2) background(3):background(4)],2),p.Results.order(2));
     bgs(:,3) = polyval(params{2},bgs(:,1),[],mu);
@@ -89,5 +90,5 @@ else
     specs(:,3) = cumtrapz(specs(:,1),specs(:,2));
 end
 
-% calculate double integral
+% calculate second integral
 doubleint = specs(background(3),3) - specs(background(2),3);

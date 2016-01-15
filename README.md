@@ -2,7 +2,9 @@
 
 A MatLab toolbox for quantitative EPR.
 
-*This is the git repository site for the spincounting toolbox. The [main website](http://lcts.github.io/spincounting) is located [here](http://lcts.github.io/spincounting).*
+*This is the git repository site for the spincounting toolbox (stable branch).*
+
+*The [main website](http://lcts.github.io/spincounting) is located [here](http://lcts.github.io/spincounting).*
 
 
 ### Overview
@@ -10,7 +12,7 @@ This MatLab toolbox is designed to facilitate and automate the evaluation of qua
 
 ### System Requirements
  * MatLab 2012 or later
- * Optimisation Toolbox (for functions polyfit() and lsqcurvefit())
+ * Curve Fitting Toolbox (for functions polyfit() and lsqcurvefit())
  * For use with Bruker Xepr data files, [easyspin](http://easyspin.org) is needed as well.
 
 ### Versions

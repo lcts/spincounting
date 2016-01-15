@@ -1,8 +1,6 @@
 function [data, params] = GetFile(varargin)
 % get data for spin counting
 %
-% VERSION 1.0
-%
 % USAGE:
 % data = GetFile(functions, knownformats, dialoftitle)
 % data = GetFile(functions, filename)
