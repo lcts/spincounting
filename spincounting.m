@@ -18,9 +18,9 @@ function [nspins, tfactor, results] = spincounting(varargin)
 % nspins           : float, # of spins in sample, default: false
 % tfactor          : float, spectrometer transfer factor, default: false
 % nospec           : boolean, only determine q, default: false
-% noplot           : boolean, do not display plots. They are still generated 
+% noplot           : boolean, do not display plots. They are still generated
 %                    and saved, default: false
-% q                : float, quality factor q. Setting this disables all q-factor 
+% q                : float, quality factor q. Setting this disables all q-factor
 %                    calculation related functionality, default: false
 %
 % S                : float, spin of sample, default: 1/2
@@ -58,7 +58,7 @@ function [nspins, tfactor, results] = spincounting(varargin)
 %
 
 %% VERSION AND INFO
-VERSION = '2.0.0';
+VERSION = '2.0.1';
 fprintf('\nspincouting v%s\n\n', VERSION);
 
 %% INPUT HANDLING
@@ -121,96 +121,95 @@ end
 
 %% SET UP OUTPUT
 % get a filename for saving unless we're not supposed to
-if ~p.nosave
-  % check if we're missing a filename
-  if ~p.outfile
-    % if so, get one
-    [file, path] = uiputfile('*.log','Save Results to File:');
-    if file == 0; error('spincounting:NoFile', 'Saving requested but no output file selected. Abort.\n'); end;
-    p.outfile = fullfile(path, file);
-  end
-  % remove extension from filename (because we add our own later)
-  [path, file, extension] = fileparts(p.outfile);
-  p.outfile = fullfile(path, file);
-  % check if outfile exists or is a folder
-  if exist([p.outfile extension], 'file')
-    % warn
-    fprintf('\n\n');
-    warning('spincounting:FileExists', 'Existing output files will be overwritten.\n');
-    % remember the old diary file
-    olddiary = get(0,'DiaryFile');
-    % and overwrite diary file
-    delete([p.outfile extension]);
-    diary([p.outfile extension]);
-  else   % outfile does not exist
-    % remember the old diary file
-    olddiary = get(0,'DiaryFile');
-    % log all output to file
-    diary([p.outfile extension]);
-  end
+if p.nosave
+    % warn the user that nothing is being saved
+    warning('spincounting:NoSave', '''nosave'' option set. Data will not be saved.\n');
 else
-  % warn the user that nothing is being saved
-  warning('spincounting:NoSave', 'nosave option set, data is not being saved.\n');
+    % check if we're missing a filename
+    if ~p.outfile
+        % if so, get one
+        while true
+            [file, path] = uiputfile('*.log','Save Results to File:');
+            if file == 0
+                btn = questdlg('No file selected, data won''t be saved. Continue anyway?', ...
+                               'No file selected', ...
+                               'Yes','No', ...
+                               'No');
+                if strcmp(btn,'Yes')
+                    warning('spincounting:NoFile', 'No output file selected. Data will not be saved.\n');
+                    p.nosave = true;
+                    break
+                end
+            else
+                p.outfile = fullfile(path, file);
+                break
+            end
+        end
+    end
+    
+    % check if we now have a filename
+    if ~p.nosave
+        % remove extension from filename (because we add our own later)
+        [path, file, extension] = fileparts(p.outfile);
+        p.outfile = fullfile(path, file);
+        % check if outfile exists or is a folder
+        if exist([p.outfile extension], 'file')
+            % warn
+            fprintf('\n\n');
+            warning('spincounting:FileExists', 'Existing output files will be overwritten.\n');
+            % remember the old diary file
+            olddiary = get(0,'DiaryFile');
+            % and overwrite diary file
+            delete([p.outfile extension]);
+            diary([p.outfile extension]);
+        else   % outfile does not exist
+            % remember the old diary file
+            olddiary = get(0,'DiaryFile');
+            % log all output to file
+            diary([p.outfile extension]);
+        end
+    end
 end
 
 %% SET OPERATION MODE
 if ~p.nospec
-  if ~p.nspins
-    if ~p.tfactor
-      results.mode = 'integrate';
-    else 
-      results.mode = 'calc_spins';
-    end
-  else  
-    if ~p.tfactor
-      results.mode = 'calc_tfactor';
+    if ~p.nspins
+        if ~p.tfactor
+            results.mode = 'integrate';
+        else
+            results.mode = 'calc_spins';
+        end
     else
-      results.mode = 'check';
+        if ~p.tfactor
+            results.mode = 'calc_tfactor';
+        else
+            results.mode = 'check';
+        end
     end
-  end
 else
-  results.mode = 'none';
+    results.mode = 'none';
 end
 
 %% LOAD DATA %%
 % Load tune picture data
-% if ~p.q
-%   if islogical(p.tunefile)
-%     tdata = GetTuneFile(p.tunepicscaling);
-%   else
-%     tdata = GetTuneFile(p.tunepicscaling, p.tunefile);
-%   end
-% end
-
 if ~p.q
-  if islogical(p.tunefile)
-    tdata = GetFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS, 'Select a tune picture file:');
-  else
-    tdata = GetFile(TUNE_LOADFUNCTIONS, p.tunefile);
-  end
+    if islogical(p.tunefile)
+        tdata = GetFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS, 'Select a tune picture file:');
+    else
+        tdata = GetFile(TUNE_LOADFUNCTIONS, p.tunefile);
+    end
 end
 
 % % Load spectrum data
-% if ~p.nospec
-%   if islogical(p.specfile)
-%     [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS);
-%   else
-%     [sdata, sptemp] = GetSpecFile(SPECTRUM_LOADFUNCTIONS, {}, p.specfile);
-%   end
-%   % merge paramstruct sptemp into existing paramstruct sp
-%   fnames = fieldnames(sptemp);
-%   for ii = 1:length(fnames); sp.(fnames{ii}) = sptemp.(fnames{ii}); end
-% end
-
 if ~p.nospec
-  if islogical(p.specfile)
-    [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS, 'Select a spectrum file:');
-  else
-    [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, p.specfile);
-  end
-  % merge paramstruct sptemp into existing paramstruct sp
-  fnames = fieldnames(sptemp);
-  for ii = 1:length(fnames); sp.(fnames{ii}) = sptemp.(fnames{ii}); end
+    if islogical(p.specfile)
+        [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS, 'Select a spectrum file:');
+    else
+        [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, p.specfile);
+    end
+    % merge paramstruct sptemp into existing paramstruct sp
+    fnames = fieldnames(sptemp);
+    for ii = 1:length(fnames); sp.(fnames{ii}) = sptemp.(fnames{ii}); end
 end
 
 %% HANDLE FITTING AND INTEGRATION PARAMETERS %%
@@ -277,67 +276,67 @@ if ~p.nospec
         if ~isfield(sp, 'attn') || ~isfield(sp, 'maxpwr')
             error('pass pwr or maxpwr and attenuation');
         else
-            sp.pwr = db2level(-sp.attn,sp.maxpwr);
+            sp.pwr = db2level(-sp.attn, sp.maxpwr);
         end
     end
 end
 
-
 %% FIT DIP & INTEGRATE SPECTRUM %%
 if ~p.q
-  if isfield(results,'tune')
-    [fwhm, ~, tunebg, fit] = FitResDip(tdata,results.tune);
-  else
-    [fwhm, ~, tunebg, fit] = FitResDip(tdata);
-  end
-  results.tune.data = tdata;
-  results.tune.fit(:,1)   = tdata(:,1);
-  results.tune.fit(:,2:4) = fit;
-  results.tune.fwhm       = fwhm;
+    if isfield(results,'tune')
+        [fwhm, ~, tunebg, fit] = FitResDip(tdata,results.tune);
+    else
+        [fwhm, ~, tunebg, fit] = FitResDip(tdata);
+    end
+    results.tune.data = tdata;
+    results.tune.fit(:,1)   = tdata(:,1);
+    results.tune.fit(:,2:4) = fit;
+    results.tune.fwhm       = fwhm;
 end
 
 % calculate number of spins from spectrum
 if ~p.nospec
-  if isfield(results,'spec')
-    [dint, specs, bgs, ~, specbg] = DoubleInt(sdata, results.spec);
-  else
-    [dint, specs, bgs, ~, specbg] = DoubleInt(sdata);
-  end
-  results.spec.data(:,1:2) = sdata;
-  results.spec.data(:,3:4) = specs(:,2:3);
-  results.spec.bgs         = bgs;
-  results.spec.dint        = dint;
+    if isfield(results,'spec')
+        [dint, specs, bgs, ~, specbg] = DoubleInt(sdata, results.spec);
+    else
+        [dint, specs, bgs, ~, specbg] = DoubleInt(sdata);
+    end
+    results.spec.data(:,1:2) = sdata;
+    results.spec.data(:,3:4) = specs(:,2:3);
+    results.spec.bgs         = bgs;
+    results.spec.dint        = dint;
 end
 
 %% PLOT THE LOT %%
 % plot tune picture with background corrections and fit
 if ~p.q
-  close(findobj('type','figure','name','TuneFigure'))
-  if ~p.noplot
-    hTuneFigure = figure('name','TuneFigure', 'Visible', 'on');
-  else
-    hTuneFigure = figure('name','TuneFigure', 'Visible', 'off');
-  end
-  hTuneAxes = axes('Parent',hTuneFigure);
-  PlotTuneFigure(hTuneAxes, tdata, fit, tunebg);
+    close(findobj('type','figure','name','TuneFigure'))
+    if ~p.noplot
+        hTuneFigure = figure('name','TuneFigure', 'Visible', 'on');
+    else
+        hTuneFigure = figure('name','TuneFigure', 'Visible', 'off');
+    end
+    hTuneAxes = axes('Parent',hTuneFigure);
+    PlotTuneFigure(hTuneAxes, tdata, fit, tunebg);
 end
 % plot spectrum with background corrections and integrals
 if ~p.nospec
-  close(findobj('type','figure','name','SpecFigure'))
-  if ~p.noplot
-    hSpecFigure = figure('name','SpecFigure', 'Visible', 'on');
-  else
-    hSpecFigure = figure('name','SpecFigure', 'Visible', 'off');
-  end
-  hSpecAxes(1) = axes('Tag', 'specaxes', 'Parent', hSpecFigure);
-  hSpecAxes(2) = axes('Tag', 'intaxes', 'Parent', hSpecFigure);
-  PlotSpecFigure(hSpecAxes, sdata, specbg, specs, bgs);
+    close(findobj('type','figure','name','SpecFigure'))
+    if ~p.noplot
+        hSpecFigure = figure('name','SpecFigure', 'Visible', 'on');
+    else
+        hSpecFigure = figure('name','SpecFigure', 'Visible', 'off');
+    end
+    hSpecAxes(1) = axes('Tag', 'specaxes', 'Parent', hSpecFigure);
+    hSpecAxes(2) = axes('Tag', 'intaxes', 'Parent', hSpecFigure);
+    PlotSpecFigure(hSpecAxes, sdata, specbg, specs, bgs);
 end
 
 %% CALCULATE RESULTS AND OUTPUT
 % Calculate Q-factor, print fwhm, Q
 if ~p.q
-    fprintf('\n\n\nTune picture background indices: [%i %i %i %i]\n', tunebg);
+    fprintf('\n\n\nTune picture background: [%.2f  %.2f  %.2f  %.2f] MHz\nUse ''tunebglimits'' to change.\n', ...
+            tdata(tunebg,1));
     if isfield(sp,'mwfreq')
         results.q = sp.mwfreq / fwhm / 1e6;
         fprintf('FWHM: %.4f MHz\nq-factor: %.2f\n', fwhm, results.q);
@@ -346,33 +345,34 @@ if ~p.q
         fprintf('Microwave frequency needed for q-factor calculation.\n');
     end
 else
-  results.q = p.q;
-  fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', results.q);
+    results.q = p.q;
+    fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', results.q);
 end
 
 if ~p.nospec
-  % print double integral and spec background indices
-  fprintf('\nSpectrum background indices: [%i %i %i %i]\nDouble integral: %g a.u.\n', ...
-                specbg, dint);
-  % set measurement parameters
-  % calculate actual power from maxpwr and attenuation
-  sp.nb = PopulationDiff(sp.T, sp.mwfreq);
-  % Calculate normalisation factor and print it with some info
-  fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.2f\n - modulation amplitude: %.1f\n', ...
-          sp.maxpwr*1000, sp.attn, sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
+    % print double integral and spec background indices
+    fprintf('\nSpectrum background: [%.1f %.1f %.1f %.1f] G\nUse ''intbglimits'' to change.\nDouble integral: %g a.u.\n', ...
+            sdata(specbg,1), dint);
+    % set measurement parameters
+    % calculate actual power from maxpwr and attenuation
+    sp.nb = PopulationDiff(sp.T, sp.mwfreq);
+    % Calculate normalisation factor and print it with some info
+    
+    fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.1f\n - modulation amplitude: %.2f\n', ...
+            sp.maxpwr*1000, sp.attn, sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
 end
-  
+
 if ~p.nosave
-  % save plots to file
-  outformat = ['-d' p.outformat];
-  if ~p.q
-    set(hTuneFigure,'PaperPositionMode','auto');
-    print(hTuneFigure, outformat, '-r300', strcat(p.outfile, '_tune_picture'));
-    fprintf('\nTune figure saved to %s. ', [p.outfile, '_tune_picture.', p.outformat, '\n']);
-  end
-  set(hSpecFigure,'PaperPositionMode','auto');
-  print(hSpecFigure, outformat, '-r300', strcat(p.outfile, '_spectrum'));
-  fprintf('Double integration figure saved to %s\n', [p.outfile, '_spectrum.', p.outformat, '\n']);
+    % save plots to file
+    outformat = ['-d' p.outformat];
+    if ~p.q
+        set(hTuneFigure,'PaperPositionMode','auto');
+        print(hTuneFigure, outformat, '-r300', strcat(p.outfile, '_tune_picture'));
+        fprintf('\nTune figure saved to %s. ', [p.outfile, '_tune_picture.', p.outformat, '\n']);
+    end
+    set(hSpecFigure,'PaperPositionMode','auto');
+    print(hSpecFigure, outformat, '-r300', strcat(p.outfile, '_spectrum'));
+    fprintf('Double integration figure saved to %s\n', [p.outfile, '_spectrum.', p.outformat, '\n']);
 end
 
 
@@ -411,9 +411,9 @@ results.params = sp;
 
 %% CLEANUP AND EXIT
 if ~p.nosave
-  % end diary and reset DiaryFile to what it was
-  diary off;
-  set(0,'DiaryFile', olddiary);
+    % end diary and reset DiaryFile to what it was
+    diary off;
+    set(0,'DiaryFile', olddiary);
 end
 
 % ... and the rest is silence
