@@ -44,9 +44,9 @@ v2.0
  - CAUTION: tfactor's definition is changed to follow convention in literature (DI = tfactor * constants * spins)
             tfactor_new = 1/tfactor_old
 v2.1
- - fixed in loading functions: variable for parameters in struct/mat-file is 'params', not 'pars'
  - spincounting now displays the field/frequency values use as bg limits instead of indices
  - spincounting now switches to nosave mode if file selection dialog is aborted, after prompting the user
  - fixed bug where FitResDip would prompt user for invalid option 'background'
  - fixed bug where FitResDip would report itself as DoubleInt in error message
  - fixed LoadMat returning improperly named parameter struct
+ - fixed bug caused by multiple frequencies being present in dat2/ch1/ch2-files
