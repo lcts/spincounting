@@ -75,7 +75,7 @@ pmain.addParamValue('nospec', false, @(x)validateattributes(x,{'logical'},{'scal
 pmain.addParamValue('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParamValue('nspins', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParamValue('tfactor', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('q', false, @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParamValue('q', false, @(x)validateattributes(x,{'char','numeric'},{'vector'}));
 % measurement parameters (override those read from file or set by default)
 pmain.addParamValue('S', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParamValue('maxpwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
@@ -103,6 +103,18 @@ pmain.FunctionName = 'spincounting';
 pmain.parse(varargin{:});
 % and store the result in p
 p = pmain.Results;
+
+disp('OK')
+ischar(p.q)
+% validate q
+if ischar(p.q)
+    disp('char?')
+    if ~strcmp(p.q,'auto')
+        error('''q'' must be numeric scalar or ''auto''');
+    end
+else
+    validateattributes(p.q,{'numeric'},{'scalar'},'spincounting','''q''');
+end
 
 %% LOAD DEFAULTS
 % initialise parameter struct
@@ -191,16 +203,7 @@ else
 end
 
 %% LOAD DATA %%
-% Load tune picture data
-if ~p.q
-    if islogical(p.tunefile)
-        tdata = GetFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS, 'Select a tune picture file:');
-    else
-        tdata = GetFile(TUNE_LOADFUNCTIONS, p.tunefile);
-    end
-end
-
-% % Load spectrum data
+% Load spectrum data
 if ~p.nospec
     if islogical(p.specfile)
         [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS, 'Select a spectrum file:');
@@ -210,6 +213,24 @@ if ~p.nospec
     % merge paramstruct sptemp into existing paramstruct sp
     fnames = fieldnames(sptemp);
     for ii = 1:length(fnames); sp.(fnames{ii}) = sptemp.(fnames{ii}); end
+end
+
+% Load tune picture data
+% if 'auto' is requested, use q from specfile if present
+% else reset q to false
+if strcmp(p.q, 'auto') && isfield(sp, 'q')
+    p.q = sp.q;
+else
+    p.q = false;
+end
+
+% get q from tunefile if needed
+if ~p.q
+    if islogical(p.tunefile)
+        tdata = GetFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS, 'Select a tune picture file:');
+    else
+        tdata = GetFile(TUNE_LOADFUNCTIONS, p.tunefile);
+    end
 end
 
 %% HANDLE FITTING AND INTEGRATION PARAMETERS %%

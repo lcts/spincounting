@@ -21,3 +21,6 @@ pars.modamp = str2double(paramstemp.ModAmp(1:end-1));
 if isfield(paramstemp,'Temperature')
     pars.T = str2double(paramstemp.Temperature(1:end-1));
 end
+if isfield(paramstemp,'QValue')
+    pars.q = paramstemp.QValue;
+end
