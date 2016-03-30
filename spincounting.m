@@ -65,37 +65,37 @@ fprintf('\nspincouting v%s\n\n', VERSION);
 % define input arguments
 pmain = inputParser;
 % files and file handling
-pmain.addParamValue('tunefile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
-pmain.addParamValue('specfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
-pmain.addParamValue('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
-pmain.addParamValue('outformat', 'pdf', @(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
-pmain.addParamValue('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParameter('tunefile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
+pmain.addParameter('specfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
+pmain.addParameter('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
+pmain.addParameter('outformat', 'pdf', @(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
+pmain.addParameter('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 % program behaviour
-pmain.addParamValue('nospec', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
-pmain.addParamValue('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
-pmain.addParamValue('nspins', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('tfactor', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('q', false, @(x)validateattributes(x,{'char','numeric'},{'vector'}));
+pmain.addParameter('nospec', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParameter('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParameter('nspins', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('tfactor', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('q', false, @(x)validateattributes(x,{'char','numeric'},{'vector'}));
 % measurement parameters (override those read from file or set by default)
-pmain.addParamValue('S', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('maxpwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('rgain', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('tc', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('nscans', [], @(x)validateattributes(x,{'numeric'},{'positive','integer'}));
-pmain.addParamValue('pwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('attn', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('T', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('modamp', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParamValue('mwfreq', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('S', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('maxpwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('rgain', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('tc', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('nscans', [], @(x)validateattributes(x,{'numeric'},{'positive','integer'}));
+pmain.addParameter('pwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('attn', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('T', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('modamp', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('mwfreq', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 % tune picture evaluation
-pmain.addParamValue('tunepicscaling', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('tunebglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
-pmain.addParamValue('tunebgorder',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('tunepicsmoothing',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParamValue('dipmodel',[], @ischar);
+pmain.addParameter('tunepicscaling', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('tunebglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
+pmain.addParameter('tunebgorder',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('tunepicsmoothing',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('dipmodel',[], @ischar);
 % spectrum integration
-pmain.addParamValue('intbglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
-pmain.addParamValue('intbgorder',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
+pmain.addParameter('intbglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
+pmain.addParameter('intbgorder',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
 % add the name of the function
 pmain.FunctionName = 'spincounting';
 
@@ -124,7 +124,7 @@ sp.rgain = 1;
 sp.nscans = 1;
 sp.tc = 1;
 
-% load confid
+% load config
 scconfig
 % populate parameter struct
 for ii = 1:size(DEFAULTS,1)
