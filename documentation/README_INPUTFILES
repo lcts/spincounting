@@ -1,6 +1,6 @@
  ________________________________________________
 |                                                |
-| THE SPINCOUNTING TOOLBOX v2.1-devel            |
+| THE SPINCOUNTING TOOLBOX v3.0-devel            |
 |                                                |
 | Author: Christopher Engelhard                  |
 | Mail: christopher.engelhard@fu-berlin.de       |
@@ -17,9 +17,10 @@ Currently, the toolbox supports as a source for the tune picture
  - Tektronics-oscilloscope .CSV files
  - generic ascii files with either two lines or two columns containing frequency and intensity data
  - loading data from a MatLab-file (.mat)
+ - reading data from a screenshot of the tune picture. This is somewhat experimental
  - passing data directly to the toolbox as a MatLab struct variable
 
-1.2) EPR data 
+1.2) EPR data
 Currently, the toolbox supports the following EPR data files
 
  - its own format (.scs)
@@ -49,7 +50,7 @@ When the real microwave power 'pwr' is not specified, 'attenuation' has to be. I
 The other parameters are set to typical values (or set to 1, aka ignored) by default in the software and can thus be omitted.
 
 When writing your own loading routine, only read parameters from the file that actually change the signal amplitude. If e.g. your machine automatically averages scans, don't set the 'nscans' parameter or set it to 1 regardless of the number of scans.
- 
+
 The requirements for the different formats are listed below.
 
 

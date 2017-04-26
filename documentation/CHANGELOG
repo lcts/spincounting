@@ -56,4 +56,8 @@ v3.0-devel
  - API CHANGE: the output are now [out, results] instead of [nspins, tfactor, results]. 'out' contains nspins
    or tfactor depending on the mode. Both nspins and tfactor are still saved to the results array individually
  - changed input validation to allow negative and non-integer background limits
- - added support for screenshots as tune picture files
+ - added support for screenshots as tune picture files (experimental)
+ - q value can now be read from spectrum file as well as input manually/determined from tune pic file
+ - spincounting now asks for spectrum file first, then tune file. This is necessary for getting q from spectrum
+   file params
+ - use addParameter instead of the deprecated addParamValue in inputParser

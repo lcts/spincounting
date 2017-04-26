@@ -24,7 +24,7 @@
 
  ____________________________________________________________
 |                                                            |
-| spincounting uses smeantic versioning (http://semver.org/) |
+| spincounting uses semantic versioning (http://semver.org/) |
 | In short: Changes in the first number imply API changes,   |
 | changes to the second number imply feature changes that    |
 | do not break the API, changes to the third number indicate |
@@ -134,7 +134,7 @@ Passing nspins and/or tfactor determines the operation mode.
  - neither:	calculate normalized double integral
  - nspins:	calculate tfactor from spectrum, out = tfactor
  - tfactor:	calculate nspins from spectrum, out = nspins
- - both:	check tfactor against nspins using the given spectrum, , out = nspinserror
+ - both:	check tfactor against nspins using the given spectrum, out = nspinserror
 Passing q is only useful in two cases:
  - the quality factor has been determined by alternate means
  - the program is used to compare measurements that can be assumed to have identical q
