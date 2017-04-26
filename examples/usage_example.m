@@ -1,7 +1,7 @@
 % this example script illustrates the usage of the spincounting toolbox and
 % its options. It does not necessarily represent the optimal workflow.
 
-% Since you have to insert some values on the way, run this script using 
+% Since you have to insert some values on the way, run this script using
 % 'Run and Advance' (CTRL+SHIFT+ENTER) or 'Run Section' (CTRL+ENTER) in
 % matlab in order to do this step by step.
 
@@ -51,7 +51,7 @@ spincounting('nspins', nspins, ...
 % saving. We also redo the q-calculation, so that that figure also gets
 % saved
 intbg = [lowleft lowright highleft highright]
-[~, tfactor] = spincounting('nspins', nspins, ...
+tfactor = spincounting('nspins', nspins, ...
                             'intbglimits', intbg, ...
                             'specfile', 'tempol.scs', ...
                             'tunefile', 'tempol.sct')
@@ -60,7 +60,7 @@ intbg = [lowleft lowright highleft highright]
 % quantification!
 
 %% We can also get all the parameters used in the process from the program:
-[~, tfactor, results] = spincounting('nspins', nspins, ...
+[tfactor, results] = spincounting('nspins', nspins, ...
                                     'intbglimits', intbg, ...
                                     'q', q, ...
                                     'specfile', 'tempol.scs', ...
@@ -73,14 +73,14 @@ options.q = q;
 options.specfile = 'tempol.scs';
 options.nosave = true
 %% and pass that to the progam
-[~, tfactor, results] = spincounting(options)
+[tfactor, results] = spincounting(options)
 
 %% if you want to remove an option that you're put into your struct, use
 % rmfield(structure, 'fieldname'):
 options
 options_new = rmfield(options,'nosave')
 
-                                
+
 %% Time for some spin counting
 % Redo the previous steps with your own files (or use the 'P3HT'
 % example files) but this time, we want to know the number of spins, so we
