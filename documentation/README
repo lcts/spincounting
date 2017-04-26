@@ -1,6 +1,6 @@
  ________________________________________________
 |                                                |
-| THE SPINCOUNTING TOOLBOX v2.1-devel            |
+| THE SPINCOUNTING TOOLBOX v3.0-devel            |
 |                                                |
 | Author: Christopher Engelhard                  |
 | Mail: christopher.engelhard@fu-berlin.de       |
@@ -22,7 +22,14 @@
 | the proper parameters to the program.                     |
 |___________________________________________________________|
 
-
+ ____________________________________________________________
+|                                                            |
+| spincounting uses smeantic versioning (http://semver.org/) |
+| In short: Changes in the first number imply API changes,   |
+| changes to the second number imply feature changes that    |
+| do not break the API, changes to the third number indicate |
+| bugfix releases.                                           |
+|____________________________________________________________|
 
 This is the manual for the spincounting toolbox. For a quick reference to progam usage and options, type 'help spincounting' on the MatLab commandline (or just 'spincounting' and hit F1).
 
@@ -41,10 +48,10 @@ TABLE OF CONTENTS
 1) SYNTAX
 
 spincounting
-nspins = spincounting('tfactor',<value>)
-[ ~, tfactor] = spincounting('nspins', <value>)
-[nspins, tfactor, results] = spincounting(___, '<option>', <value>)
-[nspins, tfactor, results] = spincounting(struct)
+out = spincounting('tfactor',<value>)
+out = spincounting('nspins', <value>)
+[out, results] = spincounting(___, '<option>', <value>)
+[out, results] = spincounting(struct)
 
 
 2) INPUTS
@@ -65,10 +72,13 @@ nosave           : boolean, don't save anything if true, default: false
 nspins           : float, # of spins in sample, default: false
 tfactor          : float, spectrometer transfer factor, default: false
 nospec           : boolean, only determine q, default: false
-noplot           : boolean, do not display plots. They are still generated 
+noplot           : boolean, do not display plots. They are still generated
                    and saved, default: false
-q                : float, quality factor q. Setting this disables all q-factor 
+q                : float, quality factor q. Setting this disables all q-factor
                    calculation related functionality, default: false
+                   If q is set to a numerical value, that value is used. If q
+                   is set to 'auto', then spincounting tries to read a q value
+                   from the input file. If this fails, it defaults back to 'false'.
 
 2.3) Options setting measurement and sample parameters
 
@@ -90,21 +100,21 @@ When both attn and pwr are set, pwr takes precedence.
 2.4) Options governing the fitting of the dip and q calculation
 
 tunepicscaling   : float, scaling of the tune picture in MHz/s, default: 6,94e4
-tunebglimits     : 1x4 integer, indices of background, default: auto
+tunebglimits     : 1x4 float, x values of background, default: auto
 tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
 tunebgorder      : integer, order of background correction used, default 3
 dipmodel         : string, model used for dip fitting, default: lorentz
 
 2.5) Options governing double integration
 
-intbglimits      : 1x4 integer, indices of background, default: auto
+intbglimits      : 1x4 float, x values of background, default: auto
 intbgorder       : integer, order of background correction used, # of elements
                    determines # of steps, default [1 3]
 
 
 3) OUTPUTS
-nspins:   calculated number of spins (returns NaN if transfer factor unknown)
-tfactor:  calculated transfer factor (retursn NaN if number of spins unknown)
+out:      depending on the operating mode, returns either the number of spins,
+          the transfer factor or the spin error. Returns NaN if no calculations were performed.
 results:  a structure containing internal parameters including the various fits, backgrounds and spectra
           the quality factor and double integrals
 
@@ -122,9 +132,9 @@ q-factor, number of spins and the spectrometer transfer factor can all be passed
 
 Passing nspins and/or tfactor determines the operation mode.
  - neither:	calculate normalized double integral
- - nspins:	calculate tfactor from spectrum
- - tfactor:	calculate nspins from spectrum
- - both:	check tfactor against nspins using the given spectrum
+ - nspins:	calculate tfactor from spectrum, out = tfactor
+ - tfactor:	calculate nspins from spectrum, out = nspins
+ - both:	check tfactor against nspins using the given spectrum, , out = nspinserror
 Passing q is only useful in two cases:
  - the quality factor has been determined by alternate means
  - the program is used to compare measurements that can be assumed to have identical q

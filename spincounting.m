@@ -1,12 +1,12 @@
-function [nspins, tfactor, results] = spincounting(varargin)
+function [out, results] = spincounting(varargin)
 % Evaluate EPR spectra quantitatively
 %
 % USAGE:
 % spincounting
-% nspins = spincounting('tfactor',<value>)
-% [ ~, tfactor] = spincounting('nspins', <value>)
-% [nspins, tfactor, results] = spincounting(___, '<option>', <value>)
-% [nspins, tfactor, results] = spincounting(struct)
+% out = spincounting('tfactor',<value>)
+% out = spincounting('nspins', <value>)
+% [out, results] = spincounting(___, '<option>', <value>)
+% [out, results] = spincounting(struct)
 %
 % OPTIONS:
 % tunefile         : string, tune picture file, default: Prompt
@@ -48,17 +48,17 @@ function [nspins, tfactor, results] = spincounting(varargin)
 % with struct.<Option> = <Value>
 %
 % OUTPUTS:
-% nspins  : calculated number of spins (returns NaN if transfer factor unknown)
-% tfactor : calculated transfer factor (retursn NaN if number of spins unknown)
-%           taken into account
-% results : a structure containing internal parameters including the various fits, backgrounds and spectra
-%           the quality factor and double integrals
+% out     : depending on the operating mode, returns either the number of spins,
+%           the transfer factor or the spin error. Returns NaN if no calculations
+%           were performed.
+% results : a structure containing internal parameters including the various fits,
+%           backgrounds and spectra the quality factor and double integrals
 %
 % Further help in the documentation folder
 %
 
 %% VERSION AND INFO
-VERSION = '2.1-devel';
+VERSION = '3.0-devel';
 fprintf('\nspincouting v%s\n\n', VERSION);
 
 %% INPUT HANDLING
@@ -158,7 +158,7 @@ else
             end
         end
     end
-    
+
     % check if we now have a filename
     if ~p.nosave
         % remove extension from filename (because we add our own later)
@@ -286,7 +286,7 @@ if ~p.nospec
     if ~isempty(p.tc); sp.tc = p.tc; end
     if ~isempty(p.rgain); sp.rgain = p.rgain; end
     if ~isempty(p.nscans); sp.nscans = p.nscans; end
-    
+
     if ~isfield(sp, 'T'); error('missing temperature'); end
     if ~isfield(sp, 'S'); error('missing spin'); end
     if ~isfield(sp, 'tc'); error('missing time constant'); end
@@ -378,7 +378,7 @@ if ~p.nospec
     % calculate actual power from maxpwr and attenuation
     sp.nb = PopulationDiff(sp.T, sp.mwfreq);
     % Calculate normalisation factor and print it with some info
-    
+
     fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.1f\n - modulation amplitude: %.2f\n', ...
             sp.maxpwr*1000, sp.attn, sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
 end
@@ -401,27 +401,33 @@ end
 switch results.mode
     case 'none' % only determine q
         fprintf('\nDone.\nNo spin counting requested.\n');
+        out = NaN;
         nspins = NaN;
         tfactor = NaN;
         dint = NaN;
     case 'integrate' % no further action
         fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
+        out = NaN;
         nspins = NaN;
         tfactor = NaN;
     case 'calc_spins' % calculate nspins from tfactor
         nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         tfactor = p.tfactor;
+        out = nspins;
         fprintf('\nUsing transferfactor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
                 tfactor, nspins);
     case 'calc_tfactor' % calculate tfactor from nspins
         tfactor = CalcSpins(dint, p.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         nspins = p.nspins;
+        out = tfactor;
         fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transferfactor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
                 nspins, tfactor, tfactor);
     case 'check' % check calculated against given nspins
         nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         nspinserror = abs(nspins - p.nspins)/ nspins * 100;
         tfactor = CalcSpins(dint, p.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        out = nspinserror;
+        results.nspinserror = nspinserror;
         fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
                 nspinserror, tfactor);
 end

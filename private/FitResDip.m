@@ -18,12 +18,12 @@ function [fwhm, resnorm, background, fit, params, func] = FitResDip(data, vararg
 %
 % Parameters & Options
 % data       - 2-dimensional array of the data to be fitted
-% 
-% background - vector of indices [leftstart leftstop rightstart rightstop] delimiting the area used
+%
+% background - vector of x values [leftstart leftstop rightstart rightstop] delimiting the area used
 %              for initial background fit. The dip should be between leftstop and rightstart.
 %              If this parameter is not given, FitResDip will try to autodetect the dip. Tf that fails
 %              the left and right 20% of the tunepicture (excluding flat background) are used.
-% smoothing  - # of points to use for smoothing for dip detection. Defaults to 2.5% of the total 
+% smoothing  - # of points to use for smoothing for dip detection. Defaults to 2.5% of the total
 %              number of points. This parameter also influences how conservative the start of the tune picture
 %              is estimated.
 % order      - the order of the polynomial used for fitting, between 0-5, default 3. For a
@@ -46,7 +46,7 @@ function [fwhm, resnorm, background, fit, params, func] = FitResDip(data, vararg
 % Check number of arguments and set defaults
 p = inputParser;
 p.addRequired('data', @(x)validateattributes(x,{'numeric'},{'2d','real'}));
-p.addParamValue('background',false, @(x)validateattributes(x,{'numeric'},{'positive','size',[1,4],'integer'}));
+p.addParamValue('background',false, @(x)validateattributes(x,{'numeric'},{'size',[1,4]}));
 p.addParamValue('smoothing',ceil(length(data(:,1))*0.025), @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
 p.addParamValue('order',3, @(x)validateattributes(x,{'numeric'},{'>=',0,'<=',5,'scalar','integer'}));
 p.addParamValue('dipmodel','lorentz', @(x)ischar(validatestring(x,{'lorentz', 'nofit', 'gauss'})));
@@ -60,7 +60,7 @@ p.parse(data,varargin{:});
 [noiselvl, ~, localstd] = LocalNoise(data(:,2),p.Results.smoothing);
 [~, mintab] = peakdet(localstd,3*noiselvl);
 
-if ~p.Results.background  
+if ~p.Results.background
   % Determine starting point for fit
   % Start/end of the tune picture is defined as the point where the signal has risen above 3x the noise level
   % plus p.Results.smoothing of buffer
@@ -154,5 +154,5 @@ switch p.Results.dipmodel
   otherwise
     % throw exception
     message = ['inputParser recognized ' dipmodel ', but the model is not implemented.'];
-    error('FitResDip:FutureVersion', message) 
+    error('FitResDip:FutureVersion', message)
 end

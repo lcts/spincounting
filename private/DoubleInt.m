@@ -13,8 +13,8 @@ function [doubleint, specs, bgs, params, background] = DoubleInt(data, varargin)
 %
 % Parameters & Options
 % data       - 2-dimensional array of the data
-% 
-% background - vector of indices [leftstart leftstop rightstart rightstop] delimiting the area used
+%
+% background - vector of x values [leftstart leftstop rightstart rightstop] delimiting the area used
 %              for background fit. Take care to include as much background as possible in your spectrum but no signal.
 %              If this parameter is not given, DoubleInt will use the left and right 25% of the data as background.
 % order      - a vector the orders of the polynomials for background correction. The number of elements determines the number
@@ -31,18 +31,19 @@ function [doubleint, specs, bgs, params, background] = DoubleInt(data, varargin)
 % Check number of arguments and set defaults
 p = inputParser;
 p.addRequired('data', @(x)validateattributes(x,{'numeric'},{'2d','real'}));
-p.addParamValue('background',false, @(x)validateattributes(x,{'numeric'},{'positive','size',[1,4]}));
+p.addParamValue('background',false, @(x)validateattributes(x,{'numeric'},{'size',[1,4]}));
 p.addParamValue('order',[1 3], @(x)validateattributes(x,{'numeric'},{'row','integer'}));
 p.FunctionName = 'DoubleInt';
 p.parse(data,varargin{:});
 
-if ~p.Results.background  
+if ~p.Results.background
   % use the default '25% from start/stop' as background.
   background(1) = 1;
   background(2) = background(1)+ceil(length(data(:,1))*0.25);
   background(4) = length(data(:,1));
   background(3) = background(4)-ceil(length(data(:,1))*0.25);
 else
+  % convert from values to indices
   background = iof(p.Results.data(:,1),p.Results.background);
   BGINVALID = false;
   for i = 3:-1:1
@@ -58,7 +59,7 @@ end
 
 if length(p.Results.order) >= 3
    message = 'order has too many elements. A maximum of two background correction steps are supported.';
-   error('DoubleInt:BackgroundSteps', message);   
+   error('DoubleInt:BackgroundSteps', message);
 end
 
 %% INTEGRATE SPECTRUM
