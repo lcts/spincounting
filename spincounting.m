@@ -104,16 +104,13 @@ pmain.parse(varargin{:});
 % and store the result in p
 p = pmain.Results;
 
-disp('OK')
-ischar(p.q)
 % validate q
 if ischar(p.q)
-    disp('char?')
     if ~strcmp(p.q,'auto')
         error('''q'' must be numeric scalar or ''auto''');
     end
 else
-    validateattributes(p.q,{'numeric'},{'scalar'},'spincounting','''q''');
+    validateattributes(p.q,{'numeric','logical'},{'scalar'},'spincounting','''q''');
 end
 
 %% LOAD DEFAULTS
