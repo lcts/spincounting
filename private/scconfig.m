@@ -6,6 +6,7 @@ DEFAULTS = {...
             'tunepicscaling', 6.94e4; ... % MHz/<tunepicunit>
             'S', 1/2; ...                 % sample spin
             'maxpwr', 0.2; ...            % bridge max power (W)
+            'savemat', false; ...         % save results as a .mat file
            };
 
 % TUNE FILES

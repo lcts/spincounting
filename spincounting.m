@@ -14,6 +14,7 @@ function [out, results] = spincounting(varargin)
 % outfile          : string, output files, default: Prompt
 % outformat        : string, output format for plots, default: 'pdf'
 % nosave           : boolean, don't save anything if true, default: false
+% savemat          : boolean, save results to .mat file, default: false
 %
 % nspins           : float, # of spins in sample, default: false
 % tfactor          : float, spectrometer transfer factor, default: false
@@ -70,6 +71,7 @@ pmain.addParameter('specfile', false, @(x)validateattributes(x,{'char','struct'}
 pmain.addParameter('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
 pmain.addParameter('outformat', 'pdf', @(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
 pmain.addParameter('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParameter('savemat', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 % program behaviour
 pmain.addParameter('nospec', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParameter('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
@@ -353,8 +355,15 @@ end
 %% CALCULATE RESULTS AND OUTPUT
 % Calculate Q-factor, print fwhm, Q
 if ~p.q
-    fprintf('\n\n\nTune picture background: [%.2f  %.2f  %.2f  %.2f] MHz\nUse ''tunebglimits'' to change.\n', ...
-            tdata(tunebg,1));
+	% print tune background limit values
+	if ~p.tunebglimits
+		fprintf('\n\n\nTune picture background: [%.2f  %.2f  %.2f  %.2f] MHz\nUse ''tunebglimits'' to change.\n', ...
+				tdata(tunebg,1));
+	else
+		fprintf('\n\n\nTune picture background: [%.2f  %.2f  %.2f  %.2f] MHz set by user.\n', ...
+				tdata(tunebg,1));
+	end
+	% calculate and print fwhm/Q
     if isfield(sp,'mwfreq')
         results.q = sp.mwfreq / fwhm / 1e6;
         fprintf('FWHM: %.4f MHz\nq-factor: %.2f\n', fwhm, results.q);
@@ -368,14 +377,18 @@ else
 end
 
 if ~p.nospec
-    % print double integral and spec background indices
-    fprintf('\nSpectrum background: [%.1f %.1f %.1f %.1f] G\nUse ''intbglimits'' to change.\nDouble integral: %g a.u.\n', ...
-            sdata(specbg,1), dint);
+    % print double integral and spec background limit values
+    if ~p.intbglimits
+		fprintf('\nSpectrum background: [%.1f %.1f %.1f %.1f] G\nUse ''intbglimits'' to change.\nDouble integral: %g a.u.\n', ...
+				sdata(specbg,1), dint);
+	else
+		fprintf('\nSpectrum background: [%.1f %.1f %.1f %.1f] G set by user.\nDouble integral: %g a.u.\n', ...
+				sdata(specbg,1), dint);
+	end
     % set measurement parameters
     % calculate actual power from maxpwr and attenuation
     sp.nb = PopulationDiff(sp.T, sp.mwfreq);
     % Calculate normalisation factor and print it with some info
-
     fprintf('\nCalculation performed based on the following parameters:\n - bridge max power: %.1f mW\n - attenuation: %.1f dB\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.1f\n - modulation amplitude: %.2f\n', ...
             sp.maxpwr*1000, sp.attn, sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
 end
@@ -435,6 +448,10 @@ results.params = sp;
 
 %% CLEANUP AND EXIT
 if ~p.nosave
+	% save results struct to mat-file or csv-file if needed
+	if p.savemat
+		save([p.outfile '.mat'], 'results', '-struct')
+	end
     % end diary and reset DiaryFile to what it was
     diary off;
     set(0,'DiaryFile', olddiary);
