@@ -61,3 +61,4 @@ v3.0-devel
  - q value can now be read from spectrum file as well as input manually/determined from tune pic file
  - spincounting now asks for spectrum file first, then tune file. This is necessary for getting q from spectrum
    file params
+ - new parameter 'savemat' enables saving of output to a mat-file in addition to the logfile
