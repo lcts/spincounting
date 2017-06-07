@@ -373,7 +373,7 @@ if ~p.q
     end
 else
     results.q = p.q;
-    fprintf('\nq-factor %.2f supplied by user. No q-factor calculations performed.\n', results.q);
+    fprintf('\nq-factor %.2f supplied by user/read from spectrum file. No q-factor calculations performed.\n', results.q);
 end
 
 if ~p.nospec
