@@ -60,7 +60,6 @@ function [out, results] = spincounting(varargin)
 
 %% VERSION AND INFO
 VERSION = '3.0-devel';
-fprintf('\nspincouting v%s\n\n', VERSION);
 
 %% INPUT HANDLING
 % define input arguments
@@ -181,6 +180,8 @@ else
         end
     end
 end
+% print the version number
+fprintf('\nspincouting v%s\n\n', VERSION);
 
 %% SET OPERATION MODE
 if ~p.nospec
