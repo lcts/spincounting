@@ -28,6 +28,6 @@ pars.bstart   = paramstemp.Bfrom * 10;             % G
 pars.bstop    = paramstemp.Bto * 10;               % G
 pars.li_freq  = paramstemp.ModulationFreq * 1000;  % kHz
 pars.li_phase = paramstemp.Measurement_Phase;      % °
-%pars.li_tc = paramstemp.SweepTime???
+pars.tc       = paramstemp.SweepTime / (dim(data, 1) * 1e-3);
 pars.npoints  = dim(data, 1);
 pars.bstep    = abs(pars.bstop - pars.bstep) / (pars.npoints - 1);
