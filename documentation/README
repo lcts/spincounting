@@ -78,7 +78,7 @@ q                : float, quality factor q. Setting this disables all q-factor
                    calculation related functionality, default: false
                    If q is set to a numerical value, that value is used. If q
                    is set to 'auto', then spincounting tries to read a q value
-                   from the input file. If this fails, it defaults back to 'false'.
+                   from the spectrum file. If this fails, it defaults back to 'false'.
 
 2.3) Options setting measurement and sample parameters
 

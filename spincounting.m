@@ -392,8 +392,8 @@ if ~p.nospec
     % calculate actual power from maxpwr and attenuation
     sp.nb = PopulationDiff(sp.T, sp.mwfreq);
     % Calculate normalisation factor and print it with some info
-    fprintf('\nCalculation performed based on the following parameters:\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.1f\n - modulation amplitude: %.2f\n', ...
-            sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp);
+    fprintf('\nCalculation performed based on the following parameters:\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.1f\n - modulation amplitude: %.2f\n - receiver gain: %.2f\n - time constant: %e s\n - number of scans: %.0f\n', ...
+            sp.pwr*1000, sp.T, sp.nb, sp.S, sp.modamp, sp.rgain, sp.tc, sp.nscans);
 end
 
 if ~p.nosave
@@ -427,13 +427,13 @@ switch results.mode
         nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         tfactor = p.tfactor;
         out = nspins;
-        fprintf('\nUsing transferfactor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
+        fprintf('\nUsing transfer factor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
                 tfactor, nspins);
     case 'calc_tfactor' % calculate tfactor from nspins
         tfactor = CalcSpins(dint, p.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         nspins = p.nspins;
         out = tfactor;
-        fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transferfactor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
+        fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transfer factor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
                 nspins, tfactor, tfactor);
     case 'check' % check calculated against given nspins
         nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
