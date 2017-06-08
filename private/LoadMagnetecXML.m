@@ -22,12 +22,12 @@ pars.T      = paramstemp.Measurement_Temperature + 273.15; % K
 if isfield(paramstemp, 'EnableQFactorMeasurement') && strcmp(paramstemp.EnableQFactorMeasurement,'True')
 	pars.q  = paramstemp.Measurement_QFactor;
 end
+pars.tc       = paramstemp.SweepTime / (dim(data, 1) * 1e-3);
 % these sc doesn't need, but let's load them anyway,
 % so that this function is also useful for other purposes
 pars.bstart   = paramstemp.Bfrom * 10;             % G
 pars.bstop    = paramstemp.Bto * 10;               % G
 pars.li_freq  = paramstemp.ModulationFreq * 1000;  % kHz
 pars.li_phase = paramstemp.Measurement_Phase;      % °
-pars.tc       = paramstemp.SweepTime / (dim(data, 1) * 1e-3);
 pars.npoints  = dim(data, 1);
 pars.bstep    = abs(pars.bstop - pars.bstep) / (pars.npoints - 1);

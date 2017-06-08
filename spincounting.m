@@ -35,7 +35,9 @@ function [out, results] = spincounting(varargin)
 % modamp           : float, modulation amplitude in G
 % mwfreq           : float, microwave frequency in Hz
 %
-% tunepicscaling   : float, scaling of the tune picture in MHz/s, default: 6,94e4
+% tunepicscaling   : float, scaling of the tune picture in MHz/<x unit>, default: 6,94e4
+%                    when using an image as a tune file, use the tune picture width in MHz
+%                    instead, as the created x-axis is meaningless for image files
 % tunebglimits     : 1x4 integer, indices of background, default: auto
 % tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
 % tunebgorder      : integer, order of background correction used, default 3

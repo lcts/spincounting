@@ -100,6 +100,8 @@ When both attn and pwr are set, pwr takes precedence.
 2.4) Options governing the fitting of the dip and q calculation
 
 tunepicscaling   : float, scaling of the tune picture in MHz/s, default: 6,94e4
+                   when using an image as a tune file, use the tune picture width in MHz
+                   instead, as the created x-axis is meaningless for image files
 tunebglimits     : 1x4 float, x values of background, default: auto
 tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
 tunebgorder      : integer, order of background correction used, default 3
@@ -160,6 +162,8 @@ For a good result it is vitally important that the background corrections and fi
 Record the tune picture without the dip or with a very high q sample. Adjust tunebgorder to get a good fit. Use the same order polynomial when fitting the tune picture with the dip. Check the displayed background. It should have a similar shape as the one without the dip. If in doubt. record both (with/without dip) and subtract them before fitting.
 The reason for this approach is that for low q samples, a higher order background might appear to yield a better fit, but in reality the algorithm is just fitting part of the dip with the background.
 You can minimise errors from imperfect background correction by positioning the dip on the same background area every time you measure.
+
+When you're using an image (e.g. a screenshot of the tune picture) as data, note that the x-axis of the data in the image files is meaningless, as the scaling (MHz/pixel) depends on the resolution of the window on your computer screen, which could be variable. The loading function for image files therefore normalises the x-axis to [0,1]. For this reason tunepicscaling is always <full width of tune picture / Mhz>/<x unit> for image files.
 
 4.3.2) Spectrum
 Set the inner borders of the background correction area to the low and high field borders of your spectrum. Leave the outer borders at the spectrum min/max field for now. Set the lowest possible intbgorder for the first correction that describes that data well. Then do the same for the second correction. It is important not to use needlessly high order polynomials. Play around with bg limits and borders until a good correction of the bg after integration is achieved. Prioritise low order polynomials over large background areas.
