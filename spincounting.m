@@ -142,12 +142,20 @@ end
 
 % populate machine parameter struct with values from machine file
 if p.machine
-    scpath = fileparts(mfilename('fullpath'));
-    machinefile = [scpath, '/machines/', p.machine, '.m'];
+    scpath = fileparts(mfilename('fullpath'))
+    machinefile = [scpath, '/private/machines/', p.machine, '.m']
     if exist(machinefile, 'file') == 2
-        eval(machinefile);
+        run(machinefile);
         for ii = 1:size(MACHINE_PARAMETERS,1)
             mp.(MACHINE_PARAMETERS{ii,1}) = MACHINE_PARAMETERS{ii,2};
+            % some parameteres make no sense in a machine file and are ignored
+            if isfield(mp,'tunefile');  rmfield((mp, 'tunefile'); end
+            if isfield(mp,'specfile');  rmfield((mp, 'specfile'); end
+            if isfield(mp,'outfile');   rmfield((mp, 'outfile'); end
+            if isfield(mp,'outformat'); rmfield((mp, 'outformat'); end
+            if isfield(mp,'nosave');    rmfield((mp, 'nosave'); end
+            if isfield(mp,'savemat');   rmfield((mp, 'savemat'); end
+            if isfield(mp,'nspins');    rmfield((mp, 'nspins'); end
         end
     else
         error('no machine file found for machine ''%s''', p.machine);

@@ -5,7 +5,7 @@ CONFIG_VERSION = '3';
 % while you can set all the measurement parameters here, you really
 % shouldn't. Only set as default parameters that are unlikely to change
 % (i.e. that are part of your set-up or intrinsic properties of your sample
-DEFAULTS = {...
+DEFAULT_PARAMETERS = {...
             'tunepicscaling', 6.94e4; ... % MHz/<tunepicunit>
             'S', 1/2; ...                 % sample spin
             'maxpwr', 0.2; ...            % bridge max power (W)
