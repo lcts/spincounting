@@ -25,7 +25,7 @@ nspins = Na * conc * vol
 spincounting('nspins', nspins, 'nosave',true);
 
 %% the fit of the tune picture looks good, and we save the q-value:
-q = <insert value>
+q = 2500
 
 % the integrated spectrum, not so much, because the background area should
 % end right next to the spectrum. Rerun the program while setting a proper
@@ -33,14 +33,14 @@ q = <insert value>
 %
 % since we already determined the q-value, we can give it directly to the
 % program
-spincounting('nspins', nspins, 'nosave',true, 'intbglimits', [lowleft lowright highleft highright])
+spincounting('nspins', nspins, 'nosave',true, 'intbglimits', [3255.7 3300.3 3399.8 3445.2], 'tunebglimits', [-1.5e-5 0 1e-4 2e-4 ])
 
 %% When we try to adjust the bg, we probably have to run the program a few time
 % and we don't want to have to select the file every time, so we pass the
 % name as an option to the program
 spincounting('nspins', nspins, ...
              'nosave',true, ...
-             'intbglimits', [3250 3323 3372 3450], ...
+             'intbglimits', [3255.7 3300.3 3399.8 3445.2], ...
              'q', q, ...
              'specfile', 'tempol.scs');
 
@@ -93,7 +93,7 @@ spincounting('tfactor', tfactor, 'nosave',true)
 optionsP3HT.tfactor = tfactor;
 optionsP3HT.intbglimits = intbgP3HT;
 optionsP3HT.q = qP3HT;
-optionsP3HT.specfile = <insert name>;
+optionsP3HT.specfile = 'P3HT.scs';
 optionsP3HT.nosave = true;
 
 nspins = spincounting(optionsP3HT);

@@ -80,7 +80,7 @@ if ~p.Results.background
   end
 else
   % convert from values to indices
-  background = iof(p.Results.data(:,1),p.Results.background);
+  background = iof(p.Results.data(:,1),p.Results.background)
   BGINVALID = false;
   % sanity checks
   for i = 3:-1:1
