@@ -119,13 +119,18 @@ end
 %% LOAD DEFAULTS
 % initialise parameter struct
 sp = struct();
-% ignore rgain, nscans, tc unless someone sets them somewhere
-sp.rgain = 1;
-sp.nscans = 1;
-sp.tc = 1;
 
 % load config
 scconfig
+
+if ~strcmp(VERSION(1),CONFIG_VERSION(1))
+    warning(['Version %s introduced changes to config files and user interface that break backwards-compatibility. ', ...
+             'Please read the CHANGELOG file on how to adapt your configuration and scripts.', ...
+             '\n\nYou can set ''CONFIG_VERSION = %s'' in scconfig.m to disable this warning.'], ...
+             VERSION, VERSION(1));
+    return;
+end
+
 % populate parameter struct
 for ii = 1:size(DEFAULTS,1)
     sp.(DEFAULTS{ii,1}) = DEFAULTS{ii,2};

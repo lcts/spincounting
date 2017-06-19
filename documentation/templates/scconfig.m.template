@@ -2,6 +2,7 @@
 % 2) Rename it to scconfig.m
 % 3) Edit accoding to your needs
 
+% Configuration version. Needs to match the major version number of the toolbox
 CONFIG_VERSION = '3';
 
 %% GLOBAL DEFAULTS

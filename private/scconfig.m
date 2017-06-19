@@ -1,3 +1,6 @@
+% Configuration version. Needs to match the major version number of the toolbox
+CONFIG_VERSION = '3';
+
 % PROGRAM DEFAULTS
 % while you can set all the measurement parameters here, you really
 % shouldn't. Only set as default parameters that are unlikely to change
@@ -7,6 +10,9 @@ DEFAULTS = {...
             'S', 1/2; ...                 % sample spin
             'maxpwr', 0.2; ...            % bridge max power (W)
             'savemat', false; ...         % save results as a .mat file
+            'rgain', 1; ...               % files are normalised wrt receiver gain 
+            'nscans', 1; ...              % dito number of scans
+            'tc', 1; ...                  % dito time constant
            };
 
 % TUNE FILES
