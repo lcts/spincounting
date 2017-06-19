@@ -66,39 +66,42 @@ VERSION = '3.0-devel';
 %% INPUT HANDLING
 % define input arguments
 pmain = inputParser;
+%                  <parameter>		<default> 	<validation function>
 % files and file handling
-pmain.addParameter('tunefile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
-pmain.addParameter('specfile', false, @(x)validateattributes(x,{'char','struct'},{'vector'}));
-pmain.addParameter('outfile', false, @(x)validateattributes(x,{'char'},{'vector'}));
-pmain.addParameter('outformat', 'pdf', @(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
-pmain.addParameter('nosave', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
-pmain.addParameter('savemat', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParameter('tunefile',			false,	@(x)validateattributes(x,{'char','struct'},{'vector'}));
+pmain.addParameter('specfile',			false,	@(x)validateattributes(x,{'char','struct'},{'vector'}));
+pmain.addParameter('outfile',			false,	@(x)validateattributes(x,{'char'},{'vector'}));
+pmain.addParameter('outformat',			'pdf',	@(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
+pmain.addParameter('nosave',			false,	@(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParameter('savemat',			false,	@(x)validateattributes(x,{'logical'},{'scalar'}));
 % program behaviour
-pmain.addParameter('nospec', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
-pmain.addParameter('noplot', false, @(x)validateattributes(x,{'logical'},{'scalar'}));
-pmain.addParameter('nspins', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParameter('tfactor', false, @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParameter('q', false, @(x)validateattributes(x,{'char','numeric'},{'vector'}));
+pmain.addParameter('nospec',			false,	@(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParameter('noplot',			false,	@(x)validateattributes(x,{'logical'},{'scalar'}));
+pmain.addParameter('nspins',			false,	@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('tfactor',			false,	@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('q',					false,	@(x)validateattributes(x,{'numeric','logical'},{'scalar'}));
+% machine file to read default parameteres from
+pmain.addParameter('machine',			false,	@(x)validateattributes(x,{'char'},{'vector'}));
 % measurement parameters (override those read from file or set by default)
-pmain.addParameter('S', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParameter('maxpwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParameter('rgain', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParameter('tc', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParameter('nscans', [], @(x)validateattributes(x,{'numeric'},{'positive','integer'}));
-pmain.addParameter('pwr', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParameter('attn', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParameter('T', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParameter('modamp', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pmain.addParameter('mwfreq', [], @(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('S',					[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('maxpwr',			[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('rgain',				[],		@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('tc',				[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('nscans',			[],		@(x)validateattributes(x,{'numeric'},{'positive','integer'}));
+pmain.addParameter('pwr',				[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('attn',				[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('T',					[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('modamp',			[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pmain.addParameter('mwfreq',			[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 % tune picture evaluation
-pmain.addParameter('tunepicscaling', [], @(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParameter('tunebglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
-pmain.addParameter('tunebgorder',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParameter('tunepicsmoothing',[],@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParameter('dipmodel',[], @ischar);
+pmain.addParameter('tunepicscaling',	[],		@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('tunebglimits',		[],		@(x)validateattributes(x,{'numeric'},{'vector'}));
+pmain.addParameter('tunebgorder',		[],		@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('tunepicsmoothing',	[],		@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pmain.addParameter('dipmodel',			[],		@ischar);
 % spectrum integration
-pmain.addParameter('intbglimits',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
-pmain.addParameter('intbgorder',[],@(x)validateattributes(x,{'numeric'},{'vector'}));
+pmain.addParameter('intbglimits',		[],		@(x)validateattributes(x,{'numeric'},{'vector'}));
+pmain.addParameter('intbgorder',		[],		@(x)validateattributes(x,{'numeric'},{'vector'}));
 % add the name of the function
 pmain.FunctionName = 'spincounting';
 
@@ -107,14 +110,14 @@ pmain.parse(varargin{:});
 % and store the result in p
 p = pmain.Results;
 
-% validate q
-if ischar(p.q)
-    if ~strcmp(p.q,'auto')
-        error('''q'' must be numeric scalar or ''auto''');
-    end
-else
-    validateattributes(p.q,{'numeric','logical'},{'scalar'},'spincounting','''q''');
-end
+%% A WORD ABOUT PARAMETER STRUCTS
+% sp:		Main spincounting parameter struct, everything ends here
+%			Initilaised with values from scconfig 
+% sptemp:	prameters read from spectrum file, get merged into sp
+% mp:		parameters read from machine files, get merged into sp
+% p:		paramteres read from commandline, get merged into sp
+%
+% Precedence: p > mp > stemp > scconfig
 
 %% LOAD DEFAULTS
 % initialise parameter struct
@@ -123,18 +126,34 @@ sp = struct();
 % load config
 scconfig
 
+% check if config file is up-to-date
 if ~strcmp(VERSION(1),CONFIG_VERSION(1))
     warning(['Version %s introduced changes to config files and user interface that break backwards-compatibility. ', ...
              'Please read the CHANGELOG file on how to adapt your configuration and scripts.', ...
              '\n\nYou can set ''CONFIG_VERSION = %s'' in scconfig.m to disable this warning.'], ...
-             VERSION, VERSION(1));
+            VERSION, VERSION(1));
     return;
 end
 
-% populate parameter struct
-for ii = 1:size(DEFAULTS,1)
-    sp.(DEFAULTS{ii,1}) = DEFAULTS{ii,2};
+% populate spincounting parameter struct with defaults from scconfig
+for ii = 1:size(DEFAULT_PARAMETERS,1)
+    sp.(DEFAULT_PARAMETERS{ii,1}) = DEFAULT_PARAMETERS{ii,2};
 end
+
+% populate machine parameter struct with values from machine file
+if p.machine
+    scpath = fileparts(mfilename('fullpath'));
+    machinefile = [scpath, '/machines/', p.machine, '.m'];
+    if exist(machinefile, 'file') == 2
+        eval(machinefile);
+        for ii = 1:size(MACHINE_PARAMETERS,1)
+            mp.(MACHINE_PARAMETERS{ii,1}) = MACHINE_PARAMETERS{ii,2};
+        end
+    else
+        error('no machine file found for machine ''%s''', p.machine);
+    end
+end
+        
 
 %% SET UP OUTPUT
 % get a filename for saving unless we're not supposed to
@@ -222,15 +241,13 @@ if ~p.nospec
     for ii = 1:length(fnames); sp.(fnames{ii}) = sptemp.(fnames{ii}); end
 end
 
-% Load tune picture data
-% if 'auto' is requested, use q from specfile if present
-% else reset q to false
-if strcmp(p.q, 'auto') && isfield(sp, 'q')
-    p.q = sp.q;
-else
-    p.q = false;
+% merge machine paramstruct mp into existing paramstruct sp
+if p.machine
+    fnames = fieldnames(mp);
+    for ii = 1:length(fnames); sp.(fnames{ii}) = mp.(fnames{ii}); end
 end
 
+% Load tune picture data
 % get q from tunefile if needed
 if ~p.q
     if islogical(p.tunefile)
