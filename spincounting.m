@@ -74,14 +74,14 @@ pmain.addParameter('outfile',			false,	@(x)validateattributes(x,{'char'},{'vecto
 pmain.addParameter('outformat',			'pdf',	@(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
 pmain.addParameter('nosave',			false,	@(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParameter('savemat',			false,	@(x)validateattributes(x,{'logical'},{'scalar'}));
+% machine file to read default parameteres from
+pmain.addParameter('machine',			false,	@(x)validateattributes(x,{'char'},{'vector'}));
 % program behaviour
 pmain.addParameter('nospec',			false,	@(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParameter('noplot',			false,	@(x)validateattributes(x,{'logical'},{'scalar'}));
 pmain.addParameter('nspins',			false,	@(x)validateattributes(x,{'numeric'},{'scalar'}));
 pmain.addParameter('tfactor',			false,	@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pmain.addParameter('q',					false,	@(x)validateattributes(x,{'numeric','logical'},{'scalar'}));
-% machine file to read default parameteres from
-pmain.addParameter('machine',			false,	@(x)validateattributes(x,{'char'},{'vector'}));
+pmain.addParameter('q',					[],		@(x)validateattributes(x,{'numeric','logical'},{'scalar'}));
 % measurement parameters (override those read from file or set by default)
 pmain.addParameter('S',					[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pmain.addParameter('maxpwr',			[],		@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
@@ -109,6 +109,11 @@ pmain.FunctionName = 'spincounting';
 pmain.parse(varargin{:});
 % and store the result in p
 p = pmain.Results;
+% remove empty fields from p, necessary for proper merging later on
+fnames = fieldnames(p);
+for ii = 1:length(fnames)
+	if isempty(p.(fnames{ii})); p = rmfield(p, fnames{ii}); end;
+end
 
 %% A WORD ABOUT PARAMETER STRUCTS
 % sp:		Main spincounting parameter struct, everything ends here
@@ -117,11 +122,13 @@ p = pmain.Results;
 % mp:		parameters read from machine files, get merged into sp
 % p:		paramteres read from commandline, get merged into sp
 %
-% Precedence: p > mp > stemp > scconfig
+% Precedence: p > mp > sptemp > scconfig
 
 %% LOAD DEFAULTS
 % initialise parameter struct
 sp = struct();
+% initilaise output struct
+results = struct();
 
 % load config
 scconfig
@@ -139,28 +146,44 @@ end
 for ii = 1:size(DEFAULT_PARAMETERS,1)
     sp.(DEFAULT_PARAMETERS{ii,1}) = DEFAULT_PARAMETERS{ii,2};
 end
+% p.machine needs to be merged directly
+if p.machine
+    sp.machine = p.machine;
+elseif ~isfield(sp, 'machine')
+    sp.machine = false;
+end
+% some parameteres make should be set in machine file instead of scconfig
+disallow_fields = {'q', 'S', 'maxpwr', 'rgain', 'tc', 'nscans', 'pwr', 'attn', 'T', 'modamp', 'mwfreq', ...
+                   'tunepicscaling', 'tunepicsmoothing', 'tunebglimits', 'tunebgorder', 'dipmodel', ...
+                   'intbglimits', 'intbgorder' ...
+                  };
+for ii = 1:length(disallow_fields)
+	if isfield(sp, disallow_fields{ii})
+		error( 'Option ''%s'' can not be set in ''scconfig''. use a machine file instead', disallow_fields{ii});
+	end
+end
 
 % populate machine parameter struct with values from machine file
-if p.machine
-    scpath = fileparts(mfilename('fullpath'))
-    machinefile = [scpath, '/private/machines/', p.machine, '.m']
+if sp.machine
+    scpath = fileparts(mfilename('fullpath'));
+    machinefile = [scpath, '/private/machines/', sp.machine, '.m'];
     if exist(machinefile, 'file') == 2
         run(machinefile);
         for ii = 1:size(MACHINE_PARAMETERS,1)
             mp.(MACHINE_PARAMETERS{ii,1}) = MACHINE_PARAMETERS{ii,2};
-            % some parameteres make no sense in a machine file and are ignored
-            if isfield(mp,'tunefile');  rmfield(mp, 'tunefile'); end
-            if isfield(mp,'specfile');  rmfield(mp, 'specfile'); end
-            if isfield(mp,'outfile');   rmfield(mp, 'outfile'); end
-            if isfield(mp,'outformat'); rmfield(mp, 'outformat'); end
-            if isfield(mp,'nosave');    rmfield(mp, 'nosave'); end
-            if isfield(mp,'savemat');   rmfield(mp, 'savemat'); end
-            if isfield(mp,'nspins');    rmfield(mp, 'nspins'); end
+        end
+		% some parameteres make no sense in a machine file
+        disallow_fields = {'tunefile', 'specfile', 'outfile', 'outformat', 'nosave', 'noplot', 'savemat', 'nspins'};
+        for ii = 1:length(disallow_fields)
+        	if isfield(mp, disallow_fields{ii})
+        		error( 'Option ''%s'' can not be set in machine file. Set in ''scconfig'' instead', disallow_fields{ii});
+        	end
         end
     else
         error('no machine file found for machine ''%s''', p.machine);
     end
 end
+
         
 
 %% SET UP OUTPUT
@@ -215,26 +238,8 @@ else
     end
 end
 % print the version number
-fprintf('\nspincouting v%s\n\n', VERSION);
-
-%% SET OPERATION MODE
-if ~p.nospec
-    if ~p.nspins
-        if ~p.tfactor
-            results.mode = 'integrate';
-        else
-            results.mode = 'calc_spins';
-        end
-    else
-        if ~p.tfactor
-            results.mode = 'calc_tfactor';
-        else
-            results.mode = 'check';
-        end
-    end
-else
-    results.mode = 'none';
-end
+fprintf('\nspincouting v%s\n', VERSION);
+if sp.machine; fprintf('Using defaults read from machine file ''%s''.\n\n', sp.machine); end
 
 %% LOAD DATA %%
 % Load spectrum data
@@ -250,43 +255,49 @@ if ~p.nospec
 end
 
 % merge machine paramstruct mp into existing paramstruct sp
-if p.machine
+if sp.machine
     fnames = fieldnames(mp);
     for ii = 1:length(fnames); sp.(fnames{ii}) = mp.(fnames{ii}); end
 end
 
+% merge command line parameter struct p into existing paramstruct sp
+fnames = fieldnames(p);
+for ii = 1:length(fnames); sp.(fnames{ii}) = p.(fnames{ii}); end
+
+
 % Load tune picture data
+% if sp.q-is still not defined, set it to false
+if ~isfield(sp, 'q'); sp.q = false; end
 % get q from tunefile if needed
-if ~p.q
+if ~sp.q
     if islogical(p.tunefile)
         tdata = GetFile(TUNE_FORMATS, '', 'Select a tune picture file:');
     else
-        tdata = GetFile(TUNE_FORMATS, p.tunefile);
+        tdata = GetFile(TUNE_FORMATS, sp.tunefile);
     end
+    % get parameters for tune picture fitting and put them into results struct
+	if isfield(sp, 'tunebglimits')
+    	results.tune.background = sp.tunebglimits;
+	end
+	if isfield(sp, 'tunebgorder')
+    	results.tune.order = sp.tunebgorder;
+	end
+	if isfield(sp, 'tunepicsmoothing')
+    	results.tune.smoothing = sp.tunepicsmoothing;
+	end
+	if isfield(sp, 'dipmodel')
+    	results.tune.dipmodel = sp.dipmodel;
+	end
 end
 
 %% HANDLE FITTING AND INTEGRATION PARAMETERS %%
 
-% get parameters for tune picture fitting and put them into results struct
-if ~isempty(p.tunebglimits)
-    results.tune.background = p.tunebglimits;
-end
-if ~isempty(p.tunebgorder)
-    results.tune.order = p.tunebgorder;
-end
-if ~isempty(p.tunepicsmoothing)
-    results.tune.smoothing = p.tunepicsmoothing;
-end
-if ~isempty(p.dipmodel)
-    results.tune.dipmodel = p.dipmodel;
-end
-
 % get parameters for spectrum integration and put them into results struct
-if ~isempty(p.intbglimits)
-    results.spec.background = p.intbglimits;
+if isfield(sp, 'intbglimits')
+    results.spec.background = sp.intbglimits;
 end
-if ~isempty(p.intbgorder)
-    results.spec.order = p.intbgorder;
+if isfield(sp, 'intbgorder')
+    results.spec.order = sp.intbgorder;
 end
 
 %% CHECK PARAMETERS %%
@@ -294,31 +305,18 @@ end
 % file / list of default values
 
 % tunepicscaling is needed for q
-if ~p.q
-    % override defaults/read-from-file
-    if ~isempty(p.tunepicscaling); sp.tunepicscaling = p.tunepicscaling; end
+if ~sp.q
     % check that we have a parameter
     if ~isfield(sp, 'tunepicscaling'); error('missing tunepicscaling'); end
     tdata(:,1) = tdata(:,1) * sp.tunepicscaling;
 end
 % unless we're doing nothing (nospec and q are set), we need the mw
 % frequency
-if ~(p.q && p.nospec)
-    if ~isempty(p.mwfreq); sp.mwfreq = p.mwfreq; end
+if ~(sp.q && p.nospec)
     if ~isfield(sp, 'mwfreq'); error('missing mwfreq'); end
 end
 % the rest is only important for normalisation
-if ~p.nospec
-    if ~isempty(p.T); sp.T = p.T; end
-    if ~isempty(p.modamp); sp.modamp = p.modamp; end
-    if ~isempty(p.pwr); sp.pwr = p.pwr; end
-    if ~isempty(p.attn); sp.attn = p.attn; end
-    if ~isempty(p.maxpwr); sp.maxpwr = p.maxpwr; end
-    if ~isempty(p.S); sp.S = p.S; end
-    if ~isempty(p.tc); sp.tc = p.tc; end
-    if ~isempty(p.rgain); sp.rgain = p.rgain; end
-    if ~isempty(p.nscans); sp.nscans = p.nscans; end
-
+if ~sp.nospec
     if ~isfield(sp, 'T'); error('missing temperature'); end
     if ~isfield(sp, 'S'); error('missing spin'); end
     if ~isfield(sp, 'tc'); error('missing time constant'); end
@@ -335,7 +333,7 @@ if ~p.nospec
 end
 
 %% FIT DIP & INTEGRATE SPECTRUM %%
-if ~p.q
+if ~sp.q
     if isfield(results,'tune')
         [fwhm, ~, tunebg, fit] = FitResDip(tdata,results.tune);
     else
@@ -362,7 +360,7 @@ end
 
 %% PLOT THE LOT %%
 % plot tune picture with background corrections and fit
-if ~p.q
+if ~sp.q
     close(findobj('type','figure','name','TuneFigure'))
     if ~p.noplot
         hTuneFigure = figure('name','TuneFigure', 'Visible', 'on');
@@ -387,9 +385,9 @@ end
 
 %% CALCULATE RESULTS AND OUTPUT
 % Calculate Q-factor, print fwhm, Q
-if ~p.q
+if ~sp.q
 	% print tune background limit values
-	if ~p.tunebglimits
+	if ~isfield(p, 'tunebglimits')
 		fprintf('\n\n\nTune picture background: [%.2f  %.2f  %.2f  %.2f] MHz\nUse ''tunebglimits'' to change.\n', ...
 				tdata(tunebg,1));
 	else
@@ -405,13 +403,13 @@ if ~p.q
         fprintf('Microwave frequency needed for q-factor calculation.\n');
     end
 else
-    results.q = p.q;
+    results.q = sp.q;
     fprintf('\nq-factor %.2f supplied by user/read from spectrum file. No q-factor calculations performed.\n', results.q);
 end
 
 if ~p.nospec
     % print double integral and spec background limit values
-    if ~p.intbglimits
+    if ~isfield(p, 'intbglimits')
 		fprintf('\nSpectrum background: [%.1f %.1f %.1f %.1f] G\nUse ''intbglimits'' to change.\nDouble integral: %g a.u.\n', ...
 				sdata(specbg,1), dint);
 	else
@@ -429,7 +427,7 @@ end
 if ~p.nosave
     % save plots to file
     outformat = ['-d' p.outformat];
-    if ~p.q
+    if ~sp.q
         set(hTuneFigure,'PaperPositionMode','auto');
         print(hTuneFigure, outformat, '-r300', strcat(p.outfile, '_tune_picture'));
         fprintf('\nTune figure saved to %s. ', [p.outfile, '_tune_picture.', p.outformat, '\n']);
@@ -439,6 +437,24 @@ if ~p.nosave
     fprintf('Double integration figure saved to %s\n', [p.outfile, '_spectrum.', p.outformat, '\n']);
 end
 
+%% SET OPERATION MODE
+if ~p.nospec
+    if ~sp.nspins
+        if ~sp.tfactor
+            results.mode = 'integrate';
+        else
+            results.mode = 'calc_spins';
+        end
+    else
+        if ~sp.tfactor
+            results.mode = 'calc_tfactor';
+        else
+            results.mode = 'check';
+        end
+    end
+else
+    results.mode = 'none';
+end
 
 %% MODE_DEPENDENT ACTIONS
 switch results.mode
@@ -454,21 +470,21 @@ switch results.mode
         nspins = NaN;
         tfactor = NaN;
     case 'calc_spins' % calculate nspins from tfactor
-        nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
-        tfactor = p.tfactor;
+        nspins = CalcSpins(dint, sp.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        tfactor = sp.tfactor;
         out = nspins;
         fprintf('\nUsing transfer factor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
                 tfactor, nspins);
     case 'calc_tfactor' % calculate tfactor from nspins
-        tfactor = CalcSpins(dint, p.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
-        nspins = p.nspins;
+        tfactor = CalcSpins(dint, sp.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        nspins = sp.nspins;
         out = tfactor;
         fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transfer factor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
                 nspins, tfactor, tfactor);
     case 'check' % check calculated against given nspins
-        nspins = CalcSpins(dint, p.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        nspins = CalcSpins(dint, sp.tfactor, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         nspinserror = abs(nspins - p.nspins)/ nspins * 100;
-        tfactor = CalcSpins(dint, p.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
+        tfactor = CalcSpins(dint, sp.nspins, sp.rgain, sp.tc, sp.nscans, sp.pwr, sp.modamp, results.q, sp.nb, sp.S);
         out = nspinserror;
         results.nspinserror = nspinserror;
         fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
