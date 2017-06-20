@@ -149,13 +149,13 @@ if p.machine
         for ii = 1:size(MACHINE_PARAMETERS,1)
             mp.(MACHINE_PARAMETERS{ii,1}) = MACHINE_PARAMETERS{ii,2};
             % some parameteres make no sense in a machine file and are ignored
-            if isfield(mp,'tunefile');  rmfield((mp, 'tunefile'); end
-            if isfield(mp,'specfile');  rmfield((mp, 'specfile'); end
-            if isfield(mp,'outfile');   rmfield((mp, 'outfile'); end
-            if isfield(mp,'outformat'); rmfield((mp, 'outformat'); end
-            if isfield(mp,'nosave');    rmfield((mp, 'nosave'); end
-            if isfield(mp,'savemat');   rmfield((mp, 'savemat'); end
-            if isfield(mp,'nspins');    rmfield((mp, 'nspins'); end
+            if isfield(mp,'tunefile');  rmfield(mp, 'tunefile'); end
+            if isfield(mp,'specfile');  rmfield(mp, 'specfile'); end
+            if isfield(mp,'outfile');   rmfield(mp, 'outfile'); end
+            if isfield(mp,'outformat'); rmfield(mp, 'outformat'); end
+            if isfield(mp,'nosave');    rmfield(mp, 'nosave'); end
+            if isfield(mp,'savemat');   rmfield(mp, 'savemat'); end
+            if isfield(mp,'nspins');    rmfield(mp, 'nspins'); end
         end
     else
         error('no machine file found for machine ''%s''', p.machine);
@@ -240,9 +240,9 @@ end
 % Load spectrum data
 if ~p.nospec
     if islogical(p.specfile)
-        [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS, 'Select a spectrum file:');
+        [sdata, sptemp] = GetFile(SPECTRUM_FORMATS, '', 'Select a spectrum file:');
     else
-        [sdata, sptemp] = GetFile(SPECTRUM_LOADFUNCTIONS, p.specfile);
+        [sdata, sptemp] = GetFile(SPECTRUM_FORMATS, p.specfile);
     end
     % merge paramstruct sptemp into existing paramstruct sp
     fnames = fieldnames(sptemp);
@@ -259,9 +259,9 @@ end
 % get q from tunefile if needed
 if ~p.q
     if islogical(p.tunefile)
-        tdata = GetFile(TUNE_LOADFUNCTIONS, TUNE_KNOWN_FORMATS, 'Select a tune picture file:');
+        tdata = GetFile(TUNE_FORMATS, '', 'Select a tune picture file:');
     else
-        tdata = GetFile(TUNE_LOADFUNCTIONS, p.tunefile);
+        tdata = GetFile(TUNE_FORMATS, p.tunefile);
     end
 end
 

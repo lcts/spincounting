@@ -5,18 +5,18 @@ function [data, params] = GetFile(varargin)
 % data = GetFile(functions, knownformats, dialoftitle)
 % data = GetFile(functions, filename)
 % data = GetFile(functions, struct)
-% [data, pars] = GetFile(___)
+% [data, params] = GetFile(___)
 
 % parse inputs
 p = inputParser;
-p.addRequired('functions', @(x)validateattributes(x,{'cell'},{'ncols', 2}));
-p.addRequired('input', @(x)validateattributes(x,{'char','struct','cell'},{'2d'}));
-p.addOptional('title', '', @ischar);
+p.addRequired('funcarray', @(x)validateattributes(x,{'cell'},{'ncols', 3}));
+p.addOptional('input', '', @(x)validateattributes(x,{'char','struct'},{'2d'}));
+p.addOptional('title', 'Select a file:', @ischar);
 p.FunctionName = 'GetFile';
 p.parse(varargin{:});
 
-if iscell(p.Results.input)
-    [file, filepath] = uigetfile(p.Results.input,p.Results.title);   % get the file
+if isempty(p.Results.input)
+    [file, filepath] = uigetfile(parseformats(p.Results.funcarray,'filter'), p.Results.title);   % get the file
     if file == 0; error('GetFile:NoFile', 'No file selected.'); end; % throw exception if cancelled
     [filepath, file, extension] = fileparts([filepath file]);        % get file extension
     file = fullfile(filepath, [file extension]);
@@ -43,11 +43,12 @@ end
 
 if ~isstruct(p.Results.input)
     % check if we know about this extension
-    [ir,~] = find(strcmpi(p.Results.functions, extension));
+    functions = parseformats(p.Results.funcarray,'function')
+    [ir,~] = find(strcmpi(functions, extension));
     % if we do
     if ir ~= 0
         % run the appropriate loading function
-        [data, params] = feval(p.Results.functions{ir,2},file);
+        [data, params] = feval(functions{ir,2},file);
     else
         % try to get data with load()
         warning('GetFile:UnknownFormat', 'Unknown file format, trying to load as generic ascii.')
