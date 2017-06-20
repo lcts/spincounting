@@ -43,7 +43,7 @@ end
 
 if ~isstruct(p.Results.input)
     % check if we know about this extension
-    functions = parseformats(p.Results.funcarray,'function')
+    functions = parseformats(p.Results.funcarray,'function');
     [ir,~] = find(strcmpi(functions, extension));
     % if we do
     if ir ~= 0
