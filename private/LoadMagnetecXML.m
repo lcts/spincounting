@@ -19,8 +19,8 @@ pars.pwr    = paramstemp.MicrowavePower * 1e-3;    % W
 pars.modamp = paramstemp.Modulation * 10;          % G
 %pars.nscans = paramstemp.Accumulations;
 pars.T      = paramstemp.Measurement_Temperature + 273.15; % K
-if isfield(paramstemp, 'EnableQFactorMeasurement') && strcmp(paramstemp.EnableQFactorMeasurement,'True')
-	pars.q  = paramstemp.Measurement_QFactor;
+if isfield(paramstemp, 'EnableQFactorMeasurement') && paramstemp.EnableQFactorMeasurement
+	pars.q  = paramstemp.Measurement_QFactor
 end
 %pars.tc       = paramstemp.SweepTime / (size(data, 1) * 1e-3);
 % these sc doesn't need, but let's load them anyway,
