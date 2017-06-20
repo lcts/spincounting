@@ -14,9 +14,7 @@ CONFIG_VERSION = '3';
 DEFAULT_PARAMETERS = {...
 %           'parameter1', value1; ...
 %           'parameter2', value2; ...
-            'machine', 'testmachine'; ... % MHz/<tunepicunit>
             'savemat', false; ...         % save results as a .mat file
-            'nosave', true; ...               % files are normalised wrt receiver gain 
            };
 
 % TUNE FILES
