@@ -14,4 +14,7 @@ MACHINE_PARAMETERS = {...
             'tunepicscaling', 6.94e4; ... % MHz/<tunepicunit>
             'S', 1/2; ...                 % sample spin
             'maxpwr', 0.2; ...            % bridge max power (W)
+            'rgain', 1; ...               % files are normalised wrt receiver gain 
+            'nscans', 1; ...              % dito number of scans
+            'tc', 1; ...                  % dito time constant
            };
