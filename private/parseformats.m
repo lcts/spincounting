@@ -23,9 +23,9 @@ if strcmp(p.Results.outtype, 'filter')
 else
 	kk = 1;
 	for ii = 1:size(p.Results.funcarray,1)
-		extensions = p.Results.funcarray{ii,1};
+		extensions = lower(p.Results.funcarray{ii,1});
 		% split extension string into cell array of extensions
-		extensions = strsplit(extensions(2:end), '; *');
+		extensions = unique(strsplit(extensions(2:end), '; *'));
 		for jj = 1:length(extensions)
 			% one extension could be '' (all files), ignore that
 			if ~isempty(extensions{jj})
