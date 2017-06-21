@@ -1,4 +1,4 @@
-function [returnval, nb] = CalcSpins(dint, refval, rgain, tc, nscans, pwr, Bmod, q, nb, S)
+function [returnval, nb] = calcspins(dint, refval, rgain, tc, nscans, pwr, Bmod, q, nb, S)
 
 % calculate spins / calibration factor
 % since <double integral> / <constants> = <calibration factor> * <# of

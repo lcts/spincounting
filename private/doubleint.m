@@ -1,13 +1,13 @@
-function [doubleint, specs, bgs, params, background] = DoubleInt(data, varargin)
+function [result, specs, bgs, params, background] = doubleint(data, varargin)
 % Calculate the double integral of a spectrum.
 %
 % Syntax
-% doubleint = DoubleInt(data)
-% doubleint = DoubleInt(data, 'Option', Value, ...)
-% [doubleint specs bgs params] = DoubleInt(data, ...)
+% result = doubleint(data)
+% result = doubleint(data, 'Option', Value, ...)
+% [result specs bgs params] = doubleint(data, ...)
 %
 % Description
-% DoubleInt calculates the double integral of a spectrum while performing automatic background correction.
+% doubleint calculates the double integral of a spectrum while performing automatic background correction.
 % The background is corrected either before the first or before each integration step, using polynoms of
 % user-definable order.
 %
@@ -16,7 +16,7 @@ function [doubleint, specs, bgs, params, background] = DoubleInt(data, varargin)
 %
 % background - vector of x values [leftstart leftstop rightstart rightstop] delimiting the area used
 %              for background fit. Take care to include as much background as possible in your spectrum but no signal.
-%              If this parameter is not given, DoubleInt will use the left and right 25% of the data as background.
+%              If this parameter is not given, doubleint will use the left and right 25% of the data as background.
 % order      - a vector the orders of the polynomials for background correction. The number of elements determines the number
 %              of correction steps (1 or 2). Default [1 3].
 %
@@ -31,9 +31,9 @@ function [doubleint, specs, bgs, params, background] = DoubleInt(data, varargin)
 % Check number of arguments and set defaults
 p = inputParser;
 p.addRequired('data', @(x)validateattributes(x,{'numeric'},{'2d','real'}));
-p.addParamValue('background',false, @(x)validateattributes(x,{'numeric'},{'size',[1,4]}));
-p.addParamValue('order',[1 3], @(x)validateattributes(x,{'numeric'},{'row','integer'}));
-p.FunctionName = 'DoubleInt';
+p.addParameter('background',false, @(x)validateattributes(x,{'numeric'},{'size',[1,4]}));
+p.addParameter('order',[1 3], @(x)validateattributes(x,{'numeric'},{'row','integer'}));
+p.FunctionName = 'doubleint';
 p.parse(data,varargin{:});
 
 if ~p.Results.background
@@ -53,13 +53,13 @@ else
     end
   end
   if BGINVALID
-    warning('DoubleInt:BGInvalid','Invalid background. Set to [%i %i %i %i].\n\n', background(1), background(2),background(3),background(4));
+    warning('doubleint:BGInvalid','Invalid background. Set to [%i %i %i %i].\n\n', background(1), background(2),background(3),background(4));
   end
 end
 
 if length(p.Results.order) >= 3
    message = 'order has too many elements. A maximum of two background correction steps are supported.';
-   error('DoubleInt:BackgroundSteps', message);
+   error('doubleint:BackgroundSteps', message);
 end
 
 %% INTEGRATE SPECTRUM
@@ -92,4 +92,4 @@ else
 end
 
 % calculate second integral
-doubleint = specs(background(3),3) - specs(background(2),3);
+result = specs(background(3),3) - specs(background(2),3);

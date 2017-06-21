@@ -74,6 +74,7 @@ pcmd.addParameter('outfile',			[],	@(x)validateattributes(x,{'char'},{'vector'})
 pcmd.addParameter('outformat',		[],	@(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
 pcmd.addParameter('nosave',			[],	@(x)validateattributes(x,{'logical'},{'scalar'}));
 pcmd.addParameter('savemat',			[],	@(x)validateattributes(x,{'logical'},{'scalar'}));
+pcmd.addParameter('warn',			[],	@(x)ischar(validatestring(x,{'on', 'off', 'nochange'})));
 % machine file to read default parameteres from
 pcmd.addParameter('machine',			[],	@(x)validateattributes(x,{'char'},{'vector'}));
 % program behaviour
@@ -132,7 +133,7 @@ diaryfile = tempname;
 diary(diaryfile);
 
 %% PRINT VERSION NUMBER
-fprintf('\nspincouting v%s\n', VERSION);
+fprintf('\nspincouting v%s\n%s\n\n', VERSION, datestr(now));
 
 %% LOAD DEFAULTS
 % initialise parameter structs
@@ -145,6 +146,7 @@ pstate = struct('tunefile', false, ...
                 'outformat', 'pdf', ...
                 'nosave', false, ...
                 'savemat', false, ...
+                'warn', 'nochange', ...
                 'noplot', false, ...
                 'machine', false, ...
                 'nospec', false ...
@@ -172,7 +174,8 @@ for ii = 1:size(DEFAULT_PARAMETERS,1)
         pmain.(DEFAULT_PARAMETERS{ii,1}) = DEFAULT_PARAMETERS{ii,2};
     end
 end
-% p.machine needs to be merged directly
+% pstate.machine needs to be merged directly, as commandline has to override
+% scconfig before pstate.machine is first queried
 if ~isempty(pcmd.Results.machine)
     pstate.machine = pcmd.Results.machine;
 end
@@ -195,10 +198,11 @@ end
 % Load spectrum data
 if ~pstate.nospec
     if islogical(pstate.specfile)
-        [sdata, pfile, pstate.specfile] = GetFile(SPECTRUM_FORMATS, '', 'Select a spectrum file:');
+        [sdata, pfile, pstate.specfile] = getfile(SPECTRUM_FORMATS, '', 'Select a spectrum file:');
     else
-        [sdata, pfile] = GetFile(SPECTRUM_FORMATS, pstate.specfile);
+        [sdata, pfile] = getfile(SPECTRUM_FORMATS, pstate.specfile);
     end
+    fprintf('Using spectrum file %s\n', pstate.specfile);
     % merge pfile into pmain/pstate
     fnames = fieldnames(pfile);
     for ii = 1:length(fnames)
@@ -240,10 +244,11 @@ if ~isfield(pmain, 'q'); pmain.q = false; end
 % get q from tunefile if needed
 if ~pmain.q
     if islogical(pstate.tunefile)
-        [tdata, ~, pstate.tunefile] = GetFile(TUNE_FORMATS, '', 'Select a tune picture file:');
+        [tdata, ~, pstate.tunefile] = getfile(TUNE_FORMATS, '', 'Select a tune picture file:');
     else
-        tdata = GetFile(TUNE_FORMATS, pmain.tunefile);
+        tdata = getfile(TUNE_FORMATS, pmain.tunefile);
     end
+    fprintf('Using tune picture file %s\n', pstate.tunefile);
 end
 
 %% OUTPUT FILES
@@ -278,6 +283,7 @@ else
         % remove extension from filename (because we add our own later)
         [path, file, extension] = fileparts(pstate.outfile);
         pstate.outfile = fullfile(path, file);
+        fprintf('Writing to log file %s.log\n', pstate.outfile);
         % check if outfile exists or is a folder
         if exist([pstate.outfile extension], 'file')
             % warn
@@ -324,10 +330,10 @@ end
 
 %% FIT DIP & INTEGRATE SPECTRUM %%
 if ~pmain.q
-    if ~isempty(pars2tune(pmain))
-        [fwhm, ~, tunebg, fit] = FitResDip(tdata, pars2tune(pmain));
+    if ~isempty(sc2fitdip(pmain))
+        [fwhm, ~, tunebg, fit] = fitdip(tdata, sc2fitdip(pmain));
     else
-        [fwhm, ~, tunebg, fit] = FitResDip(tdata);
+        [fwhm, ~, tunebg, fit] = fitdip(tdata);
     end
     results.tune.data = tdata;
     results.tune.fit(:,1)   = tdata(:,1);
@@ -337,10 +343,10 @@ end
 
 % calculate number of spins from spectrum
 if ~pstate.nospec
-    if ~isempty(pars2spec(pmain))
-        [dint, specs, bgs, ~, specbg] = DoubleInt(sdata, pars2spec(pmain));
+    if ~isempty(sc2doubleint(pmain))
+        [dint, specs, bgs, ~, specbg] = doubleint(sdata, sc2doubleint(pmain));
     else
-        [dint, specs, bgs, ~, specbg] = DoubleInt(sdata);
+        [dint, specs, bgs, ~, specbg] = doubleint(sdata);
     end
     results.spec.data(:,1:2) = sdata;
     results.spec.data(:,3:4) = specs(:,2:3);
@@ -408,7 +414,7 @@ if ~pstate.nospec
 	end
     % set measurement parameters
     % calculate actual power from maxpwr and attenuation
-    pmain.nb = PopulationDiff(pmain.T, pmain.mwfreq);
+    pmain.nb = popdiff(pmain.T, pmain.mwfreq);
     % Calculate normalisation factor and print it with some info
     fprintf('\nCalculation performed based on the following parameters:\n - actual power: %e mW\n - temperature: %.0f K\n - boltzmann population factor: %g\n - sample spin: S = %.1f\n - modulation amplitude: %.2f\n - receiver gain: %.2f\n - time constant: %e s\n - number of scans: %.0f\n', ...
             pmain.pwr*1000, pmain.T, pmain.nb, pmain.S, pmain.modamp, pmain.rgain, pmain.tc, pmain.nscans);
@@ -460,21 +466,21 @@ switch results.mode
         nspins = NaN;
         tfactor = NaN;
     case 'calc_spins' % calculate nspins from tfactor
-        nspins = CalcSpins(dint, pmain.tfactor, pmain.rgain, pmain.tc, pmain.nscans, pmain.pwr, pmain.modamp, results.q, pmain.nb, pmain.S);
+        nspins = calcspins(dint, pmain.tfactor, pmain.rgain, pmain.tc, pmain.nscans, pmain.pwr, pmain.modamp, results.q, pmain.nb, pmain.S);
         tfactor = pmain.tfactor;
         out = nspins;
         fprintf('\nUsing transfer factor tfactor = %e.\nCalculated number of spins in sample: %e\n', ...
                 tfactor, nspins);
     case 'calc_tfactor' % calculate tfactor from nspins
-        tfactor = CalcSpins(dint, pmain.nspins, pmain.rgain, pmain.tc, pmain.nscans, pmain.pwr, pmain.modamp, results.q, pmain.nb, pmain.S);
+        tfactor = calcspins(dint, pmain.nspins, pmain.rgain, pmain.tc, pmain.nscans, pmain.pwr, pmain.modamp, results.q, pmain.nb, pmain.S);
         nspins = pmain.nspins;
         out = tfactor;
         fprintf('\nUsing nspins = %e spins as reference.\n\nSpectrometer transfer factor tfactor = %e\n( <double integral> = %e * <# spins> )\n', ...
                 nspins, tfactor, tfactor);
     case 'check' % check calculated against given nspins
-        nspins = CalcSpins(dint, pmain.tfactor, pmain.rgain, pmain.tc, pmain.nscans, pmain.pwr, pmain.modamp, results.q, pmain.nb, pmain.S);
+        nspins = calcspins(dint, pmain.tfactor, pmain.rgain, pmain.tc, pmain.nscans, pmain.pwr, pmain.modamp, results.q, pmain.nb, pmain.S);
         nspinserror = abs(nspins - pmain.nspins)/ nspins * 100;
-        tfactor = CalcSpins(dint, pmain.nspins, pmain.rgain, pmain.tc, pmain.nscans, pmain.pwr, pmain.modamp, results.q, pmain.nb, pmain.S);
+        tfactor = calcspins(dint, pmain.nspins, pmain.rgain, pmain.tc, pmain.nscans, pmain.pwr, pmain.modamp, results.q, pmain.nb, pmain.S);
         out = nspinserror;
         results.nspinserror = nspinserror;
         fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
@@ -488,7 +494,7 @@ results.params = pmain;
 %% CLEANUP AND EXIT
 if ~pstate.nosave
     % copy temporary diary to outfile
-    copyfile(diaryfile,[pstate.outfile '.mat']);
+    copyfile(diaryfile,[pstate.outfile '.log']);
     delete(diaryfile);
 	% save results struct to mat-file or csv-file if needed
 	if pstate.savemat

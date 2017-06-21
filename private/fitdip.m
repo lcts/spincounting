@@ -1,16 +1,16 @@
-function [fwhm, resnorm, background, fit, params, func] = FitResDip(data, varargin)
+function [fwhm, resnorm, background, fit, params, func] = fitdip(data, varargin)
 % Fit a tune picture to extract the FWHM of the dip
 %
 % Syntax
-% fwhm = FitResDip(data)
-% fwhm = FitResDip(data, 'Option', Value, ...)
-% [fwhm resnorm fit bgparam dipparam] = FitResDip(...)
+% fwhm = fitdip(data)
+% fwhm = fitdip(data, 'Option', Value, ...)
+% [fwhm resnorm fit bgparam dipparam] = fitdip(...)
 %
 % Description
-% FitResDip extracts the dip FWHM by fitting a tune picture using a polynom as % the background
+% fitdip extracts the dip FWHM by fitting a tune picture using a polynom as % the background
 % and different models for the dip.
 %
-% fwhm = FitResDip(data) returns the FWHM of the dip. The units will be those used for the x-axis
+% fwhm = fitdip(data) returns the FWHM of the dip. The units will be those used for the x-axis
 %                        in data.
 %
 % The tune pic is not normalized before fitting. To ensure a successful fit, both x- and y-axis should
@@ -21,7 +21,7 @@ function [fwhm, resnorm, background, fit, params, func] = FitResDip(data, vararg
 %
 % background - vector of x values [leftstart leftstop rightstart rightstop] delimiting the area used
 %              for initial background fit. The dip should be between leftstop and rightstart.
-%              If this parameter is not given, FitResDip will try to autodetect the dip. Tf that fails
+%              If this parameter is not given, fitdip will try to autodetect the dip. Tf that fails
 %              the left and right 20% of the tunepicture (excluding flat background) are used.
 % smoothing  - # of points to use for smoothing for dip detection. Defaults to 2.5% of the total
 %              number of points. This parameter also influences how conservative the start of the tune picture
@@ -51,7 +51,7 @@ p.addParameter('smoothing',ceil(length(data(:,1))*0.025), @(x)validateattributes
 p.addParameter('order',3, @(x)validateattributes(x,{'numeric'},{'>=',0,'<=',5,'scalar','integer'}));
 p.addParameter('dipmodel','lorentz', @(x)ischar(validatestring(x,{'lorentz', 'nofit', 'gauss'})));
 % to add more models, add their name to the above and implement them in the switch statement below
-p.FunctionName = 'FitResDip';
+p.FunctionName = 'fitdip';
 p.parse(data,varargin{:});
 
 %% EXTRACT TUNE PICTURE AND DIP AREA FROM DATA
@@ -72,7 +72,7 @@ if ~p.Results.background
     background(2) = background(1)+ceil(length(data(:,1))*0.2);
     background(3) = background(4)-ceil(length(data(:,1))*0.2);
     % and warn the user that he should check the choice is OK.
-    warning('FitResDip:UsingDefaultBG', 'Dip autodetection failed, using default background area. Use option "tunebglimits" to override.')
+    warning('fitdip:UsingDefaultBG', 'Dip autodetection failed, using default background area. Use option "tunebglimits" to override.')
   else % else we're good.
     % fit the background using the detected minima
     background(2) = mintab(1,1);
@@ -91,7 +91,7 @@ else
     end
   end
   if BGINVALID
-    warning('FitResDip:BGInvalid','Invalid background indices. Set to [%i %i %i %i].\n\n', background(1), background(2),background(3),background(4));
+    warning('fitdip:BGInvalid','Invalid background indices. Set to [%i %i %i %i].\n\n', background(1), background(2),background(3),background(4));
   end
 end
 
@@ -154,5 +154,5 @@ switch p.Results.dipmodel
   otherwise
     % throw exception
     message = ['inputParser recognized ' dipmodel ', but the model is not implemented.'];
-    error('FitResDip:FutureVersion', message)
+    error('fitdip:FutureVersion', message)
 end
