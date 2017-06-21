@@ -46,10 +46,10 @@ function [fwhm, resnorm, background, fit, params, func] = FitResDip(data, vararg
 % Check number of arguments and set defaults
 p = inputParser;
 p.addRequired('data', @(x)validateattributes(x,{'numeric'},{'2d','real'}));
-p.addParamValue('background',false, @(x)validateattributes(x,{'numeric'},{'size',[1,4]}));
-p.addParamValue('smoothing',ceil(length(data(:,1))*0.025), @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
-p.addParamValue('order',3, @(x)validateattributes(x,{'numeric'},{'>=',0,'<=',5,'scalar','integer'}));
-p.addParamValue('dipmodel','lorentz', @(x)ischar(validatestring(x,{'lorentz', 'nofit', 'gauss'})));
+p.addParameter('background',false, @(x)validateattributes(x,{'numeric'},{'size',[1,4]}));
+p.addParameter('smoothing',ceil(length(data(:,1))*0.025), @(x)validateattributes(x,{'numeric'},{'positive','scalar','integer'}));
+p.addParameter('order',3, @(x)validateattributes(x,{'numeric'},{'>=',0,'<=',5,'scalar','integer'}));
+p.addParameter('dipmodel','lorentz', @(x)ischar(validatestring(x,{'lorentz', 'nofit', 'gauss'})));
 % to add more models, add their name to the above and implement them in the switch statement below
 p.FunctionName = 'FitResDip';
 p.parse(data,varargin{:});
@@ -80,7 +80,7 @@ if ~p.Results.background
   end
 else
   % convert from values to indices
-  background = iof(p.Results.data(:,1),p.Results.background)
+  background = iof(p.Results.data(:,1),p.Results.background);
   BGINVALID = false;
   % sanity checks
   for i = 3:-1:1
