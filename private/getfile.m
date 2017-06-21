@@ -7,14 +7,16 @@ function [data, params, file] = getfile(varargin)
 % data = getfile(functions, struct)
 % [data, params] = getfile(___)
 
-% parse inputs
+%% PARSE INPUTS
 p = inputParser;
 p.addRequired('funcarray', @(x)validateattributes(x,{'cell'},{'ncols', 3}));
 p.addOptional('input', '', @(x)validateattributes(x,{'char','struct'},{'2d'}));
 p.addOptional('title', 'Select a file:', @ischar);
+p.addOptional('warn', 'nochange', @(x)ischar(validatestring(x,{'on', 'off', 'nochange'})));
 p.FunctionName = 'getfile';
 p.parse(varargin{:});
 
+%% HANDLE REQUESTED FILENAME
 if isempty(p.Results.input)
     [file, filepath] = uigetfile(parseformats(p.Results.funcarray,'filter'), p.Results.title);   % get the file
     if file == 0; error('getfile:NoFile', 'No file selected.'); end; % throw exception if cancelled
@@ -23,14 +25,14 @@ if isempty(p.Results.input)
     extension = lower(extension);                                    % convert to lowercase
 elseif isstruct(p.Results.input) % 'file' passed is a struct
     % get data from struct, if present
-    if isfield(p.Results.input,'data');
+    if isfield(p.Results.input,'data')
         data = p.Results.input.data;
     else
         % otherwise error
         error('getfile:MalformedStruct', 'Struct passed is missing field ''data''.');
     end
     % get params from struct if present
-    if isfield(p.Results.input,'params');
+    if isfield(p.Results.input,'params')
         params = p.Results.input.params;
     else
         % we can live without parameters, return empty struct
@@ -50,11 +52,11 @@ if ~isstruct(p.Results.input)
     % if we do
     if ir ~= 0
         % run the appropriate loading function
-        [data, params] = feval(functions{ir,2},file);
+        [data, params] = feval(functions{ir,2},file, p.Results.warn);
     else
         % try to get data with load()
         warning('getfile:UnknownFormat', 'Unknown file format, trying to load as generic ascii.')
-        [data, params] = LoadGeneric(file);
+        [data, params] = LoadGeneric(file, p.Results.warn);
         % and return an empty struct as params
     end
 end

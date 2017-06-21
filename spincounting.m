@@ -179,6 +179,28 @@ end
 if ~isempty(pcmd.Results.machine)
     pstate.machine = pcmd.Results.machine;
 end
+% warn needs to be merged before the spec file is loaded
+if ~isempty(pcmd.Results.warn)
+    pstate.warn = pcmd.Results.warn;
+end
+
+if strcmp(pstate.warn, 'off'); fprintf('NOTE: Most warnings are disabled.\n\n'); end
+
+%% SET WARNING STATE
+% save previous warning state
+warn_state = warning;
+% turn warning on or off
+if strcmp(pstate.warn,'off')
+    warning('off','spincounting:NoSave');
+    warning('off','spincounting:NoFile');
+    warning('off','spincounting:FileExists');
+    warning('off','getfile:UnknownFormat');
+elseif strcmp(pstate.warn,'on')
+    warning('on','spincounting:NoSave');
+    warning('on','spincounting:NoFile');
+    warning('on','spincounting:FileExists');
+    warning('on','getfile:UnknownFormat');
+end
 
 % populate machine parameter struct with values from machine file
 if pstate.machine
@@ -194,15 +216,25 @@ if pstate.machine
     end
 end
 
-%% LOAD DATA %%
+%% LOAD SPECTRUM DATA AND MERGE PARAMETERS %%
 % Load spectrum data
 if ~pstate.nospec
     if islogical(pstate.specfile)
-        [sdata, pfile, pstate.specfile] = getfile(SPECTRUM_FORMATS, '', 'Select a spectrum file:');
+        try
+            [sdata, pfile, pstate.specfile] = getfile(SPECTRUM_FORMATS, '', 'Select a spectrum file:', pstate.warn);
+        catch ME
+            warning(warn_state);
+            rethrow(ME)
+        end
     else
-        [sdata, pfile] = getfile(SPECTRUM_FORMATS, pstate.specfile);
+        try
+            [sdata, pfile] = getfile(SPECTRUM_FORMATS, pstate.specfile, '', pstate.warn);
+        catch ME
+            warning(warn_state);
+            rethrow(ME)
+        end
     end
-    fprintf('Using spectrum file %s\n', pstate.specfile);
+    fprintf('Spectrum file:\t%s\n', pstate.specfile);
     % merge pfile into pmain/pstate
     fnames = fieldnames(pfile);
     for ii = 1:length(fnames)
@@ -238,20 +270,30 @@ for ii = 1:length(fnames)
     end
 end
 
-% Load tune picture data
+%% LOAD TUNE PICTURE DATA, IF NEEDED
 % if pmain.q is not defined, set it to false
 if ~isfield(pmain, 'q'); pmain.q = false; end
 % get q from tunefile if needed
 if ~pmain.q
     if islogical(pstate.tunefile)
-        [tdata, ~, pstate.tunefile] = getfile(TUNE_FORMATS, '', 'Select a tune picture file:');
+        try
+            [tdata, ~, pstate.tunefile] = getfile(TUNE_FORMATS, '', 'Select a tune picture file:', pstate.warn);
+        catch ME
+            warning(warn_state);
+            rethrow(ME)
+        end
     else
-        tdata = getfile(TUNE_FORMATS, pmain.tunefile);
+        try
+            tdata = getfile(TUNE_FORMATS, pmain.tunefile, '', pstate.warn);
+        catch ME
+            warning(warn_state);
+            rethrow(ME)
+        end
     end
-    fprintf('Using tune picture file %s\n', pstate.tunefile);
+    fprintf('Tune file:\t%s\n', pstate.tunefile);
 end
 
-%% OUTPUT FILES
+%% SET OUTPUT FILES
 % get a filename for saving if necessary
 if pstate.nosave
     % warn the user that nothing is being saved
@@ -283,7 +325,7 @@ else
         % remove extension from filename (because we add our own later)
         [path, file, extension] = fileparts(pstate.outfile);
         pstate.outfile = fullfile(path, file);
-        fprintf('Writing to log file %s.log\n', pstate.outfile);
+        fprintf('Log file:\t%s.log\n', pstate.outfile);
         % check if outfile exists or is a folder
         if exist([pstate.outfile extension], 'file')
             % warn
@@ -303,25 +345,25 @@ end
 % tunepicscaling is needed for q
 if ~pmain.q
     % check that we have a parameter
-    if ~isfield(pmain, 'tunepicscaling'); error('missing tunepicscaling'); end
+    if ~isfield(pmain, 'tunepicscaling'); warning(warn_state); error('missing tunepicscaling'); end
     tdata(:,1) = tdata(:,1) * pmain.tunepicscaling;
 end
 % unless we're doing nothing (nospec and q are set), we need the mw
 % frequency
 if ~(pmain.q && pstate.nospec)
-    if ~isfield(pmain, 'mwfreq'); error('missing mwfreq'); end
+    if ~isfield(pmain, 'mwfreq'); warning(warn_state); error('missing mwfreq'); end
 end
 % the rest is only important for normalisation
 if ~pstate.nospec
-    if ~isfield(pmain, 'T'); error('missing temperature'); end
-    if ~isfield(pmain, 'S'); error('missing spin'); end
-    if ~isfield(pmain, 'tc'); error('missing time constant'); end
-    if ~isfield(pmain, 'rgain'); error('missing receiver gain'); end
-    if ~isfield(pmain, 'nscans'); error('missing number of scans'); end
-    if ~isfield(pmain, 'modamp'); error('missing modamp'); end
+    if ~isfield(pmain, 'T'); warning(warn_state); error('missing temperature'); end
+    if ~isfield(pmain, 'S'); warning(warn_state); error('missing spin'); end
+    if ~isfield(pmain, 'tc'); warning(warn_state); error('missing time constant'); end
+    if ~isfield(pmain, 'rgain'); warning(warn_state); error('missing receiver gain'); end
+    if ~isfield(pmain, 'nscans'); warning(warn_state); error('missing number of scans'); end
+    if ~isfield(pmain, 'modamp'); warning(warn_state); error('missing modamp'); end
     if ~isfield(pmain, 'pwr')
         if ~isfield(pmain, 'attn') || ~isfield(pmain, 'maxpwr')
-            error('pass ''pwr'' or both ''maxpwr'' and ''attn''');
+            warning(warn_state); error('pass ''pwr'' or both ''maxpwr'' and ''attn''');
         else
             pmain.pwr = db2level(-pmain.attn, pmain.maxpwr);
         end
@@ -426,11 +468,10 @@ if ~pstate.nosave
     if ~pmain.q
         set(hTuneFigure,'PaperPositionMode','auto');
         print(hTuneFigure, outformat, '-r300', strcat(pstate.outfile, '_tune_picture'));
-        fprintf('\nTune figure saved to %s. ', [pstate.outfile, '_tune_picture.', pstate.outformat, '\n']);
     end
     set(hSpecFigure,'PaperPositionMode','auto');
     print(hSpecFigure, outformat, '-r300', strcat(pstate.outfile, '_spectrum'));
-    fprintf('Double integration figure saved to %s\n', [pstate.outfile, '_spectrum.', pstate.outformat, '\n']);
+    fprintf('\nFigures saved.');
 end
 
 %% SET OPERATION MODE
@@ -455,13 +496,13 @@ end
 %% MODE_DEPENDENT ACTIONS
 switch results.mode
     case 'none' % only determine q
-        fprintf('\nDone.\nNo spin counting requested.\n');
+        fprintf('\nNo spin counting requested.\n');
         out = NaN;
         nspins = NaN;
         tfactor = NaN;
         dint = NaN;
     case 'integrate' % no further action
-        fprintf('\nDone.\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
+        fprintf('\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
         out = NaN;
         nspins = NaN;
         tfactor = NaN;
@@ -499,10 +540,13 @@ if ~pstate.nosave
 	% save results struct to mat-file or csv-file if needed
 	if pstate.savemat
 		save([pstate.outfile '.mat'], 'results', '-struct')
+        fprintf('Results saved to .mat file.\n');
 	end
     % end diary and reset DiaryFile to what it was
     diary off;
     set(0,'DiaryFile', olddiary);
 end
 
+% reset warning state
+warning(warn_state)
 % ... and the rest is silence
