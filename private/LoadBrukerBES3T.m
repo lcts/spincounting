@@ -1,4 +1,4 @@
-function [ data, pars ] = LoadBrukerBES3T(filename)
+function [ data, pars ] = LoadBrukerBES3T(filename, ~)
 % load data from scspec-formatted ascii file
 %
 % Requires easyspin (www.easyspin.org)

@@ -1,4 +1,4 @@
-function [ data, pars ] = LoadImage(filename)
+function [ data, pars ] = LoadImage(filename, ~)
 % load data from image file
 %
 % USAGE:

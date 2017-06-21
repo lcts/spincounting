@@ -1,4 +1,4 @@
-function [ data, pars] = LoadFsc2(filename)
+function [ data, pars] = LoadFsc2(filename, warn)
 % load data from various FU Berlin fsc2  ascii files
 %
 % USAGE:
@@ -17,7 +17,7 @@ if ~isempty(regexp(fileread(filename),'% Date/Time','once'))
     pars.modamp = parstemp.ModAmp;
 else
     % try treating it as a dat2-type file
-    [datatemp, parstemp, id] = dat2load(filename);
+    [datatemp, parstemp, id] = dat2load(filename, warn);
     % create proper akkumulated data if it wasn't already
     if isempty(regexp(id.type,'akku','once'))
         dataakku = 0;

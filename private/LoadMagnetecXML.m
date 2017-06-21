@@ -1,4 +1,4 @@
-function [ data, pars ] = LoadMagnetecXML(filename)
+function [ data, pars ] = LoadMagnetecXML(filename, ~)
 % load data from Magnetec-formatted xml-file
 %
 % Requires easyspin (www.easyspin.org)
