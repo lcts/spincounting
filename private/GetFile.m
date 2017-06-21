@@ -1,4 +1,4 @@
-function [data, params] = GetFile(varargin)
+function [data, params, file] = GetFile(varargin)
 % get data for spin counting
 %
 % USAGE:
@@ -36,6 +36,8 @@ elseif isstruct(p.Results.input) % 'file' passed is a struct
         % we can live without parameters, return empty struct
         params = struct();
     end
+    % set file to 'struct'
+    file = 'struct';
 else    
     [filepath, file, extension] = fileparts(p.Results.input);
     file = fullfile(filepath, [file extension]);
