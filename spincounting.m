@@ -66,7 +66,7 @@ function [out, strout] = spincounting(varargin)
 VERSION = '3.0-devel';
 RUNDATE = datestr(now);
 
-%% TODO: CLEAN RESULTS STRUCT
+%% TODO: DOCUMENTATION
 
 
 %% PARSE INPUT ARGUMENTS WITH InputParse
