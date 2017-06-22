@@ -204,9 +204,12 @@ end
 if ~isempty(pcmd.Results.machine)
 	pstate.machine = pcmd.Results.machine;
 end
-% warn needs to be merged before the spec file is loaded
+% warn and nospec need to be merged before the spec file is loaded
 if ~isempty(pcmd.Results.warn)
 	pstate.warn = pcmd.Results.warn;
+end
+if ~isempty(pcmd.Results.nospec)
+	pstate.nospec = pcmd.Results.nospec;
 end
 
 if strcmp(pstate.warn, 'off'); fprintf('NOTE: Most warnings are disabled.\n\n'); end
@@ -357,6 +360,7 @@ else
 				if strcmp(btn,'Yes')
 					warning('spincounting:NoFile', 'No output file selected. Data will not be saved.\n');
 					pstate.nosave = true;
+					pstate.outfile = 'none';
 					break
 				end
 			else
@@ -380,7 +384,11 @@ else
 		end
 	end
 end
-fprintf('Log file:\t%s.log\n', pstate.outfile);
+if ~pstate.nosave
+	fprintf('Log file:\t%s.log\n', pstate.outfile);
+else
+	fprintf('Log file:\t%s\n', pstate.outfile);
+end
 
 
 %% SET OPERATION MODE
@@ -439,17 +447,24 @@ end
 %% FIT DIP & INTEGRATE SPECTRUM
 %==================================================================================================%
 if ~pmain.q
-	strout.calc_q = true;
-	if ~isempty(sc2fitdip(pmain))
+	try
+		bdcdkafhkgg
 		[fwhm, tunebg, fit, ~, ~, pmain.tunepicsmoothing, pmain.tunebgorder, pmain.dipmodel] = ...
 			fitdip(tdata, sc2fitdip(pmain));
-	else
-		[fwhm, tunebg, fit, ~, ~, pmain.tunepicsmoothing, pmain.tunebgorder, pmain.dipmodel] = ...
-			fitdip(tdata);
+		strout.data.tunedata = tdata;
+		strout.data.tunefit(:,1)   = tdata(:,1);
+		strout.data.tunefit(:,2:4) = fit;
+		strout.calc_q = true;		
+	catch ME
+		if strcmp(strout.mode, 'none')
+			warning('Determining FWHM of the Dip failed. No Q-Value can be calculated.');
+		else
+			strout.mode = 'integrate';
+			warning('Determining FWHM of the Dip failed. No Q-Value can be calculated, falling back to integration mode.');
+		end
+		pmain.q = 'error';
+		strout.calc_q = 'error';
 	end
-	strout.data.tunedata = tdata;
-	strout.data.tunefit(:,1)   = tdata(:,1);
-	strout.data.tunefit(:,2:4) = fit;
 else
 	strout.calc_q = false;
 end
@@ -473,9 +488,17 @@ end
 close(findobj('type','figure','name','SCFigure'))
 scrsz = get(groot,'ScreenSize');
 if ~pstate.noplot
-	hFigure = figure('name','SCFigure', 'Visible', 'on', 'Position', [10 -10+scrsz(4)/2 scrsz(3)/2 scrsz(4)/2]);
+	hFigure = figure(...
+		'name','SCFigure', ...
+		'Visible', 'on', ...
+		'Position', [10 -10+scrsz(4)/2 scrsz(3)/2 scrsz(4)/2] ...
+		);
 else
-	hFigure = figure('name','SCFigure', 'Visible', 'off');
+	hFigure = figure(...
+		'name','SCFigure', ...
+		'Visible', 'on', ...
+		'Position', [10 -10+scrsz(4)/2 scrsz(3)/2 scrsz(4)/2] ...
+		);
 end
 hTuneAxes = axes('Parent',hFigure, 'Position', [0.03 0.07 0.37 0.9]);
 hSpecAxes(1) = axes('Tag', 'specaxes', 'Parent', hFigure, 'Position', [0.47 0.07 0.45 0.9]);
@@ -484,6 +507,9 @@ hSpecAxes(2) = axes('Tag', 'intaxes', 'Parent', hFigure, 'Position', [0.47 0.07 
 % plot tune picture with background corrections and fit
 if ~pmain.q
 	PlotTuneFigure(hTuneAxes, tdata, fit, tunebg);
+elseif strcmp(pmain.q, 'error')
+	% if q could not be determined, only plot the data
+	PlotTuneFigure(hTuneAxes, tdata, false, false);
 end
 % plot spectrum with background corrections and integrals
 if ~pstate.nospec
@@ -512,8 +538,10 @@ if ~pmain.q
 		fprintf('FWHM: %.4f MHz\n', fwhm);
 		fprintf('Microwave frequency needed for q-factor calculation.\n');
 	end
+elseif strcmp(pmain.q, 'error')
+	fprintf('\nq-factor could not be determined from tune file.');
 else
-	fprintf('\nq-factor %.2f supplied by user/read from spectrum file. No q-factor calculations performed.\n', strout.q);
+	fprintf('\nq-factor %.2f supplied by user/read from spectrum file. No q-factor calculations performed.\n', pmain.q);
 end
 
 if ~pstate.nospec
@@ -540,9 +568,9 @@ if ~pstate.nosave
 	set(hFigure,'PaperPositionMode','auto', 'PaperOrientation', 'landscape', 'PaperType', 'a4');
 	print(hFigure, outformat, '-r300', strcat(pstate.outfile, '_figure'));
 	fprintf('\nFigure saved.');
+	% attach .log to outfile parameter
+	pstate.outfile = [pstate.outfile '.log'];
 end
-% attach .log to outfile parameter
-pstate.outfile = [pstate.outfile '.log'];
 
 %% MODE-DEPENDENT ACTIONS
 %==================================================================================================%
@@ -550,7 +578,7 @@ pstate.outfile = [pstate.outfile '.log'];
 switch strout.mode
 	case 'none' % only determine q
 		fprintf('\nNo spin counting requested.\n');
-		if ~strout.calc_q
+		if strcmp(strout.calc_q, 'error') || ~strout.calc_q
 			out = NaN;
 		else
 			out = pmain.q;
@@ -560,7 +588,7 @@ switch strout.mode
 	case 'integrate' % no further action
 		fprintf('\nTo calculate absolute number of spins, call spincounting with the ''tfactor'' option.\nTo calculate the transfer factor, call spincounting with the ''nspins'' option.\n');
 		strout.results.dint = dint;
-		if strout.calc_q; strout.results.q = pmain.q; strout.results.fwhm = fwhm; end
+		if ~strcmp(strout.calc_q, 'error') && strout.calc_q; strout.results.q = pmain.q; strout.results.fwhm = fwhm; end
 		out = dint;
 	case 'calc_spins' % calculate nspins from tfactor
 		strout.results.dint = dint;
