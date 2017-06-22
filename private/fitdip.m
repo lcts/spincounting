@@ -1,10 +1,10 @@
-function [fwhm, resnorm, background, fit, params, func] = fitdip(data, varargin)
+function [fwhm, bgindex, fit, coeff, func, smoothing, order, dipmodel] = fitdip(data, varargin)
 % Fit a tune picture to extract the FWHM of the dip
 %
 % Syntax
 % fwhm = fitdip(data)
 % fwhm = fitdip(data, 'Option', Value, ...)
-% [fwhm resnorm fit bgparam dipparam] = fitdip(...)
+% [fwhm, bgindex, fit, coeff, func, smoothing, order, dipmodel] = fitdip(...)
 %
 % Description
 % fitdip extracts the dip FWHM by fitting a tune picture using a polynom as % the background
@@ -35,10 +35,9 @@ function [fwhm, resnorm, background, fit, params, func] = fitdip(data, varargin)
 %              'nofit' calculates FWHM directly without fitting the dip.
 %
 % Additional Outputs
-% resnorm    - the resnorm returned by lsqcurvefit
-% background - the background indices used for fitting
+% bgindex    - the background indices used for fitting
 % fit        - the fitted curve
-% params     - the coefficients found in fit [dipheight dipwidth dipposition bgparams...]
+% coeff      - the coefficients found in fit [dipheight dipwidth dipposition bgparams...]
 % func       - the function used for fitting
 %
 
@@ -54,6 +53,10 @@ p.addParameter('dipmodel','lorentz', @(x)ischar(validatestring(x,{'lorentz', 'no
 p.FunctionName = 'fitdip';
 p.parse(data,varargin{:});
 
+smoothing = p.Results.smoothing;
+order = p.Results.order;
+dipmodel = p.Results.dipmodel;
+
 %% EXTRACT TUNE PICTURE AND DIP AREA FROM DATA
 % Determine noiselvl, generate pseudo-derivative via local standard deviation
 % then find local maxima and minima in local standard deviation
@@ -64,67 +67,66 @@ if ~p.Results.background
   % Determine starting point for fit
   % Start/end of the tune picture is defined as the point where the signal has risen above 3x the noise level
   % plus p.Results.smoothing of buffer
-  background(1) = find(data(:,2)>3*noiselvl+mean(data(1:p.Results.smoothing,2)),1)              + p.Results.smoothing;
-  background(4) = find(data(:,2)>3*noiselvl+mean(data(end-p.Results.smoothing:end,2)),1,'last') - p.Results.smoothing;
+  bgindex(1) = find(data(:,2)>3*noiselvl+mean(data(1:p.Results.smoothing,2)),1)              + p.Results.smoothing;
+  bgindex(4) = find(data(:,2)>3*noiselvl+mean(data(end-p.Results.smoothing:end,2)),1,'last') - p.Results.smoothing;
   % ideally, there are three minima the beginning, center and end of the dip, check
   if length(mintab(:,1)) ~= 3 % without exactly 3 minima we can't identify a dip from this
     % so use the default '20% from start/stop' as background.
-    background(2) = background(1)+ceil(length(data(:,1))*0.2);
-    background(3) = background(4)-ceil(length(data(:,1))*0.2);
+    bgindex(2) = bgindex(1)+ceil(length(data(:,1))*0.2);
+    bgindex(3) = bgindex(4)-ceil(length(data(:,1))*0.2);
     % and warn the user that he should check the choice is OK.
     warning('fitdip:UsingDefaultBG', 'Dip autodetection failed, using default background area. Use option "tunebglimits" to override.')
   else % else we're good.
     % fit the background using the detected minima
-    background(2) = mintab(1,1);
-    background(3) = mintab(3,1);
+    bgindex(2) = mintab(1,1);
+    bgindex(3) = mintab(3,1);
   end
 else
   % convert from values to indices
-  background = iof(p.Results.data(:,1),p.Results.background);
+  bgindex = iof(p.Results.data(:,1),p.Results.background);
   BGINVALID = false;
   % sanity checks
   for i = 3:-1:1
     % background indices should be ordered
-    if background(i) > background(i+1)
-      background(i) = background(i+1);
+    if bgindex(i) > bgindex(i+1)
+      bgindex(i) = bgindex(i+1);
       BGINVALID = true;
     end
   end
   if BGINVALID
-    warning('fitdip:BGInvalid','Invalid background indices. Set to [%i %i %i %i].\n\n', background(1), background(2),background(3),background(4));
+    warning('fitdip:BGInvalid','Invalid background indices. Set to [%i %i %i %i].\n\n', bgindex(1), bgindex(2),bgindex(3),bgindex(4));
   end
 end
 
 %% FIND STARTING VALUES FOR FIT
 % First, calculate initial background
-[xbg, ~, mu] = polyfit(data([background(1):background(2) background(3):background(4)],1), ...
-                       data([background(1):background(2) background(3):background(4)],2), ...
+[xbg, ~, mu] = polyfit(data([bgindex(1):bgindex(2) bgindex(3):bgindex(4)],1), ...
+                       data([bgindex(1):bgindex(2) bgindex(3):bgindex(4)],2), ...
                        p.Results.order ...
 	                  );
 % determine approximate maximum height xdip(1) and dip offset xdip(3) from background-corrected data
-[xdip(1),xdip(3)] = min(data(background(2):background(3),2) ...
-                        - polyval(xbg,data(background(2):background(3),1),[],mu) ...
+[xdip(1),xdip(3)] = min(data(bgindex(2):bgindex(3),2) ...
+                        - polyval(xbg,data(bgindex(2):bgindex(3),1),[],mu) ...
 		       );
-xdip(3) = data(background(2) + xdip(3),1);
+xdip(3) = data(bgindex(2) + xdip(3),1);
 
 % get initial FWHM xdip(2)
-xdip(2) = (data(find(data(background(2):background(3),2) - polyval(xbg,data(background(2):background(3),1),[],mu) <= xdip(1)/2,1,'last'),1) ...
-           - data(find(data(background(2):background(3),2) - polyval(xbg,data(background(2):background(3),1),[],mu) <= xdip(1)/2,1,'first'),1) ...
+xdip(2) = (data(find(data(bgindex(2):bgindex(3),2) - polyval(xbg,data(bgindex(2):bgindex(3),1),[],mu) <= xdip(1)/2,1,'last'),1) ...
+           - data(find(data(bgindex(2):bgindex(3),2) - polyval(xbg,data(bgindex(2):bgindex(3),1),[],mu) <= xdip(1)/2,1,'first'),1) ...
 	  );
 
 %% FIT THE DATA USING DIFFERENT MODELS
 switch p.Results.dipmodel
   case 'nofit'		% just use the initial parameters directly
     fwhm = xdip(2);
-    resnorm = false;
-    params = [xdip xbg];
+    coeff = [xdip xbg];
     % use a lorentzian to plot the determined dip. This is rather arbitrary.
     fdip = @(x,xdata) x(1)*x(2)^2/4./((xdata - x(3)).^2 + (x(2)/2)^2);'x';'xdata';
     fbg  = @(x,xdata) polyval(x,xdata,[],mu);'x';'xdata';
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
-    fit(:,1) = func(params,data(:,1));
-    fit(:,2) = fbg(params(4:end),data(:,1));
-    fit(:,3) = fdip(params(1:3),data(:,1));
+    fit(:,1) = func(coeff,data(:,1));
+    fit(:,2) = fbg(coeff(4:end),data(:,1));
+    fit(:,3) = fdip(coeff(1:3),data(:,1));
   case 'lorentz'	% fit the dip using a lorentz curve
     % define functions, lorentzian, background and both
     fdip = @(x,xdata) x(1)*x(2)^2/4./((xdata - x(3)).^2 + (x(2)/2)^2);'x';'xdata';
@@ -132,12 +134,12 @@ switch p.Results.dipmodel
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
     % fit the lorentz curve and background
     xin = [xdip xbg];
-    [params, resnorm]= lsqcurvefit(func,xin,data(background(1):background(4),1),data(background(1):background(4),2));
+    coeff = lsqcurvefit(func,xin,data(bgindex(1):bgindex(4),1),data(bgindex(1):bgindex(4),2));
     % save output parameters
-    fwhm = abs(params(2));
-    fit(:,1) = func(params,data(:,1));
-    fit(:,2) = fbg(params(4:end),data(:,1));
-    fit(:,3) = fdip(params(1:3),data(:,1));
+    fwhm = abs(coeff(2));
+    fit(:,1) = func(coeff,data(:,1));
+    fit(:,2) = fbg(coeff(4:end),data(:,1));
+    fit(:,3) = fdip(coeff(1:3),data(:,1));
   case 'gauss'		% fit the dip using a gaussian curve
   % define functions, lorentzian, background and both
     fdip = @(x,xdata) x(1)*1/(x(2)*sqrt(2*pi)).*exp(-(xdata - x(3)).^2 / (2*x(2)^2));'x';'xdata';
@@ -145,12 +147,12 @@ switch p.Results.dipmodel
     func = @(x,xdata) fbg(x(4:end),xdata) + fdip(x(1:3),xdata);'x';'xdata';
     % fit the lorentz curve and background
     xin = [xdip xbg];
-    [params, resnorm]= lsqcurvefit(func,xin,data(background(1):background(4),1),data(background(1):background(4),2));
+    coeff = lsqcurvefit(func,xin,data(bgindex(1):bgindex(4),1),data(bgindex(1):bgindex(4),2));
     % save output parameters
-    fwhm = 2*sqrt(2*log(2)) * abs(params(2));
-    fit(:,1) = func(params,data(:,1));
-    fit(:,2) = fbg(params(4:end),data(:,1));
-    fit(:,3) = fdip(params(1:3),data(:,1));
+    fwhm = 2*sqrt(2*log(2)) * abs(coeff(2));
+    fit(:,1) = func(coeff,data(:,1));
+    fit(:,2) = fbg(coeff(4:end),data(:,1));
+    fit(:,3) = fdip(coeff(1:3),data(:,1));
   otherwise
     % throw exception
     message = ['inputParser recognized ' dipmodel ', but the model is not implemented.'];

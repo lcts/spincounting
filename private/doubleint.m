@@ -1,10 +1,10 @@
-function [result, specs, bgs, params, background] = doubleint(data, varargin)
+function [result, specs, bgs, coeff, background, bgorder] = doubleint(data, varargin)
 % Calculate the double integral of a spectrum.
 %
 % Syntax
 % result = doubleint(data)
 % result = doubleint(data, 'Option', Value, ...)
-% [result specs bgs params] = doubleint(data, ...)
+% [result, specs, bgs, coeff, background, bgorder] = doubleint(data, ...)
 %
 % Description
 % doubleint calculates the double integral of a spectrum while performing automatic background correction.
@@ -23,9 +23,9 @@ function [result, specs, bgs, params, background] = doubleint(data, varargin)
 % Additional Outputs
 % specs      - an array of the calculated integrals [xaxis firstint secondint]
 % bgs        - dito for backgrounds
-% params     - the coefficients used for background corrections for use in polyval
+% coeff      - the coefficients used for background corrections for use in polyval
 % background - the background limits used for background correction
-% bgindex    - the background limit indices used for background correction
+% bgcorder   - the background order used for background correction
 
 %% ARGUMENT PARSING
 % Check number of arguments and set defaults
@@ -35,6 +35,8 @@ p.addParameter('background',false, @(x)validateattributes(x,{'numeric'},{'size',
 p.addParameter('order',[1 3], @(x)validateattributes(x,{'numeric'},{'row','integer'}));
 p.FunctionName = 'doubleint';
 p.parse(data,varargin{:});
+
+bgorder = p.Results.order;
 
 if ~p.Results.background
   % use the default '25% from start/stop' as background.
@@ -68,9 +70,9 @@ specs(:,1) = data(:,1);
 bgs(:,1)   = data(:,1);
 
 % initial background correction
-[params{1}, ~, mu] = polyfit(data([background(1):background(2) background(3):background(4)],1), ...
+[coeff{1}, ~, mu] = polyfit(data([background(1):background(2) background(3):background(4)],1), ...
                       data([background(1):background(2) background(3):background(4)],2),p.Results.order(1));
-bgs(:,2) = polyval(params{1},bgs(:,1),[],mu);
+bgs(:,2) = polyval(coeff{1},bgs(:,1),[],mu);
 specs(:,2) = data(:,2) - bgs(:,2);
 
 % first integration step
@@ -80,9 +82,9 @@ specs(:,2) = cumtrapz(specs(:,1),specs(:,2));
 if length(p.Results.order) >= 2
     % perform second bg correction before second integration
 
-    [params{2}, ~, mu] = polyfit(specs([background(1):background(2) background(3):background(4)],1), ...
+    [coeff{2}, ~, mu] = polyfit(specs([background(1):background(2) background(3):background(4)],1), ...
                           specs([background(1):background(2) background(3):background(4)],2),p.Results.order(2));
-    bgs(:,3) = polyval(params{2},bgs(:,1),[],mu);
+    bgs(:,3) = polyval(coeff{2},bgs(:,1),[],mu);
     specs(:,3) = specs(:,2) - bgs(:,3);
     % then integrate
     specs(:,3) = cumtrapz(specs(:,1),specs(:,3));
