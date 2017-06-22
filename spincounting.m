@@ -469,27 +469,24 @@ end
 
 %% PLOT SPECTRA & FITS
 %==================================================================================================%
+% create figure
+close(findobj('type','figure','name','SCFigure'))
+scrsz = get(groot,'ScreenSize');
+if ~pstate.noplot
+	hFigure = figure('name','SCFigure', 'Visible', 'on', 'Position', [10 -10+scrsz(4)/2 scrsz(3)/2 scrsz(4)/2]);
+else
+	hFigure = figure('name','SCFigure', 'Visible', 'off');
+end
+hTuneAxes = axes('Parent',hFigure, 'Position', [0.03 0.07 0.37 0.9]);
+hSpecAxes(1) = axes('Tag', 'specaxes', 'Parent', hFigure, 'Position', [0.47 0.07 0.45 0.9]);
+hSpecAxes(2) = axes('Tag', 'intaxes', 'Parent', hFigure, 'Position', [0.47 0.07 0.45 0.9]);
+
 % plot tune picture with background corrections and fit
 if ~pmain.q
-	close(findobj('type','figure','name','TuneFigure'))
-	if ~pstate.noplot
-		hTuneFigure = figure('name','TuneFigure', 'Visible', 'on');
-	else
-		hTuneFigure = figure('name','TuneFigure', 'Visible', 'off');
-	end
-	hTuneAxes = axes('Parent',hTuneFigure);
 	PlotTuneFigure(hTuneAxes, tdata, fit, tunebg);
 end
 % plot spectrum with background corrections and integrals
 if ~pstate.nospec
-	close(findobj('type','figure','name','SpecFigure'))
-	if ~pstate.noplot
-		hSpecFigure = figure('name','SpecFigure', 'Visible', 'on');
-	else
-		hSpecFigure = figure('name','SpecFigure', 'Visible', 'off');
-	end
-	hSpecAxes(1) = axes('Tag', 'specaxes', 'Parent', hSpecFigure);
-	hSpecAxes(2) = axes('Tag', 'intaxes', 'Parent', hSpecFigure);
 	PlotSpecFigure(hSpecAxes, sdata, specbg, specs, bgs);
 end
 
@@ -540,13 +537,9 @@ end
 if ~pstate.nosave
 	% save plots to file
 	outformat = ['-d' pstate.outformat];
-	if ~pmain.q
-		set(hTuneFigure,'PaperPositionMode','auto');
-		print(hTuneFigure, outformat, '-r300', strcat(pstate.outfile, '_tune_picture'));
-	end
-	set(hSpecFigure,'PaperPositionMode','auto');
-	print(hSpecFigure, outformat, '-r300', strcat(pstate.outfile, '_spectrum'));
-	fprintf('\nFigures saved.');
+	set(hFigure,'PaperPositionMode','auto', 'PaperOrientation', 'landscape', 'PaperType', 'a4');
+	print(hFigure, outformat, '-r300', strcat(pstate.outfile, '_figure'));
+	fprintf('\nFigure saved.');
 end
 % attach .log to outfile parameter
 pstate.outfile = [pstate.outfile '.log'];
