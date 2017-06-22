@@ -16,9 +16,9 @@ p.parse(scpars);
 % initilaise 'tune' to an empty struct
 doubleintpars = struct();
 
-if isfield(scpars, 'tunebglimits')
-    doubleintpars.background = scpars.tunebglimits;
+if isfield(scpars, 'intbglimits')
+    doubleintpars.background = scpars.intbglimits;
 end
-if isfield(scpars, 'tunebgorder')
-    doubleintpars.order = scpars.tunebgorder;
+if isfield(scpars, 'intbgorder')
+    doubleintpars.order = scpars.intbgorder;
 end
