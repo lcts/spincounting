@@ -66,10 +66,21 @@ function [out, strout] = spincounting(varargin)
 VERSION = '3.0-devel';
 RUNDATE = datestr(now);
 
-%% TODO: DOCUMENTATION
+
+%% CHECK IF DEPENDENCIES ARE INSTALLED
+%==================================================================================================%
+% Optimisation toolbox
+if isempty(which('lsqcurvefit'))
+	warning('spincounting:DependencyFailed', ...
+				'Missing function ''lsqcurvefit'', which is needed for dip fitting. Please install the Optimization Toolbox or use dipmodel ''nofit''.');
+end
+if isempty(which('eprload'))
+	warning('spincounting:DependencyFailed', ...
+				'Missing function ''eprload'', which is needed for loading certain file types. Please install easyspin (www.easyspin.org).');
+end
 
 
-%% PARSE INPUT ARGUMENTS WITH InputParse
+%% PARSE INPUT ARGUMENTS WITH InputParser
 %==================================================================================================%
 % define input arguments
 pcmd = inputParser;
