@@ -1,12 +1,12 @@
 function [out, strout] = spincounting(varargin)
-% Evaluate EPR spectra quantitatively
+% SPINCOUNTING  - quantitative evaluation of EPR spectra
 %
 % USAGE:
-% spincounting
-% out = spincounting('tfactor',<value>)
-% out = spincounting('nspins', <value>)
-% [out, results] = spincounting(___, '<option>', <value>)
-% [out, results] = spincounting(struct)
+% SPINCOUNTING
+% out = SPINCOUNTING('tfactor',<value>)
+% out = SPINCOUNTING('nspins', <value>)
+% [out, results] = SPINCOUNTING(___, '<option>', <value>)
+% [out, results] = SPINCOUNTING(struct)
 %
 % OPTIONS:
 % tunefile         : string, tune picture file, default: Prompt
@@ -141,8 +141,9 @@ diary(diaryfile);
 fprintf('\nspincouting v%s\n%s\n\n', VERSION, RUNDATE);
 
 % INITIALISE PARAMETER STRUCTS
-% processing parameters have no default values
+% processing and machine parameters have no default values
 pmain = struct();
+pmachine = struct();
 % default values for state parameters
 pstate = struct(...
 	'tunefile', false, ...
@@ -156,9 +157,6 @@ pstate = struct(...
 	'machine', false, ...
 	'nospec', false ...
 	);
-% file, machine and struct are also empty
-pfile = struct();
-pmachine = struct();
 % save version and execution time
 strout = struct(...
 	'version', VERSION, ...
@@ -459,14 +457,13 @@ end
 %==================================================================================================%
 if ~pmain.q
 	try
-		bdcdkafhkgg
 		[fwhm, tunebg, fit, ~, ~, pmain.tunepicsmoothing, pmain.tunebgorder, pmain.dipmodel] = ...
 			fitdip(tdata, sc2fitdip(pmain));
 		strout.data.tunedata = tdata;
 		strout.data.tunefit(:,1)   = tdata(:,1);
 		strout.data.tunefit(:,2:4) = fit;
 		strout.calc_q = true;		
-	catch ME
+	catch
 		if strcmp(strout.mode, 'none')
 			warning('Determining FWHM of the Dip failed. No Q-Value can be calculated.');
 		else
@@ -622,12 +619,12 @@ switch strout.mode
 		if strout.calc_q; strout.results.q = pmain.q; strout.results.fwhm = fwhm; end
 		strout.results.nspins = calcspins(dint, pmain.tfactor, pmain.rgain, pmain.tc, pmain.nscans, ...
 			pmain.pwr, pmain.modamp, pmain.q, pmain.nb, pmain.S);
-		strout.results.nspinserror = abs(nspins - pmain.nspins)/ nspins * 100;
+		strout.results.nspinserror = abs(strout.results.nspins - pmain.nspins)/ strout.results.nspins * 100;
 		strout.results.tfactor = calcspins(dint, pmain.nspins, pmain.rgain, pmain.tc, pmain.nscans, ...
 			pmain.pwr, pmain.modamp, pmain.q, pmain.nb, pmain.S);
 		fprintf('\nSpin count deviation %.2f%%\nNew transfer factor is %e.\n', ...
-			nspinserror, strout.results.tfactor);
-		out = nspinserror;
+			strout.results.nspinserror, strout.results.tfactor);
+		out = strout.results.nspinserror;
 end
 
 % save program parameters

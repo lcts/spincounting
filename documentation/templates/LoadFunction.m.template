@@ -1,11 +1,14 @@
-function [ data, pars ] = LoadFunction(filename)
+function [ data, pars ] = LoadFunction(filename, warn)
 % load data from <type> file
 %
 % USAGE:
 % [data, pars] = LoadFunction(filename)
-
+% [data, pars] = LoadFunction(filename, warn)
 
 % THIS IS - OBVIOUSLY - ONLY PSEUDOCODE
+
+% if your code does not produce warnings, replace 'warn' with '~'
+% in the function declaration above
 
 % read data
 readdata = get_data_from_file(filename)

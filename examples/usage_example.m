@@ -39,10 +39,10 @@ spincounting('nspins', nspins, 'nosave',true, 'intbglimits', [3255.7 3300.3 3399
 % and we don't want to have to select the file every time, so we pass the
 % name as an option to the program
 spincounting('nspins', nspins, ...
-             'nosave',true, ...
-             'intbglimits', [3255.7 3300.3 3399.8 3445.2], ...
-             'q', q, ...
-             'specfile', 'tempol.scs');
+	'nosave',true, ...
+	'intbglimits', [3255.7 3300.3 3399.8 3445.2], ...
+	'q', q, ...
+	'specfile', 'files/tempol.scs');
 
 %% Once we have a good background fit
 % we run the program one more time, but this time we save the result, both
@@ -52,28 +52,28 @@ spincounting('nspins', nspins, ...
 % saved
 intbg = [lowleft lowright highleft highright]
 tfactor = spincounting('nspins', nspins, ...
-                            'intbglimits', intbg, ...
-                            'specfile', 'tempol.scs', ...
-                            'tunefile', 'tempol.sct')
+	'intbglimits', intbg, ...
+	'specfile', 'files/tempol.scs', ...
+	'tunefile', 'files/tempol.sct');
 
 % we now have the transfer factor 'tfactor' of our machine. Time to do some
 % quantification!
 
 %% We can also get all the parameters used in the process from the program:
 [tfactor, results] = spincounting('nspins', nspins, ...
-                                    'intbglimits', intbg, ...
-                                    'q', q, ...
-                                    'specfile', 'tempol.scs', ...
-                                    'nosave', true)
+	'intbglimits', intbg, ...
+	'q', q, ...
+	'specfile', 'files/tempol.scs', ...
+	'nosave', true);
 
 %% tired of the long lines of options? You can also put them in a struct
 options.nspins = nspins;
 options.intbglimits = intbg;
 options.q = q;
-options.specfile = 'tempol.scs';
+options.specfile = 'files/tempol.scs';
 options.nosave = true
 %% and pass that to the progam
-[tfactor, results] = spincounting(options)
+[tfactor, results] = spincounting(options);
 
 %% if you want to remove an option that you're put into your struct, use
 % rmfield(structure, 'fieldname'):
@@ -85,7 +85,7 @@ options_new = rmfield(options,'nosave')
 % Redo the previous steps with your own files (or use the 'P3HT'
 % example files) but this time, we want to know the number of spins, so we
 % pass the transfer factor instead of nspins
-spincounting('tfactor', tfactor, 'nosave',true)
+spincounting('tfactor', tfactor, 'nosave',true);
 %
 % ...
 %
@@ -93,7 +93,7 @@ spincounting('tfactor', tfactor, 'nosave',true)
 optionsP3HT.tfactor = tfactor;
 optionsP3HT.intbglimits = intbgP3HT;
 optionsP3HT.q = qP3HT;
-optionsP3HT.specfile = 'P3HT.scs';
+optionsP3HT.specfile = 'files/P3HT.scs';
 optionsP3HT.nosave = true;
 
 nspins = spincounting(optionsP3HT);
