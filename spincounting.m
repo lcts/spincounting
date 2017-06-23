@@ -259,7 +259,7 @@ end
 %==================================================================================================%
 % LOAD SPECTRUM FILE
 if ~pstate.nospec
-	if islogical(pstate.specfile)
+	if ~ischar(pstate.specfile)
 		try
 			[sdata, pfile, pstate.specfile] = getfile(SPECTRUM_FORMATS, '', ...
 				'Select a spectrum file:', pstate.warn);
@@ -325,7 +325,7 @@ end
 if ~isfield(pmain, 'q'); pmain.q = false; end
 % get q from tunefile if needed
 if ~pmain.q
-	if islogical(pstate.tunefile)
+	if ~ischar(pstate.tunefile)
 		try
 			[tdata, ~, pstate.tunefile] = getfile(TUNE_FORMATS, '', ...
 				'Select a tune picture file:', pstate.warn);
@@ -356,7 +356,7 @@ if pstate.nosave
 	pstate.outfile = 'none';
 else
 	% check if we're missing a filename
-	if ~pstate.outfile
+	if ~ischar(pstate.outfile)
 		[~, basename, ~] = fileparts(pstate.specfile);
 		% if so, get one
 		while true
@@ -376,6 +376,14 @@ else
 				pstate.outfile = fullfile(path, file);
 				break
 			end
+		end
+	elseif strcmp(pstate.outfile, 'default')
+		if ischar(pstate.specfile)
+			[path, file, ~] = fileparts(pstate.specfile);
+			pstate.outfile = [path file '.log'];
+		elseif ischar(pstate.tunefile)
+			[path, file, ~] = fileparts(pstate.tunefile);
+			pstate.outfile = [path file '.log'];
 		end
 	end
 	% check if we now have a filename
