@@ -1,4 +1,4 @@
-function [ data, pars] = LoadOldFUcw(filename)
+function [ data, pars] = LoadOldFUcw(filename, ~)
 % load data from old FU Berlin fsc2  ascii file
 %
 % USAGE:

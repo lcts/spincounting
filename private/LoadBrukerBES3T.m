@@ -1,4 +1,4 @@
-function [ data, pars ] = LoadBrukerBES3T(filename)
+function [ data, pars ] = LoadBrukerBES3T(filename, ~)
 % load data from scspec-formatted ascii file
 %
 % Requires easyspin (www.easyspin.org)
@@ -20,4 +20,7 @@ pars.pwr = paramstemp.MWPW;
 pars.modamp = str2double(paramstemp.ModAmp(1:end-1));
 if isfield(paramstemp,'Temperature')
     pars.T = str2double(paramstemp.Temperature(1:end-1));
+end
+if isfield(paramstemp,'QValue')
+    pars.q = paramstemp.QValue;
 end

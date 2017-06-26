@@ -2,11 +2,11 @@ function level = db2level(varargin)
 % converts dB into level
 %
 % USAGE:
-% dB = level2db(level)
-% dB = level2db(level,reflevel)
-% dB = level2db(level,reflevel,isfield)
+% level = db2level(db)
+% level = db2level(db,reflevel)
+% level = db2level(db,reflevel,isfield)
 %
-% 'level' can be scalar, vector or matrix. 'dB' has the same dimensions as 'level'
+% 'db' can be scalar, vector or matrix. 'level' has the same dimensions as 'db'
 % 'reflevel' can be a string or a number, default: 1
 % 'isfield' is a logical, default: false
 %
@@ -45,7 +45,7 @@ if ischar(p.reflevel)
         case {'dBu', 'dBv'} % voltage level (audio)
             reflevel = 0.7746; % V
             unitfactor = 20;
-        case 'dBm' % electrical power 
+        case 'dBm' % electrical power
             reflevel = 0.001; % W
             unitfactor = 10;
         case 'SPL' % sound pressure level

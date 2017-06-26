@@ -1,4 +1,4 @@
-function [ data, pars ] = LoadGeneric(filename)
+function [ data, pars ] = LoadGeneric(filename, ~)
 % load data from generic ascii file
 %
 % USAGE:
