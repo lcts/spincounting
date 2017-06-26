@@ -1,4 +1,4 @@
-function [ data, pars ] = LoadMat(filename)
+function [ data, pars ] = LoadMat(filename, ~)
 % load data from .mat-file
 %
 % USAGE:

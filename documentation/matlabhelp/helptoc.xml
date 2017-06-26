@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding="utf-8"?>
+
+<toc version="2.0">
+<!-- First tocitem specifies top level in Help browser Contents pane -->
+<!-- This can be a roadmap page, as shown below, or a content page -->
+    <tocitem target="sC_main_page.html">Spincounting Toolbox
+        <!-- Nest tocitems to create hierarchical entries in  Contents-->
+        <!-- To include icons, use the following syntax for tocitems: -->
+        <!-- <tocitem target="foo.html" image="HelpIcon.NAME"> -->
+        <!-- Title-of-Section </tocitem> -->
+        <!-- where NAME is one of the following (use capital letters): -->
+        <!-- FUNCTION, USER_GUIDE, EXAMPLES, BLOCK, GETTING_STARTED, -->
+        <!-- DEMOS, RELEASE_NOTES --> 
+        <!-- Icon images used for these entries are also stored in -->
+        <!-- matlabroot/toolbox/matlab/icons -->
+        <!-- A Getting Started Guide usually comes first -->
+        <tocitem target="sc_overview.html" image="HelpIcon.GETTING_STARTED">Overview
+            <tocitem target="sc_overview.htm#dep">Dependencies
+            </tocitem>
+            <tocitem target="sc_overview.htm#ft">Features
+                <!-- 2nd and lower TOC levels usually have anchor IDs -->
+                <tocitem target="sc_overview.htm#ft1">Feature 1
+                </tocitem>
+                <tocitem target="sc_overview.htm#ft2">Feature 2
+                </tocitem>
+            </tocitem>
+        </tocitem>
+        <!-- User Guide comes next -->
+        <tocitem target="sc_manual.html" 
+            image="HelpIcon.USER_GUIDE">User Guide
+            <tocitem target="sc_manual.htm#update">Changes when upgrading from v2.x
+            </tocitem>
+            <tocitem target="sc_manual.htm#conf">Configuration
+            </tocitem>
+            <tocitem target="sc_manual.htm#usage">Running Spincounting
+            </tocitem>
+            <tocitem target="sc_manual.htm#output">Output format
+            </tocitem>
+            <tocitem target="sc_manual.htm#load">Input formats
+                <tocitem target="sc_manual.htm#load-existing">Known formats
+                </tocitem>
+                <tocitem target="sc_manual.htm#load-new">Write new input functions
+                </tocitem>
+            </tocitem>
+        </tocitem>
+        <!-- Function reference next -->
+        <!-- First item is page describing function categories, if any -->
+        <tocitem target="sc_optionref.html" 
+                 image="HelpIcon.FUNCTION">Option Reference
+            <!-- First category, with link to anchor in above page -->
+            <tocitem target="sc_optionref.html#state">Program behaviour
+                <tocitem target="sc_optionref.html#opt1">Option 1
+                </tocitem>
+            </tocitem>
+            <tocitem target="sc_optionref.html#pars">Evaulation parameters
+                <tocitem target="sc_optionref.html#opt2">Option 2
+                </tocitem>
+            </tocitem>
+        </tocitem>
+        <!-- Optional List of Examples, with hyperlinks to examples in other files -->
+        <tocitem target="sc_example.html" 
+                 image="HelpIcon.HelpIcon.EXAMPLES">Examples
+        </tocitem>
+        <!-- Optional link or links to your or other Web sites -->
+        <tocitem target="http://lcts.github.io/spincounting" 
+                 image="$toolbox/matlab/icons/webicon.gif">Website
+        </tocitem>
+    </tocitem>
+</toc>

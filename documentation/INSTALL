@@ -1,0 +1,157 @@
+ ____________________________________________________________
+|                                                            |
+| THE SPINCOUNTING TOOLBOX v3.0.0                            |
+|                                                            |
+| Author:  Christopher Engelhard                             |
+| Mail:    christopher.engelhard@fu-berlin.de                |
+| Website: http://lcts.github.io/spincounting                |
+|____________________________________________________________|
+
+ ____________________________________________________________
+|                                                            |
+| spincounting uses semantic versioning (http://semver.org/) |
+| In short: Changes in the first number imply API changes,   |
+| changes to the second number imply feature changes that    |
+| do not break the API, changes to the third number indicate |
+| bugfix releases.                                           |
+|____________________________________________________________|
+
+
+TABLE OF CONTENTS
+1) Installation
+2) Configuration
+3) Upgrading
+4) Migrating from previous versions
+5) Further Help
+
+1) DOWNLOAD & INSTALLATION
+
+1.1) Release versions:
+
+Download the most recent release from https://github.com/lcts/spincounting/releases and unpack to
+a folder of your choice. If you have git installed on your computer, you can also get the most
+recent release via
+
+  git clone https://github.com/lcts/spincounting.git --branch release
+  
+This will result in a folder 'spincounting' at the location you executed git from.
+
+1.2) Git (Development) versions:
+You can either get a current snapshot of the git development branch by downloading 
+
+  https://github.com/lcts/spincounting/archive/master.zip
+
+or (recommended) by using git directly
+
+  git clone https://github.com/lcts/spincounting.git
+
+This will result in a folder 'spincounting' at the location you executed git from.
+
+1.3) Editing Matlab path
+
+To allow Matlab to use the spincounting program, from within Matlab, add the folder you saved it to
+with subfolders to the Matlab path (Matlab Home -> Set Path).
+
+
+2) CONFIGURATION
+
+spincounting is configured via a main configuration file, located at private/scconfig.m, which
+determines various aspects of default program behaviour, and optionally spectrometer-specific
+configuration files, located at private/machines/<machinename>.m, which set default experimental
+parameters specific to a given setup.
+These files are not shipped with spincounting by default, but can be generated from templates:
+
+  a) Copy & rename documentation/templates/scconfig.m.template to private/scconfig.m
+  b) Optionally, copy & rename documentation/templates/machine.m.template to
+     private/machines/<machinename>.m . <machinename> can be any alphanumeric string that allows
+     you to identify the spectrometer it is referring to, but should not contain spaces.
+  c) Edit scconfig.m to suit your needs. If you're not sure, you can leave it as is. If you're using
+     a machine file, you should put 'machine', '<machinename>'; ... in the DEFAULT_OPTIONS array
+     (see below)
+  d) Do the same for the machine file. If you do not want 
+
+2.1) Options in scconfig
+
+CONFIG_VERSION    : This option is used by spincounting to determine if the configuration needs an
+                    update after installation. Don't change this unless spincounting tells you to.
+ALLOW_ALL_OPTIONS : By default, some parameters can only be set in scconfig, others only in machine
+                    files, following their different roles described above. If you only have one
+                    setup and would like to just use scconfig for everything, set
+                    'ALLOW_ALL_OPTIONS = true', though machine files are the preferred method even
+                    for a single setup.
+DEFAULT_OPTIONS   : Used to set up default program behaviour. Unless ALLOW_ALL_OPTIONS is set, every
+                    option listed as <VALID IN> scconfig in the README can be set here. The syntax
+                    is that of a Nx2 cell array:
+                    
+                    { 'option1', value1; 'option2', value2; ... }
+                    
+TUNE_FORMATS      : Used to tell spincounting about usable loading functions for tune picture files.
+                    Only needs to be changed if you've written your own. This is a Nx3 cell array:
+                    
+                    { '*.<extension1>, '*.<extension2>', '<description>', '<function to run>'; ... }
+                    
+                    where <function to run> is the name of the function and extension1...N are all
+                    extensions this routine is responsible for.
+
+SPECTRUM_FORMATS  : Same as TUNE_FORMATS, but for spectrum files.
+
+
+2.2) Options in machine files
+
+Machine files contain only a single variable
+
+MACHINE_PARAMETERS   : Used to set up default measurement parameters. Unless ALLOW_ALL_OPTIONS is
+                       set, every option listed as <VALID IN> machinefile in the README can be set
+                       here. The syntax is the same as that of DEFAULT_OPTIONS, a Nx2 cell array:
+                    
+                       { 'option1', value1; 'option2', value2; ... }
+
+
+3) UPGRADING
+
+Since spincounting does not ship scconfig and machine files directly, you can upgrade by simply
+downloading a new version and overwriting the old. If the upgrade necessitates changes to the
+configuration, spincounting will notify the user on first run.
+
+Upgrading is particularly easy if you used git to get the program. In that case, just change to the
+installation folder and type
+
+  git pull
+  
+You can easily switch between release and development version by typing
+
+  git checkout master
+  git pull
+  
+to switch from release to develop, and
+
+  git checkout release
+  git pull
+  
+to switch from develop to release.
+
+
+4) MIGRATING FROM PREVIOUS VERSIONS
+
+Version 3.0.0 of spincounting introduced machine files and various changes to scconfig as well as
+the output format. To migrate your configuration from v2.x.x to 3.x.x, you should, after updating
+
+  a) copy your scconfig.m to scconfig.m.backup
+  b) copy documentation/templates/scconfig.m.template to private/scconfig
+  c) copy the options you set in the DEFAULTS variable in scconfig.m.backup to either
+     DEFAULT_OPTIONS in scconfig or MACHINE_PARAMETERS in a machine file, as applicatble.
+  d) If you used any self-written load routines, copy them from sccontig.m.backup to scconfig.n. Note
+     that the new scconfig uses a single variable <TUNE|SPECTRUM>_FORMATS instead of the old
+     <TUNE|SPECTRUM>_KNOWN_FORMATS and <TUNE|SPECTRUM>_LOADFUNCTIONS.
+
+Additionally, v3.x.x no longer returns [nspins, tfactor, outstr], but [out, outstr], where 'out'
+contains nspins, tfactor or nspinerror depending on the operation mode. All values are still saved
+individually to the struct output outstr. The structure of outstr has changed as well. You need to
+edit your scripts accordingly.
+
+
+5) FURTHER HELP
+
+More info can be found on the spincounting website and via the Matlab help system (You'll find it
+under 'Supplemental Software' in the main help browser).
+If you have problems or questions, don't hesitate to contact me.

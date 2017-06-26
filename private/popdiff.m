@@ -1,4 +1,4 @@
-function nb = PopulationDiff(T,mwfreq)
+function nb = popdiff(T, mwfreq)
 % calculate relative population difference factor from constants, temperature and mw
 % frequency
 h = 6.62606957e-34; % Planck constant

@@ -1,24 +1,24 @@
- ________________________________________________
-|                                                |
-| THE SPINCOUNTING TOOLBOX v2.0.1                |
-|                                                |
-| Author: Christopher Engelhard                  |
-| Mail: christopher.engelhard@fu-berlin.de       |
-| Website: http://lcts.github.io/spincounting    |
-|________________________________________________|
+ ____________________________________________________________
+|                                                            |
+| THE SPINCOUNTING TOOLBOX v3.0.0                            |
+|                                                            |
+| Author:  Christopher Engelhard                             |
+| Mail:    christopher.engelhard@fu-berlin.de                |
+| Website: http://lcts.github.io/spincounting                |
+|____________________________________________________________|
 
- ___________________________________________________________
-|                                                           |
-| THIS PROGRAM IS STRICTLY GIGO: GARBAGE IN, GARBAGE OUT.   |
-|                                                           |
-| This program is not smart. It does not fix your mistakes. |
-| Take care in setting up your experiment and in passing    |
-| the proper parameters to the program.                     |
-|___________________________________________________________|
+ ____________________________________________________________
+|                                                            |
+| THIS PROGRAM IS STRICTLY GIGO: GARBAGE IN, GARBAGE OUT.    |
+|                                                            |
+| This program is not smart. It does not fix your mistakes.  |
+| Take care in setting up your experiment and in passing     |
+| the proper parameters to the program.                      |
+|____________________________________________________________|
 
+For a quick reference to progam usage and options, type 'help spincounting' on the MatLab
+commandline (or just 'spincounting' and hit F1).
 
-
-This is the manual for the spincounting toolbox. For a quick reference to progam usage and options, type 'help spincounting' on the MatLab commandline (or just 'spincounting' and hit F1).
 
 TABLE OF CONTENTS
 1) Syntax
@@ -35,97 +35,168 @@ TABLE OF CONTENTS
 1) SYNTAX
 
 spincounting
-nspins = spincounting('tfactor',<value>)
-[ ~, tfactor] = spincounting('nspins', <value>)
-[nspins, tfactor, results] = spincounting(___, '<option>', <value>)
-[nspins, tfactor, results] = spincounting(struct)
+out = spincounting('tfactor',<value>)
+out = spincounting('nspins', <value>)
+[out, strout] = spincounting(___, '<option>', <value>)
+[out, strout] = spincounting(struct)
 
 
 2) INPUTS
 
 All options can be given as either Option-Value pairs or in the form of a struct
-with struct.<Option> = <Value>
+with struct.<Option> = <Value>. Both can also be used simultaneously.
+Additionally, these options can be read from configuration files (see (5))
+and spectrum files.
 
-2.1) Options regarding input and output files and saving
+<OPTIONNAME>       <DESCRIPTION>                                              <DEFAULT>   <VALID IN>
 
-tunefile         : string, tune picture file, default: Prompt
-specfile         : string, spectrum file, default: Prompt
-outfile          : string, output files, default: Prompt
-outformat        : string, output format for plots, default: 'pdf'
-nosave           : boolean, don't save anything if true, default: false
+tunefile         : string, tune picture file                                  Prompt      scconfig
+                   The path is evaluated relative to the current Matlab
+                   directory,
+specfile         : string, spectrum file                                      Prompt      scconfig
+                   The path is evaluated relative to the current Matlab
+                   directory,
+outfile          : string, output files                                       Prompt      scconfig
+                   The path is evaluated relative to the current Matlab
+                   directory. If set to 'default', uses the basename of
+                   specfile (or tunefile if option 'nospec' is set
+outformat        : string, output format for plots                            'pdf'       scconfig
+                   Can be one of 'pdf', 'png', 'svg', 'epsc'
+nosave           : boolean, don't save logfile and plots                      false       scconfig
+savemat          : boolean, save program outputs to .mat file                 false       scconfig
+                   Ignored if 'nosave' is set
 
-2.2) Options governing program behaviour
+nospec           : boolean, don't load spectrum, only determine q             false       scconfig
+noplot           : boolean, do not display plots. They are still              false       scconfig
+                   generated and saved
+warn             : enable or disable most warnings. Can be one of             'nochange'  scconfig
+                   'on'       - enable warnings
+                   'off'      - disable warnings
+                   'nochange' - leave warning state as set externally
+                   Warnings are reset to their original state when
+                   spincounting exits
+machine          : load parameters from machine file                          unset       scconfig
 
-nspins           : float, # of spins in sample, default: false
-tfactor          : float, spectrometer transfer factor, default: false
-nospec           : boolean, only determine q, default: false
-noplot           : boolean, do not display plots. They are still generated 
-                   and saved, default: false
-q                : float, quality factor q. Setting this disables all q-factor 
-                   calculation related functionality, default: false
+nspins           : float, # of spins in sample                                unset       machinefile
+tfactor          : float, spectrometer transfer factor                        unset       machinefile
 
-2.3) Options setting measurement and sample parameters
+q                : float, quality factor q. Setting this disables all         unset       machinefile
+                   q-factor calculation related functionality. If q is
+                   set to a numerical value, that value is used. If q
+                   is set to false on the command line or in a machine
+                   file, it ignores a q-value read from spectrum files
 
-These values should ideally be read from the data file. Options set explicitly override those read from file, so you can use these to fix wrong or missing parameters. Any parameter that is set to 1 is ignored.
+S                : float, spin of sample                                      unset       machinefile
+maxpwr           : float, maximum microwave power in W                        unset       machinefile
+rgain            : float, receiver gain factor                                unset       machinefile
+tc               : float, time constant in ms                                 unset       machinefile
+nscans           : integer, # of scans                                        unset       machinefile
+pwr              : float, microwave power in mW                               unset       machinefile
+attn             : float, attenuation in dB                                   unset       machinefile
+                   needs maxpwr. when both pwr and attn are set,
+                   pwr takes precedence
+T                : float, temperature in K                                    unset       machinefile
+modamp           : float, modulation amplitude in G                           unset       machinefile
+mwfreq           : float, microwave frequency in Hz                           unset       machinefile
 
-S                : float, spin of sample, default: 1/2
-maxpwr           : float, maximum microwave power in W, default: 0.2W
-rgain            : float, receiver gain factor, default: 1 (ignored)
-tc               : float, time constant in ms, default: 1 (ignored)
-nscans           : integer, # of scans, default: 1 (ignored)
-pwr              : float, microwave power in mW
-attn             : float, attenuation in dB
-T                : float, temperature in K
-modamp           : float, modulation amplitude in G
-mwfreq           : float, microwave frequency in Hz
+tunepicscaling   : float, scaling of the tune picture in MHz/s                unset       machinefile
+                   when using an image as a tune file, use the tune
+                   picture width in MHz instead, as the created x-axis
+                   is meaningless for image files
+tunebglimits     : 1x4 float, x values of background. Automatically           unset       machinefile
+                   detected if unset
+tunepicsmoothing : integer, # of points used for smoothing                    2.5%        machinefile
+tunebgorder      : integer, order of background correction used               3           machinefile
+dipmodel         : string, model used for dip fitting,                        'lorentz'   machinefile
+                   can be one of: 'lorentz', 'gauss', 'nofit'
 
-When both attn and pwr are set, pwr takes precedence.
+intbglimits      : 1x4 float, x values of background, automatically           unset       machinefile
+                   chosen if unset
+intbgorder       : integer, order of background correction used, # of         [1 3]       machinefile
+                   elements determines # of steps
 
-2.4) Options governing the fitting of the dip and q calculation
 
-tunepicscaling   : float, scaling of the tune picture in MHz/s, default: 6,94e4
-tunebglimits     : 1x4 integer, indices of background, default: auto
-tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
-tunebgorder      : integer, order of background correction used, default 3
-dipmodel         : string, model used for dip fitting, default: lorentz
+2.6) Input file formats
 
-2.5) Options governing double integration
+Data for Q-factor determination (tune picture)
+Currently, the toolbox supports as a source for the tune picture
+ - its own format (.sct)
+ - Tektronics-oscilloscope .CSV files
+ - generic ascii files with either two lines or two columns containing frequency and intensity data
+ - loading data from a MatLab-file (.mat)
+ - reading data from a screenshot of the tune picture. This is somewhat experimental.
+ - passing data directly to the toolbox as a MatLab struct variable
 
-intbglimits      : 1x4 integer, indices of background, default: auto
-intbgorder       : integer, order of background correction used, # of elements
-                   determines # of steps, default [1 3]
+Spectrum data
+Currently, the toolbox supports the following EPR data files
+ - its own format (.scs)
+ - Bruker Xepr (.DTA, .DSC) via easyspin's eprload() function
+ - two data formats used by software employed at Freie Universität Berlin (.akku and .akku2)
+ - generic ascii files with either two lines or two columns containing field and intensity data
+ - loading data from a MatLab-file (.mat)
+ - passing data directly to the toolbox as a MatLab struct variable
 
+- Loading structs
+You can pass a matlab struct in place of a filename. This struct has to contain a field 'data' 
+(2xN or Nx2 numeric), and optionally a field 'params', which contains the parameters in format
+'params.name = value'. All other fields are ignored.
+
+- Loading Matlab binary files (*.mat)
+MatLab .mat files have to contain a variable 'data' and optionally 'params' (struct), formatted as
+for structs.
+
+- Bruker Xepr BES3T format (.DTA/.DSC)
+In order to load .DTA and .DSC files, the function 'eprload()' from Stefan Stoll's easyspin toolbox
+(www.easyspin.org) is needed. By default, the Xepr software normalises the data for time constant,
+receiver gain and number of scans. Accordingly, these parameters should be set to 1 via 
+machine files. If Xepr measured the temperature, this parameter is read from the file,
+otherwise you'll have to specify it manually.
+
+- Tektronix CSV format (.CSV)
+These are standard .csv files generated by Tektronix oscilloscopes. The data is contained in
+columns 3 (x) and 4 (y). This format has been tested on a Tektronix TDS2002, but should work
+with other models as well.
 
 3) OUTPUTS
-nspins:   calculated number of spins (returns NaN if transfer factor unknown)
-tfactor:  calculated transfer factor (retursn NaN if number of spins unknown)
-results:  a structure containing internal parameters including the various fits, backgrounds and spectra
-          the quality factor and double integrals
+out:      depending on the operating mode, returns either the number of spins,
+          the transfer factor or the spin error. Returns NaN if no calculations were performed.
+strout:   a structure containing all internal parameters and calculated parameters, including
+          fits, backgrounds and spectra, the quality factor and double integrals, filenames etc.
 
 
 4) USAGE
-The program takes a cw-EPR spectrum and calculates the absolute number of spins in the sample from it, taking into account the various factors like modulation amplitude/microwave power etc. that influence the apparent intensity. The program can be run fully interactively with no parameters needed as well as fully integrated into external MATLAB scripts.
+The program takes a cw-EPR spectrum and calculates the absolute number of spins in the sample from it,
+taking into account the various factors like modulation amplitude/microwave power etc. that influence
+the apparent intensity. The program can be run fully interactively with no parameters needed as well
+as fully integrated into external MATLAB scripts.
 
 Two of the factors impacting signal intensity cannot be read from the measurement parameters:
-The q-factor, which is a function of the resonator and the spectrometer transfer factor, the proportionality between number of spins and parameter-corrected spectral intensity as detected by the spectrometer, which is a function of the spectrometer/resonator used.
-The q-factor is determined by fitting and measuring the dip passed to it in the form of a tune picture file, the latter can be calculated by measuring a sample with a known number of spins and running the result through this program.
+The q-factor, which is a function of the resonator and the spectrometer transfer factor, the
+proportionality between number of spins and parameter-corrected spectral intensity as detected by
+the spectrometer, which is a function of the spectrometer/resonator used.
+The q-factor is determined by fitting and measuring the dip passed to it in the form of a tune
+picture file, the latter can be calculated by measuring a sample with a known number of spins
+and running the result through this program.
 
 4.1) Determining the program's operation mode
 
-q-factor, number of spins and the spectrometer transfer factor can all be passed to the program as options. Depending on what is passed to the program, it performs different tasks:
+q-factor, number of spins and the spectrometer transfer factor can all be passed to the program as
+options. Depending on what is passed to the program, it performs different tasks:
 
 Passing nspins and/or tfactor determines the operation mode.
  - neither:	calculate normalized double integral
- - nspins:	calculate tfactor from spectrum
- - tfactor:	calculate nspins from spectrum
- - both:	check tfactor against nspins using the given spectrum
-Passing q is only useful in two cases:
+ - nspins:	calculate tfactor from spectrum, out = tfactor
+ - tfactor:	calculate nspins from spectrum, out = nspins
+ - both:	check tfactor against nspins using the given spectrum, out = nspinserror
+Passing q is only useful in the following cases:
+ - the spectrometer measures q, and the value is present in the file
  - the quality factor has been determined by alternate means
  - the program is used to compare measurements that can be assumed to have identical q
 
 4.2) Graphical display
 
-All relevant parameters are printed to stdout as well as saved to a file. Additionally, the results from fitting, background correction and integration are displayed in two plots:
+All relevant parameters are printed to stdout as well as saved to a file. Additionally, the results
+from fitting, background correction and integration are displayed in two plots:
  - tune picture:
    - data blue, fit red/dashed
    - bg fit red/dashed/thin, area used for bg correction shaded
@@ -133,66 +204,103 @@ All relevant parameters are printed to stdout as well as saved to a file. Additi
    - data blue, first integral green, second integral red
    - blue/green dotted: bg fits, area used for bg correction shaded
    - red dotted: max/min used for determination of double integral
-These figures are also by default saved to file.
+The figure is also by default saved to file.
 
 4.3) Background correction
 
-For a good result it is vitally important that the background corrections and fits used are as good as possible. Always check that the program has achieved a good background fit, especially for the second integration.
+For a good result it is vitally important that the background corrections and fits used are as good
+as possible. Always check that the program has achieved a good background fit, especially for
+the second integration.
 
 4.3.1) Tune picture
 
-Record the tune picture without the dip or with a very high q sample. Adjust tunebgorder to get a good fit. Use the same order polynomial when fitting the tune picture with the dip. Check the displayed background. It should have a similar shape as the one without the dip. If in doubt. record both (with/without dip) and subtract them before fitting.
-The reason for this approach is that for low q samples, a higher order background might appear to yield a better fit, but in reality the algorithm is just fitting part of the dip with the background.
-You can minimise errors from imperfect background correction by positioning the dip on the same background area every time you measure.
+Record the tune picture without the dip or with a very high q sample. Adjust tunebgorder to get a
+good fit. Use the same order polynomial when fitting the tune picture with the dip. Check the
+displayed background. It should have a similar shape as the one without the dip. If in doubt.
+record both (with/without dip) and subtract them before fitting.
+The reason for this approach is that for low q samples, a higher order background might appear to
+yield a better fit, but in reality the algorithm is just fitting part of the dip with the background.
+You can minimise errors from imperfect background correction by positioning the dip on the same
+background area every time you measure.
+
+When you're using an image (e.g. a screenshot of the tune picture) as data, note that the x-axis of
+the data in the image files is meaningless, as the scaling (MHz/pixel) depends on the resolution of
+the window on your computer screen, which could be variable. The loading function for image files
+therefore normalises the x-axis to [0,1]. For this reason tunepicscaling is always
+<full width of tune picture / Mhz>/<x unit> for image files.
 
 4.3.2) Spectrum
-Set the inner borders of the background correction area to the low and high field borders of your spectrum. Leave the outer borders at the spectrum min/max field for now. Set the lowest possible intbgorder for the first correction that describes that data well. Then do the same for the second correction. It is important not to use needlessly high order polynomials. Play around with bg limits and borders until a good correction of the bg after integration is achieved. Prioritise low order polynomials over large background areas.
+Set the inner borders of the background correction area to the low and high field borders of your
+spectrum. Leave the outer borders at the spectrum min/max field for now. Set the lowest possible
+intbgorder for the first correction that describes that data well. Then do the same for the second
+correction. It is important not to use needlessly high order polynomials. Play around with bg limits
+and borders until a good correction of the bg after integration is achieved.
+Prioritise low order polynomials over large background areas.
 
 
 5) CONFIGURATION
 
-Default values for the program as well as the list of known file formats can be set via a config file 'scconfig.m' in the private/ subdirectory. It contains five variables, DEFAULTS, TUNE_KNOWN_FORMATS, TUNE_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS and SPECTRUM_LOADFUNCTIONS.
+The program is configured via a main configuration file 'private/scconfig.m' and machine files
+'private/machines/<machinename>.m'. Templates for these files are located in documentation/templates.
+See documentation/INSTALL on how to set them up.
 
-DEFAULT sets the default values used for various parameters. It is a 2xN cell array with the parameter names in the first and their values in the second column:
+All parameters that are passed to the script on the commandline can be set via these files as well.
+However, you should only set parameters that are unlikely to ever change, i.e. that either define
+wanted program behaviour or are part of your setup or intrinsic properties of your samples.
 
-DEFAULTS = { '<name1>', '<value1>';   '<name2>', '<value2>'; ... }
+Some defaults can only be set in scconfig, others in machinefiles (see (2)). This behaviour can be
+changed with the ALLOW_ALL_OPTIONS parameter in scconfig.
 
-All parameters that are passed to the script on the commandline can be set here as well. However, you should only set parameters that are unlikely to ever change, i.e. that are part of your setup or intrinsic properties of your samples. Usually, these will only be scaling of the tune frequency axis tunepicscaling, bridge maximum power maxpwr and sample spin S.
+The order of precedence for the different places to set parameters is (highest to lowest):
+
+  1) command line
+  2) machine file
+  3) spectrum file
+  4) scconfig
+  5) program defaults
 
 
 6) WRITING YOUR OWN LOADING ROUTINE
 
-You can write your own loading routine for whatever format you need and include it into the toolbox. The only requirement is that it takes a filename as its only argument and return two variables, data, a 2xN or Nx2 matrix and params, a struct (can be an empty struct):
+You can write your own loading routine for whatever format you need and include it into the toolbox.
+The only requirement is that it takes the following input and output parameters:a:
 
 function [data, params] = <your-function-name>(filename)
 
-A template can be found in the examples-folder. Copy the template to the 'private' subfolder and rename it to <your-function-name>.m. Put in your code. Test it. Once you have your function working properly, you'll have to tell spincounting about it. This is done in the configuration file 'scconfig.m', by adding your function to the LOADFUNCTIONS-arrays. Depending on whether you want to load tune or spectrum data, add your function to TUNE_LOADFUNCTIONS or SPECTRUM_LOADFUNCTIONS. These two variables are 2xN cell-arrays with the format
+data     : 2xN or Nx2 matrix
+params   : struct of parameters params.<parametername>, can be empty struct()
+filename : string, the file to load
+warn     : string, same as main option 'warn', must be present but can be unused by the function
 
-{ '.<extension1>', '<function to run1>';   '.<extension2>', '<function to run2>'; ... }
+An extensively commented template can be found in documentation/templates. Copy the template to 
+private/ and rename it to <your-function-name>.m. Tell spincounting about it by adding it to the
+<TUNE|SPECTRUM>_FORMATS arrays in private/scconfig:
 
-and so on. To add your function, add a new line like this
+TUNE_FORMATS = {...
+				'*.<extension1a>, '*.<extension1b>', '<description1>', '<function to run1>'; ...
+				'*.<extension2a>, '*.<extension2b>', '<description2>', '<function to run2>'; ...
+				}
 
-'.<extension of your data file>', '<your-function-name>'; ...
+and so on. For example, to add your function 'load-my-tunefile.m', which can load file with extensions
+'*.mydat1' and '*.mydat2', you would add a line
 
-for example
+'*.mydat1, *.mydat2', 'My Tunefile format (*.mydat1, *.mydat2)', 'load-my-tunefile'; ...
 
-'.dat', 'load-my-dat-file'; ...
+The description is used by Matlab's file selector dialog.
 
-This tells spincounting that a file with the extension '.dat' can be loaded using the function '[data, params] = load-my-dat-file(filename)'. If your function can handle multiple different files, add a line for each extension.
-
-For convenience, you can also add a filter to the loading dialog, so that your files are displayed (Otherwise, you'll have to select 'All Files (*)' in the file selection dialogs to be able to select your format). For this, add a line
-
-'*.<extension>', '<short description of your format>'; ...
-
-to <TUNE|SPECTRUM>_KNOWN_FORMATS. You can make one filter for multiple extensions like this
-
-'*.<extension1>, *.<extension2>', '<short description of your format>'; ...
-
-Now you're all set - the toolbox should be able to load your data without problems!
+Once you've tested your routing, consider sending it to me, so that I can include it in future releases.
+The function can read and return any parameters you like, as spincounting will ignore any parameter
+other than the ones listed in (2).
 
 7) CURRENT LIMITATIONS
 
- - While the dip is autodetected, this has only been tested for cases where the full tune picture is recorded, i.e. there were flat areas to the left and to the right of the tune pic. Autodetection also assumes a roughly quadratic shape of the background without the dip (typical output from old bridges). Always check the figure to see if the fit makes sense, try specifying the background area manually if not.
+ - While the dip is autodetected, this has only been tested for cases where the full tune picture
+ is recorded, i.e. there were flat areas to the left and to the right of the tune pic. Autodetection
+ also assumes a roughly quadratic shape of the background without the dip (typical output from old
+ bridges). Always check the figure to see if the fit makes sense, try specifying the background area
+ manually if not.
+ If autodetection fails entirely, spincounting will still display the tune picture, but will not
+ show fits or perform calculations. In that case, specify the background area manually.
 
 
 8) EXAMPLES
@@ -202,4 +310,6 @@ A usage example, demonstration files and templates can be found in the 'examples
 
 9) FURTHER HELP
 
-If you have problems, don't hesitate to contact me.
+More info can be found on the spincounting website and via the Matlab help system (You'll find it
+under 'Supplemental Software' in the main help browser).
+If you have problems or questions, don't hesitate to contact me.
