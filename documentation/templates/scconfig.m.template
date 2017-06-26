@@ -9,11 +9,10 @@
 
 %% GLOBAL DEFAULTS
 
-% PARAMETER DEFAULTS
+% OPTION DEFAULTS
 % while you can set all the measurement parameters here, you really
-% shouldn't. Only set as default parameters that are unlikely to change
-% (i.e. that are part of your set-up or intrinsic properties of your sample
-DEFAULT_PARAMETERS = {...
+% shouldn't. Only set as default options that are independent of your EPR setup
+DEFAULT_OPTIONS = {...
 %           'parameter1', value1; ...
 %           'parameter2', value2; ...
             'savemat', false; ...         % save results as a .mat file

@@ -65,18 +65,25 @@ function [out, strout] = spincounting(varargin)
 %==================================================================================================%
 VERSION = '3.0-devel';
 RUNDATE = datestr(now);
+CV_REQUIRED = '3';
 
 
 %% CHECK IF DEPENDENCIES ARE INSTALLED
 %==================================================================================================%
+% Matlab Version (R213b = 8.2 for 'addParameter')
+if verLessThan('matlab','8.2')
+	error('spincounting:MatlabVersion', ...
+		'spincounting requires at least Matlab version 8.2 (Release R213b).')
+end
 % Optimisation toolbox
 if isempty(which('lsqcurvefit'))
 	warning('spincounting:DependencyFailed', ...
 				'Missing function ''lsqcurvefit'', which is needed for dip fitting. Please install the Optimization Toolbox or use dipmodel ''nofit''.');
 end
+% easyspin
 if isempty(which('eprload'))
 	warning('spincounting:DependencyFailed', ...
-				'Missing function ''eprload'', which is needed for loading certain file types. Please install easyspin (www.easyspin.org).');
+				'Missing function ''eprload'', which is needed for loading Bruker and Magnetec XML file types. Please install easyspin (www.easyspin.org) if you use those formats.');
 end
 
 
@@ -187,23 +194,33 @@ ALLOW_ALL_OPTIONS = false;
 scconfig
 
 % check if config file is up-to-date
-if exist('CONFIG_VERSION', 'var') ~= 1 || ~strcmp(VERSION(1),CONFIG_VERSION(1))
-	warning(['Version %s introduced changes to config files and user interface that break backwards-compatibility. ', ...
-		'Please read the CHANGELOG file on how to adapt your configuration and scripts.', ...
-		'\n\nYou can set ''CONFIG_VERSION = %s'' in scconfig.m to disable this warning.'], ...
-		VERSION, VERSION(1));
-	return;
+CV_REQUIRED_NUMERIC = sscanf(CV_REQUIRED,'%d.%d.%d');
+if exist('CONFIG_VERSION', 'var') ~= 1
+	CONFIG_VERSION = [NaN; NaN; NaN];
+else
+	CONFIG_VERSION = sscanf(CONFIG_VERSION,'%d.%d.%d');
+	CONFIG_VERSION = [CONFIG_VERSION; zeros(3-length(CONFIG_VERSION),1)];
+end
+
+for ii = 1:length(CV_REQUIRED_NUMERIC)
+	if CV_REQUIRED_NUMERIC(ii) > CONFIG_VERSION(ii)
+		warning(['Configuration file must be at least version %s. ', ...
+			'Please read documentation/INSTALL file on how to adapt your configuration and scripts.', ...
+			'\n\nYou can set ''CONFIG_VERSION = %s'' in scconfig.m to disable this warning.'], ...
+			CV_REQUIRED, CV_REQUIRED);
+		return;
+	end
 end
 
 % populate pmain and pstate structs with values from scconfig
-for ii = 1:size(DEFAULT_PARAMETERS,1)
-	if isfield(pstate, DEFAULT_PARAMETERS{ii,1})
-		pstate.(DEFAULT_PARAMETERS{ii,1}) = DEFAULT_PARAMETERS{ii,2};
+for ii = 1:size(DEFAULT_OPTIONS,1)
+	if isfield(pstate, DEFAULT_OPTIONS{ii,1})
+		pstate.(DEFAULT_OPTIONS{ii,1}) = DEFAULT_OPTIONS{ii,2};
 	elseif ~ALLOW_ALL_OPTIONS
 		error('spincounting:NotValidHere', 'Parameter ''%s'' should be set in a machine file.', ...
-			DEFAULT_PARAMETERS{ii,1});
+			DEFAULT_OPTIONS{ii,1});
 	else
-		pmain.(DEFAULT_PARAMETERS{ii,1}) = DEFAULT_PARAMETERS{ii,2};
+		pmain.(DEFAULT_OPTIONS{ii,1}) = DEFAULT_OPTIONS{ii,2};
 	end
 end
 
