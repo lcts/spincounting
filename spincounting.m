@@ -200,7 +200,7 @@ scconfig
 % check if config file is up-to-date
 CV_REQUIRED_NUMERIC = sscanf(CV_REQUIRED,'%d.%d.%d');
 if exist('CONFIG_VERSION', 'var') ~= 1
-	CONFIG_VERSION = [NaN; NaN; NaN];
+	CONFIG_VERSION = [0; 0; 0];
 else
 	CONFIG_VERSION = sscanf(CONFIG_VERSION,'%d.%d.%d');
 	CONFIG_VERSION = [CONFIG_VERSION; zeros(3-length(CONFIG_VERSION),1)];
@@ -211,7 +211,7 @@ for ii = 1:length(CV_REQUIRED_NUMERIC)
 		warning(['Configuration file must be at least version %s. ', ...
 			'Please read the section ''Migration from previous versions'' in ', ...
 			'documentation/INSTALL on how to adapt your configuration and scripts.', ...
-			'\n\nAfterwards, set ''CONFIG_VERSION = %s'' in scconfig.m to disable this warning.'], ...
+			'\n\nAfterwards, set ''CONFIG_VERSION = ''%s'''' in scconfig.m to disable this warning.'], ...
 			CV_REQUIRED, CV_REQUIRED);
 		return;
 	end

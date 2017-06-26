@@ -1,5 +1,4 @@
 *.m~
-resource/
 testfiles/
 private/machines/*
 scconfig.m
