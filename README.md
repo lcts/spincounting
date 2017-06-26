@@ -12,17 +12,17 @@ This MatLab toolbox is designed to facilitate and automate the evaluation of qua
 
 ### System Requirements
  * MatLab 2012 or later
- * Curve Fitting Toolbox (for functions polyfit(), polyval() and lsqcurvefit())
+ * Optimisation Toolbox (for function lsqcurvefit())
  * For use with Bruker Xepr data files, [easyspin](http://easyspin.org) is needed as well.
 
 ### Versions
-Current stable branch:
+Current master branch:
 
 `git clone http://github.com/lcts/spincounting`
 
-Development branch:
+Release branch:
 
-`git clone http://github.com/lcts/spincounting --branch develop`
+`git clone http://github.com/lcts/spincounting --branch release`
 
 ### Installation & first steps
 Add the spincounting folder to your MatLab search path. The toolbox is invoked by typing 'spincounting' on the MatLab command line.
