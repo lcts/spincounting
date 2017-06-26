@@ -1,12 +1,12 @@
 function [out, strout] = spincounting(varargin)
-% SPINCOUNTING  - quantitative evaluation of EPR spectra
+% spincounting  - quantitative evaluation of EPR spectra
 %
 % USAGE:
-% SPINCOUNTING
-% out = SPINCOUNTING('tfactor',<value>)
-% out = SPINCOUNTING('nspins', <value>)
-% [out, strout] = SPINCOUNTING(___, '<option>', <value>)
-% [out, strout] = SPINCOUNTING(struct)
+% spincounting
+% out = spincounting('tfactor',<value>)
+% out = spincounting('nspins', <value>)
+% [out, strout] = spincounting(___, '<option>', <value>)
+% [out, strout] = spincounting(struct)
 %
 % OPTIONS:
 % tunefile         : string, tune picture file, default: Prompt
@@ -15,13 +15,15 @@ function [out, strout] = spincounting(varargin)
 % outformat        : string, output format for plots, default: 'pdf'
 % nosave           : boolean, don't save anything if true, default: false
 % savemat          : boolean, save results to .mat file, default: false
-% warn             : string, disable most warning, default: 'nochange'
-% machine          : string, machine file to use, default: unset
-% nspins           : float, # of spins in sample, default: unset
-% tfactor          : float, spectrometer transfer factor, default: unset
 % nospec           : boolean, only determine q, default: false
 % noplot           : boolean, do not display plots. They are still generated
 %                    and saved, default: false
+% warn             : string, control warnings. Can be one of 'on', 'off' or
+%                    'nochange' (default)
+% machine          : string, name of machine file to load, default: unset
+%
+% nspins           : float, # of spins in sample, default: unset
+% tfactor          : float, spectrometer transfer factor, default: unset
 % q                : float, quality factor q. Setting this disables all q-factor
 %                    calculation related functionality, default: unset
 % S                : float, spin of sample, default: unset
@@ -29,13 +31,14 @@ function [out, strout] = spincounting(varargin)
 % rgain            : float, receiver gain factor, default: unset
 % tc               : float, time constant in ms, default: unset
 % nscans           : integer, # of scans, default: unset
-% pwr              : float, microwave power in mW, default: unset
+% pwr              : float, microwave power in W, default: unset
 % attn             : float, attenuation in dB, default: unset
 % T                : float, temperature in K, default: unset
 % modamp           : float, modulation amplitude in G, default: unset
 % mwfreq           : float, microwave frequency in Hz, default: unset
-% tunepicscaling   : float, scaling of the tune picture in MHz/<x unit>, default: 6,94e4
-%                    when using an image as a tune file, use the tune picture width in MHz
+% tunepicscaling   : float, scaling of the tune picture in MHz/<x unit>,
+%                    default: unset
+%                    When using an image as a tune file, use the tune picture width in MHz
 %                    instead, as the created x-axis is meaningless for image files
 % tunebglimits     : 1x4 integer, indices of background, default: auto
 % tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
@@ -46,7 +49,10 @@ function [out, strout] = spincounting(varargin)
 %                    determines # of steps, default [1 3]
 %
 % All options can be given as either Option-Value pairs or in the form of a struct
-% with struct.<Option> = <Value>
+% with struct.<Option> = <Value>. Both can be used simultaneously, e.g.
+% 
+% [out, strout] = spincounting(struct, '<option>', <value>)
+%
 %
 % OUTPUTS:
 % out    : depending on the operating mode, returns either the number of spins,
@@ -60,7 +66,7 @@ function [out, strout] = spincounting(varargin)
 
 
 %==================================================================================================%
-VERSION = '3.0.0';
+VERSION = '3.0.1';
 RUNDATE = datestr(now);
 CV_REQUIRED = '3';
 
@@ -82,8 +88,6 @@ if isempty(which('eprload'))
 	warning('spincounting:DependencyFailed', ...
 		'Missing function ''eprload'', which is needed for loading Bruker and Magnetec XML file types. Please install easyspin (www.easyspin.org) if you use those formats.');
 end
-
->>>>>>> master
 
 %% PARSE INPUT ARGUMENTS WITH InputParser
 %==================================================================================================%
@@ -194,7 +198,7 @@ scconfig
 % check if config file is up-to-date
 CV_REQUIRED_NUMERIC = sscanf(CV_REQUIRED,'%d.%d.%d');
 if exist('CONFIG_VERSION', 'var') ~= 1
-	CONFIG_VERSION = [NaN; NaN; NaN];
+	CONFIG_VERSION = [0; 0; 0];
 else
 	CONFIG_VERSION = sscanf(CONFIG_VERSION,'%d.%d.%d');
 	CONFIG_VERSION = [CONFIG_VERSION; zeros(3-length(CONFIG_VERSION),1)];
@@ -205,7 +209,7 @@ for ii = 1:length(CV_REQUIRED_NUMERIC)
 		warning(['Configuration file must be at least version %s. ', ...
 			'Please read the section ''Migration from previous versions'' in ', ...
 			'documentation/INSTALL on how to adapt your configuration and scripts.', ...
-			'\n\nAfterwards, set ''CONFIG_VERSION = %s'' in scconfig.m to disable this warning.'], ...
+			'\n\nAfterwards, set ''CONFIG_VERSION = ''%s'''' in scconfig.m to disable this warning.'], ...
 			CV_REQUIRED, CV_REQUIRED);
 		return;
 	end

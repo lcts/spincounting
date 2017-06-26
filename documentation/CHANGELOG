@@ -41,7 +41,7 @@ v2.0.0
  - new configuration file to set defaults
  - universal interface for new loading functions
  - extended documentation
-v2.1.1
+v2.0.1
  - spincounting now displays the field/frequency values used as bg limits instead of indices
  - spincounting now switches to nosave mode if file selection dialog is aborted, after prompting the user
  - fixed bug where FitResDip would prompt user for invalid option 'background'
@@ -55,7 +55,7 @@ v3.0.0
  - API CHANGE: output struct reorganised
  - CONFIG CHANGE: format of scconfig changed
  - CONFIG CHANGE: spincounting now supports per-machine configurations
- - REQUIREMENTS: now requires Matlab R213b
+ - REQUIREMENTS: now requires Matlab R2013b
  - existing configurations are no longer overwritten during installation
  - q value can now be read from spectrum file as well as input manually/determined from tune pic file
  - spincounting now asks for spectrum file first, then tune file. This is necessary for getting q from spectrum
@@ -65,3 +65,5 @@ v3.0.0
  - added support for Magnetec XML files
  - added support for saving reults to a .mat-file
  - failure to fit the dip in tune file no longer aborts program execution
+v3.0.1
+ - fixed error with config version checks
