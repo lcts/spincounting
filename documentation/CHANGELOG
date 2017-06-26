@@ -67,5 +67,6 @@ v3.0.0
  - added support for Magnetec XML files
  - added support for saving reults to a .mat-file
  - failure to fit the dip in tune file no longer aborts program execution
- v3.0-devel
-  - 
+v3.0.1
+ - fixed error with config version checks
+v3.0-devel
