@@ -1,14 +1,36 @@
-function [ data, pars ] = LoadFunction(filename, warn)
+% define the function name, input and outputs
+% Note that the filename should be the same as the function name set here
+function [ data, pars ] = MyFunc(filename, warn)
+% If your function does not generate warnings, use this definition instead
+%function [ data, pars ] = MyFunc(filename, ~)
+% You should edit the rest of this comment block to describe your function and leave it
+% the final file. The text below will then be displayed by the matlab help system 
 % load data from <type> file
 %
 % USAGE:
 % [data, pars] = LoadFunction(filename)
 % [data, pars] = LoadFunction(filename, warn)
 
-% THIS IS - OBVIOUSLY - ONLY PSEUDOCODE
+% If your function generates warnings, use this code block to allow the main script to switch them 
+% on or off
+%% Start of warning block
+% save previous warning state
+warn_state = warning;
+% turn warning on or off
+if strcmp(pstate.warn,'off')
+	warning('off','MyFunc:Warnng1');
+	warning('off','MyFunc:Warnng2');
+elseif strcmp(pstate.warn,'on')
+	warning('on','MyFunc:Warnng1');
+	warning('on','MyFunc:Warnng2');
+end
+%% End of warning block
 
-% if your code does not produce warnings, replace 'warn' with '~'
-% in the function declaration above
+% If you don't know what the above stuff means, just use the function definition without warnings
+% above, and don't use the warning() command in your function
+
+
+% THIS IS - OBVIOUSLY - ONLY PSEUDOCODE
 
 % read data
 readdata = get_data_from_file(filename)
@@ -25,3 +47,8 @@ else
     pars.name1 = value1
     ...
 end
+
+% if your function uses warnings, if has to return the warning state to the original values
+% before existing
+warning(warn_state)
+% also include this command before any error you raise
