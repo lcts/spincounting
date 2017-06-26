@@ -78,12 +78,12 @@ end
 % Optimisation toolbox
 if isempty(which('lsqcurvefit'))
 	warning('spincounting:DependencyFailed', ...
-				'Missing function ''lsqcurvefit'', which is needed for dip fitting. Please install the Optimization Toolbox or use dipmodel ''nofit''.');
+		'Missing function ''lsqcurvefit'', which is needed for dip fitting. Please install the Optimization Toolbox or use dipmodel ''nofit''.');
 end
 % easyspin
 if isempty(which('eprload'))
 	warning('spincounting:DependencyFailed', ...
-				'Missing function ''eprload'', which is needed for loading Bruker and Magnetec XML file types. Please install easyspin (www.easyspin.org) if you use those formats.');
+		'Missing function ''eprload'', which is needed for loading Bruker and Magnetec XML file types. Please install easyspin (www.easyspin.org) if you use those formats.');
 end
 
 
@@ -93,41 +93,41 @@ end
 pcmd = inputParser;
 %                  <parameter>		<default> 	<validation function>
 % files and file handling
-pcmd.addParameter('tunefile',			[],	@(x)validateattributes(x,{'char','struct'},{'vector'}));
-pcmd.addParameter('specfile',			[],	@(x)validateattributes(x,{'char','struct'},{'vector'}));
-pcmd.addParameter('outfile',			[],	@(x)validateattributes(x,{'char'},{'vector'}));
-pcmd.addParameter('outformat',		[],	@(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
+pcmd.addParameter('tunefile',		[],	@(x)validateattributes(x,{'char','struct'},{'vector'}));
+pcmd.addParameter('specfile',		[],	@(x)validateattributes(x,{'char','struct'},{'vector'}));
+pcmd.addParameter('outfile',		[],	@(x)validateattributes(x,{'char'},{'vector'}));
+pcmd.addParameter('outformat',	[],	@(x)ischar(validatestring(x,{'pdf', 'png', 'epsc','svg'})));
 pcmd.addParameter('nosave',			[],	@(x)validateattributes(x,{'logical'},{'scalar'}));
-pcmd.addParameter('savemat',			[],	@(x)validateattributes(x,{'logical'},{'scalar'}));
-pcmd.addParameter('warn',			[],	@(x)ischar(validatestring(x,{'on', 'off', 'nochange'})));
+pcmd.addParameter('savemat',		[],	@(x)validateattributes(x,{'logical'},{'scalar'}));
+pcmd.addParameter('warn',				[],	@(x)ischar(validatestring(x,{'on', 'off', 'nochange'})));
 % machine file to read default parameteres from
-pcmd.addParameter('machine',			[],	@(x)validateattributes(x,{'char'},{'vector'}));
+pcmd.addParameter('machine',		[],	@(x)validateattributes(x,{'char'},{'vector'}));
 % program behaviour
 pcmd.addParameter('nospec',			[],	@(x)validateattributes(x,{'logical'},{'scalar'}));
 pcmd.addParameter('noplot',			[],	@(x)validateattributes(x,{'logical'},{'scalar'}));
 pcmd.addParameter('nspins',			[],	@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pcmd.addParameter('tfactor',			[],	@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pcmd.addParameter('q',				[],	@(x)validateattributes(x,{'numeric','logical'},{'scalar'}));
+pcmd.addParameter('tfactor',		[],	@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pcmd.addParameter('q',					[],	@(x)validateattributes(x,{'numeric','logical'},{'scalar'}));
 % measurement parameters (override those read from file or set by default)
-pcmd.addParameter('S',				[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pcmd.addParameter('S',					[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pcmd.addParameter('maxpwr',			[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pcmd.addParameter('rgain',			[],	@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pcmd.addParameter('tc',				[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pcmd.addParameter('tc',					[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pcmd.addParameter('nscans',			[],	@(x)validateattributes(x,{'numeric'},{'positive','integer'}));
 pcmd.addParameter('pwr',				[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pcmd.addParameter('attn',				[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
-pcmd.addParameter('T',				[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
+pcmd.addParameter('T',					[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pcmd.addParameter('modamp',			[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 pcmd.addParameter('mwfreq',			[],	@(x)validateattributes(x,{'numeric'},{'positive','scalar'}));
 % tune picture evaluation
-pcmd.addParameter('tunepicscaling',	[],	@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pcmd.addParameter('tunebglimits',		[],	@(x)validateattributes(x,{'numeric'},{'vector'}));
-pcmd.addParameter('tunebgorder',		[],	@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pcmd.addParameter('tunepicscaling',		[],	@(x)validateattributes(x,{'numeric'},{'scalar'}));
+pcmd.addParameter('tunebglimits',			[],	@(x)validateattributes(x,{'numeric'},{'vector'}));
+pcmd.addParameter('tunebgorder',			[],	@(x)validateattributes(x,{'numeric'},{'scalar'}));
 pcmd.addParameter('tunepicsmoothing',	[],	@(x)validateattributes(x,{'numeric'},{'scalar'}));
-pcmd.addParameter('dipmodel',			[],	@ischar);
+pcmd.addParameter('dipmodel',					[],	@ischar);
 % spectrum integration
-pcmd.addParameter('intbglimits',		[],	@(x)validateattributes(x,{'numeric'},{'vector'}));
-pcmd.addParameter('intbgorder',		[],	@(x)validateattributes(x,{'numeric'},{'vector'}));
+pcmd.addParameter('intbglimits',			[],	@(x)validateattributes(x,{'numeric'},{'vector'}));
+pcmd.addParameter('intbgorder',				[],	@(x)validateattributes(x,{'numeric'},{'vector'}));
 % add the name of the function
 pcmd.FunctionName = 'spincounting';
 % parse input arguments
@@ -487,7 +487,7 @@ if ~pmain.q
 		strout.data.tunedata = tdata;
 		strout.data.tunefit(:,1)   = tdata(:,1);
 		strout.data.tunefit(:,2:4) = fit;
-		strout.calc_q = true;		
+		strout.calc_q = true;
 	catch
 		if strcmp(strout.mode, 'none')
 			warning('Determining FWHM of the Dip failed. No Q-Value can be calculated.');
