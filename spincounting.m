@@ -1,12 +1,12 @@
 function [out, strout] = spincounting(varargin)
-% SPINCOUNTING  - quantitative evaluation of EPR spectra
+% spincounting  - quantitative evaluation of EPR spectra
 %
 % USAGE:
-% SPINCOUNTING
-% out = SPINCOUNTING('tfactor',<value>)
-% out = SPINCOUNTING('nspins', <value>)
-% [out, results] = SPINCOUNTING(___, '<option>', <value>)
-% [out, results] = SPINCOUNTING(struct)
+% spincounting
+% out = spincounting('tfactor',<value>)
+% out = spincounting('nspins', <value>)
+% [out, strout] = spincounting(___, '<option>', <value>)
+% [out, strout] = spincounting(struct)
 %
 % OPTIONS:
 % tunefile         : string, tune picture file, default: Prompt
@@ -15,47 +15,51 @@ function [out, strout] = spincounting(varargin)
 % outformat        : string, output format for plots, default: 'pdf'
 % nosave           : boolean, don't save anything if true, default: false
 % savemat          : boolean, save results to .mat file, default: false
-%
-% nspins           : float, # of spins in sample, default: false
-% tfactor          : float, spectrometer transfer factor, default: false
 % nospec           : boolean, only determine q, default: false
 % noplot           : boolean, do not display plots. They are still generated
 %                    and saved, default: false
+% warn             : string, control warnings. Can be one of 'on', 'off' or
+%                    'nochange' (default)
+% machine          : string, name of machine file to load, default: unset
+%
+% nspins           : float, # of spins in sample, default: unset
+% tfactor          : float, spectrometer transfer factor, default: unset
 % q                : float, quality factor q. Setting this disables all q-factor
-%                    calculation related functionality, default: false
-%
-% S                : float, spin of sample, default: 1/2
-% maxpwr           : float, maximum microwave power in W, default: 0.2W
-% rgain            : float, receiver gain factor, default: 1
-% tc               : float, time constant in ms, default: 1
-% nscans           : integer, # of scans, default: 1
-% pwr              : float, microwave power in mW
-% attn             : float, attenuation in dB
-% T                : float, temperature in K
-% modamp           : float, modulation amplitude in G
-% mwfreq           : float, microwave frequency in Hz
-%
-% tunepicscaling   : float, scaling of the tune picture in MHz/<x unit>, default: 6,94e4
-%                    when using an image as a tune file, use the tune picture width in MHz
+%                    calculation related functionality, default: unset
+% S                : float, spin of sample, default: unset
+% maxpwr           : float, maximum microwave power in W, default: unset
+% rgain            : float, receiver gain factor, default: unset
+% tc               : float, time constant in ms, default: unset
+% nscans           : integer, # of scans, default: unset
+% pwr              : float, microwave power in W, default: unset
+% attn             : float, attenuation in dB, default: unset
+% T                : float, temperature in K, default: unset
+% modamp           : float, modulation amplitude in G, default: unset
+% mwfreq           : float, microwave frequency in Hz, default: unset
+% tunepicscaling   : float, scaling of the tune picture in MHz/<x unit>,
+%                    default: unset
+%                    When using an image as a tune file, use the tune picture width in MHz
 %                    instead, as the created x-axis is meaningless for image files
 % tunebglimits     : 1x4 integer, indices of background, default: auto
 % tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
 % tunebgorder      : integer, order of background correction used, default 3
 % dipmodel         : string, model used for dip fitting, default: lorentz
-%
 % intbglimits      : 1x4 integer, indices of background, default: auto
 % intbgorder       : integer, order of background correction used, # of elements
 %                    determines # of steps, default [1 3]
 %
 % All options can be given as either Option-Value pairs or in the form of a struct
-% with struct.<Option> = <Value>
+% with struct.<Option> = <Value>. Both can be used simultaneously, e.g.
+% 
+% [out, strout] = spincounting(struct, '<option>', <value>)
+%
 %
 % OUTPUTS:
-% out     : depending on the operating mode, returns either the number of spins,
-%           the transfer factor or the spin error. Returns NaN if no calculations
-%           were performed.
-% results : a structure containing internal parameters including the various fits,
-%           backgrounds and spectra the quality factor and double integrals
+% out    : depending on the operating mode, returns either the number of spins,
+%          the transfer factor or the spin error. Returns NaN if no calculations
+%          were performed.
+% strout : a structure containing internal parameters including the various fits,
+%          backgrounds and spectra the quality factor and double integrals
 %
 % Further help in the documentation folder
 %

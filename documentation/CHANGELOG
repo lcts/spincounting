@@ -43,23 +43,21 @@ v2.0.0
  - new configuration file to set defaults
  - universal interface for new loading functions
  - extended documentation
-
-v2.1.1
- - spincounting now displays the field/frequency values use as bg limits instead of indices
+v2.0.1
+ - spincounting now displays the field/frequency values used as bg limits instead of indices
  - spincounting now switches to nosave mode if file selection dialog is aborted, after prompting the user
  - fixed bug where FitResDip would prompt user for invalid option 'background'
  - fixed bug where FitResDip would report itself as DoubleInt in error message
  - fixed LoadMat returning improperly named parameter struct
  - fixed bug caused by multiple frequencies being present in dat2/ch1/ch2-files
-
-v3.0-devel
+v3.0.0
  - API CHANGE: the output are now [out, outstr] instead of [nspins, tfactor, outstr]. 'out' contains nspins
                or tfactor depending on the mode. Both nspins and tfactor are still saved to the results array
                individually
  - API CHANGE: output struct reorganised
  - CONFIG CHANGE: format of scconfig changed
  - CONFIG CHANGE: spincounting now supports per-machine configurations
- - REQUIREMENTS: now requires Matlab R213b
+ - REQUIREMENTS: now requires Matlab R2013b
  - existing configurations are no longer overwritten during installation
  - q value can now be read from spectrum file as well as input manually/determined from tune pic file
  - spincounting now asks for spectrum file first, then tune file. This is necessary for getting q from spectrum
@@ -69,3 +67,5 @@ v3.0-devel
  - added support for Magnetec XML files
  - added support for saving reults to a .mat-file
  - failure to fit the dip in tune file no longer aborts program execution
+ v3.0-devel
+  - 
