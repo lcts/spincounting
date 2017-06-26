@@ -1,26 +1,16 @@
- ________________________________________________
-|                                                |
-| THE SPINCOUNTING TOOLBOX v3.0-devel            |
-|                                                |
-| Author: Christopher Engelhard                  |
-| Mail: christopher.engelhard@fu-berlin.de       |
-| Website: http://lcts.github.io/spincounting    |
-|________________________________________________|
+ ____________________________________________________________
+|                                                            |
+| THE SPINCOUNTING TOOLBOX v3.0-devel                        |
+|                                                            |
+| Author:  Christopher Engelhard                             |
+| Mail:    christopher.engelhard@fu-berlin.de                |
+| Website: http://lcts.github.io/spincounting                |
+|____________________________________________________________|
 
- ________________________________________________
-|                                                |
-| This is the git version of the spincounting-   |
-| toolbox (development branch).                  |
-|________________________________________________|
-
- ___________________________________________________________
-|                                                           |
-| THIS PROGRAM IS STRICTLY GIGO: GARBAGE IN, GARBAGE OUT.   |
-|                                                           |
-| This program is not smart. It does not fix your mistakes. |
-| Take care in setting up your experiment and in passing    |
-| the proper parameters to the program.                     |
-|___________________________________________________________|
+ ____________________________________________________________
+|                                                            |
+| This is the git version of the spincounting-toolbox.       |
+|____________________________________________________________|
 
  ____________________________________________________________
 |                                                            |
@@ -31,195 +21,142 @@
 | bugfix releases.                                           |
 |____________________________________________________________|
 
-This is the manual for the spincounting toolbox. For a quick reference to progam usage and options, type 'help spincounting' on the MatLab commandline (or just 'spincounting' and hit F1).
 
 TABLE OF CONTENTS
-1) Syntax
-2) Inputs
-3) Outputs
-4) General Usage
-5) Configuration
-6) Writing your own loading functions
-7) Current Limitations
-8) Examples
-9) Further Help
+1) Installation
+2) Configuration
+3) Upgrading
+4) Migrating from v2.x.x
+5) Further Help
 
+1) DOWNLOAD & INSTALLATION
 
-1) SYNTAX
+1.1) Release versions:
 
-spincounting
-out = spincounting('tfactor',<value>)
-out = spincounting('nspins', <value>)
-[out, results] = spincounting(___, '<option>', <value>)
-[out, results] = spincounting(struct)
-
-
-2) INPUTS
-
-All options can be given as either Option-Value pairs or in the form of a struct
-with struct.<Option> = <Value>
+Download the most recent release from https://github.com/lcts/spincounting/releases and unpack to
+a folder of your choice. If you have git installed on your computer, you can also get the most
+recent release via
 
-2.1) Options regarding input and output files and saving
+  git clone https://github.com/lcts/spincounting.git --branch release
+  
+This will result in a folder 'spincounting' at the location you executed git from.
 
-tunefile         : string, tune picture file, default: Prompt
-specfile         : string, spectrum file, default: Prompt
-outfile          : string, output files, default: Prompt
-outformat        : string, output format for plots, default: 'pdf'
-nosave           : boolean, don't save anything if true, default: false
+1.2) Git (Development) versions:
+You can either get a current snapshot of the git development branch by downloading 
 
-2.2) Options governing program behaviour
+  https://github.com/lcts/spincounting/archive/master.zip
 
-nspins           : float, # of spins in sample, default: false
-tfactor          : float, spectrometer transfer factor, default: false
-nospec           : boolean, only determine q, default: false
-noplot           : boolean, do not display plots. They are still generated
-                   and saved, default: false
-q                : float, quality factor q. Setting this disables all q-factor
-                   calculation related functionality, default: false
-                   If q is set to a numerical value, that value is used. If q
-                   is set to 'auto', then spincounting tries to read a q value
-                   from the spectrum file. If this fails, it defaults back to 'false'.
+or (recommended) by using git directly
 
-2.3) Options setting measurement and sample parameters
+  git clone https://github.com/lcts/spincounting.git
 
-These values should ideally be read from the data file. Options set explicitly override those read from file, so you can use these to fix wrong or missing parameters. Any parameter that is set to 1 is ignored.
+This will result in a folder 'spincounting' at the location you executed git from.
 
-S                : float, spin of sample, default: 1/2
-maxpwr           : float, maximum microwave power in W, default: 0.2W
-rgain            : float, receiver gain factor, default: 1 (ignored)
-tc               : float, time constant in ms, default: 1 (ignored)
-nscans           : integer, # of scans, default: 1 (ignored)
-pwr              : float, microwave power in mW
-attn             : float, attenuation in dB
-T                : float, temperature in K
-modamp           : float, modulation amplitude in G
-mwfreq           : float, microwave frequency in Hz
+1.3) Editing Matlab path
 
-When both attn and pwr are set, pwr takes precedence.
+To allow Matlab to use the spincounting program, from within Matlab, add the folder you saved it to
+with subfolders to the Matlab path (Matlab Home -> Set Path).
 
-2.4) Options governing the fitting of the dip and q calculation
 
-tunepicscaling   : float, scaling of the tune picture in MHz/s, default: 6,94e4
-                   when using an image as a tune file, use the tune picture width in MHz
-                   instead, as the created x-axis is meaningless for image files
-tunebglimits     : 1x4 float, x values of background, default: auto
-tunepicsmoothing : integer, # of points used for smoothing, default 2.5% of total
-tunebgorder      : integer, order of background correction used, default 3
-dipmodel         : string, model used for dip fitting, default: lorentz
+2) CONFIGURATION
 
-2.5) Options governing double integration
+spincounting is configured via a main configuration file, located at private/scconfig.m, which
+determines various aspects of default program behaviour, and optionally spectrometer-specific
+configuration files, located at private/machines/<machinename>.m, which set default experimental
+parameters specific to a given setup.
+These files are not shipped with spincounting by default, but can be generated from templates:
 
-intbglimits      : 1x4 float, x values of background, default: auto
-intbgorder       : integer, order of background correction used, # of elements
-                   determines # of steps, default [1 3]
+  a) Copy & rename documentation/templates/scconfig.m.template to private/scconfig.m
+  b) Optionally, copy & rename documentation/templates/machine.m.template to
+     private/machines/<machinename>.m . <machinename> can be any alphanumeric string that allows
+     you to identify the spectrometer it is referring to, but should not contain spaces.
+  c) Edit scconfig.m to suit your needs. If you're not sure, you can leave it as is. If you're using
+     a machine file, you should put 'machine', '<machinename>'; ... in the DEFAULT_OPTIONS array
+     (see below)
+  d) Do the same for the machine file. If you do not want 
 
+2.1) Options in scconfig
 
-3) OUTPUTS
-out:      depending on the operating mode, returns either the number of spins,
-          the transfer factor or the spin error. Returns NaN if no calculations were performed.
-results:  a structure containing internal parameters including the various fits, backgrounds and spectra
-          the quality factor and double integrals
+CONFIG_VERSION    : This option is used by spincounting to determine if the configuration needs an
+                    update after installation. Don't change this unless spincounting tells you to.
+ALLOW_ALL_OPTIONS : By default, some parameters can only be set in scconfig, others only in machine
+                    files, following their different roles described above. If you only have one
+                    setup and would like to just use scconfig for everything, set
+                    'ALLOW_ALL_OPTIONS = true', though machine files are the preferred method even
+                    for a single setup.
+DEFAULT_OPTIONS   : Used to set up default program behaviour. Unless ALLOW_ALL_OPTIONS is set, every
+                    option listed as <VALID IN> scconfig in the README can be set here. The syntax
+                    is that of a Nx2 cell array:
+                    
+                    { 'option1', value1; 'option2', value2; ... }
+                    
+TUNE_FORMATS      : Used to tell spincounting about usable loading functions for tune picture files.
+                    Only needs to be changed if you've written your own. This is a Nx3 cell array:
+                    
+                    { '*.<extension1>, '*.<extension2>', '<description>', '<function to run>'; ... }
+                    
+                    where <function to run> is the name of the function and extension1...N are all
+                    extensions this routine is responsible for.
 
+SPECTRUM_FORMATS  : Same as TUNE_FORMATS, but for spectrum files.
 
-4) USAGE
-The program takes a cw-EPR spectrum and calculates the absolute number of spins in the sample from it, taking into account the various factors like modulation amplitude/microwave power etc. that influence the apparent intensity. The program can be run fully interactively with no parameters needed as well as fully integrated into external MATLAB scripts.
 
-Two of the factors impacting signal intensity cannot be read from the measurement parameters:
-The q-factor, which is a function of the resonator and the spectrometer transfer factor, the proportionality between number of spins and parameter-corrected spectral intensity as detected by the spectrometer, which is a function of the spectrometer/resonator used.
-The q-factor is determined by fitting and measuring the dip passed to it in the form of a tune picture file, the latter can be calculated by measuring a sample with a known number of spins and running the result through this program.
+2.2) Options in machine files
 
-4.1) Determining the program's operation mode
+Machine files contain only a single variable
 
-q-factor, number of spins and the spectrometer transfer factor can all be passed to the program as options. Depending on what is passed to the program, it performs different tasks:
+MACHINE_PARAMETERS   : Used to set up default measurement parameters. Unless ALLOW_ALL_OPTIONS is
+                       set, every option listed as <VALID IN> machinefile in the README can be set
+                       here. The syntax is the same as that of DEFAULT_OPTIONS, a Nx2 cell array:
+                    
+                       { 'option1', value1; 'option2', value2; ... }
 
-Passing nspins and/or tfactor determines the operation mode.
- - neither:	calculate normalized double integral
- - nspins:	calculate tfactor from spectrum, out = tfactor
- - tfactor:	calculate nspins from spectrum, out = nspins
- - both:	check tfactor against nspins using the given spectrum, out = nspinserror
-Passing q is only useful in two cases:
- - the quality factor has been determined by alternate means
- - the program is used to compare measurements that can be assumed to have identical q
 
-4.2) Graphical display
+3) UPGRADING
 
-All relevant parameters are printed to stdout as well as saved to a file. Additionally, the results from fitting, background correction and integration are displayed in two plots:
- - tune picture:
-   - data blue, fit red/dashed
-   - bg fit red/dashed/thin, area used for bg correction shaded
- - spectrum:
-   - data blue, first integral green, second integral red
-   - blue/green dotted: bg fits, area used for bg correction shaded
-   - red dotted: max/min used for determination of double integral
-These figures are also by default saved to file.
+Since spincounting does not ship scconfig and machine files directly, you can upgrade by simply
+downloading a new version and overwriting the old. If the upgrade necessitates changes to the
+configuration, spincounting will notify the user on first run.
 
-4.3) Background correction
+Upgrading is particularly easy if you used git to get the program. In that case, just change to the
+installation folder and type
 
-For a good result it is vitally important that the background corrections and fits used are as good as possible. Always check that the program has achieved a good background fit, especially for the second integration.
+  git pull
+  
+You can easily switch between release and development version by typing
 
-4.3.1) Tune picture
+  git checkout master
+  git pull
+  
+to switch from release to develop, and
 
-Record the tune picture without the dip or with a very high q sample. Adjust tunebgorder to get a good fit. Use the same order polynomial when fitting the tune picture with the dip. Check the displayed background. It should have a similar shape as the one without the dip. If in doubt. record both (with/without dip) and subtract them before fitting.
-The reason for this approach is that for low q samples, a higher order background might appear to yield a better fit, but in reality the algorithm is just fitting part of the dip with the background.
-You can minimise errors from imperfect background correction by positioning the dip on the same background area every time you measure.
+  git checkout release
+  git pull
+  
+to switch from develop to release.
 
-When you're using an image (e.g. a screenshot of the tune picture) as data, note that the x-axis of the data in the image files is meaningless, as the scaling (MHz/pixel) depends on the resolution of the window on your computer screen, which could be variable. The loading function for image files therefore normalises the x-axis to [0,1]. For this reason tunepicscaling is always <full width of tune picture / Mhz>/<x unit> for image files.
 
-4.3.2) Spectrum
-Set the inner borders of the background correction area to the low and high field borders of your spectrum. Leave the outer borders at the spectrum min/max field for now. Set the lowest possible intbgorder for the first correction that describes that data well. Then do the same for the second correction. It is important not to use needlessly high order polynomials. Play around with bg limits and borders until a good correction of the bg after integration is achieved. Prioritise low order polynomials over large background areas.
+4) MIGRATING FROM v2.x.x
 
+Version 3.0.0 of spincounting introduced machine files and various changes to scconfig as well as
+the output format. To migrate your configuration from v2.x.x to 3.x.x, you should, after updating
 
-5) CONFIGURATION
+  a) copy your scconfig.m to scconfig.m.backup
+  b) copy documentation/templates/scconfig.m.template to private/scconfig
+  c) copy the options you set in the DEFAULTS variable in scconfig.m.backup to either
+     DEFAULT_OPTIONS in scconfig or MACHINE_PARAMETERS in a machine file, as applicatble.
+  d) If you used any self-written load routines, copy them from sccontig.m.backup to scconfig.n. Note
+     that the new scconfig uses a single variable <TUNE|SPECTRUM>_FORMATS instead of the old
+     <TUNE|SPECTRUM>_KNOWN_FORMATS and <TUNE|SPECTRUM>_LOADFUNCTIONS.
 
-Default values for the program as well as the list of known file formats can be set via a config file 'scconfig.m' in the private/ subdirectory. It contains five variables, DEFAULTS, TUNE_KNOWN_FORMATS, TUNE_LOADFUNCTIONS, SPECTRUM_KNOWN_FORMATS and SPECTRUM_LOADFUNCTIONS.
+Additionally, v3.x.x no longer returns [nspins, tfactor, outstr], but [out, outstr], where 'out'
+contains nspins, tfactor or nspinerror depending on the operation mode. All values are still saved
+individually to the struct output outstr. The structure of outstr has changed as well. You need to
+edit your scripts accordingly.
 
-DEFAULT sets the default values used for various parameters. It is a 2xN cell array with the parameter names in the first and their values in the second column:
 
-DEFAULTS = { '<name1>', '<value1>';   '<name2>', '<value2>'; ... }
+5) FURTHER HELP
 
-All parameters that are passed to the script on the commandline can be set here as well. However, you should only set parameters that are unlikely to ever change, i.e. that are part of your setup or intrinsic properties of your samples. Usually, these will only be scaling of the tune frequency axis tunepicscaling, bridge maximum power maxpwr and sample spin S.
-
-
-6) WRITING YOUR OWN LOADING ROUTINE
-
-You can write your own loading routine for whatever format you need and include it into the toolbox. The only requirement is that it takes a filename as its only argument and return two variables, data, a 2xN or Nx2 matrix and params, a struct (can be an empty struct):
-
-function [data, params] = <your-function-name>(filename)
-
-A template can be found in the examples-folder. Copy the template to the 'private' subfolder and rename it to <your-function-name>.m. Put in your code. Test it. Once you have your function working properly, you'll have to tell spincounting about it. This is done in the configuration file 'scconfig.m', by adding your function to the LOADFUNCTIONS-arrays. Depending on whether you want to load tune or spectrum data, add your function to TUNE_LOADFUNCTIONS or SPECTRUM_LOADFUNCTIONS. These two variables are 2xN cell-arrays with the format
-
-{ '.<extension1>', '<function to run1>';   '.<extension2>', '<function to run2>'; ... }
-
-and so on. To add your function, add a new line like this
-
-'.<extension of your data file>', '<your-function-name>'; ...
-
-for example
-
-'.dat', 'load-my-dat-file'; ...
-
-This tells spincounting that a file with the extension '.dat' can be loaded using the function '[data, params] = load-my-dat-file(filename)'. If your function can handle multiple different files, add a line for each extension.
-
-For convenience, you can also add a filter to the loading dialog, so that your files are displayed (Otherwise, you'll have to select 'All Files (*)' in the file selection dialogs to be able to select your format). For this, add a line
-
-'*.<extension>', '<short description of your format>'; ...
-
-to <TUNE|SPECTRUM>_KNOWN_FORMATS. You can make one filter for multiple extensions like this
-
-'*.<extension1>, *.<extension2>', '<short description of your format>'; ...
-
-Now you're all set - the toolbox should be able to load your data without problems!
-
-7) CURRENT LIMITATIONS
-
- - While the dip is autodetected, this has only been tested for cases where the full tune picture is recorded, i.e. there were flat areas to the left and to the right of the tune pic. Autodetection also assumes a roughly quadratic shape of the background without the dip (typical output from old bridges). Always check the figure to see if the fit makes sense, try specifying the background area manually if not.
-
-
-8) EXAMPLES
-
-A usage example, demonstration files and templates can be found in the 'examples/' folder. Try usage_example.m .
-
-
-9) FURTHER HELP
-
-If you have problems, don't hesitate to contact me.
+More info can be found on the spincounting website and via the Matlab help system (You'll find it
+under 'Supplemental Software' in the main help browser).
+If you have problems or questions, don't hesitate to contact me.

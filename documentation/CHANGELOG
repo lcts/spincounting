@@ -53,18 +53,19 @@ v2.1.1
  - fixed bug caused by multiple frequencies being present in dat2/ch1/ch2-files
 
 v3.0-devel
- - API CHANGE: the output are now [out, results] instead of [nspins, tfactor, results]. 'out' contains nspins
+ - API CHANGE: the output are now [out, outstr] instead of [nspins, tfactor, outstr]. 'out' contains nspins
                or tfactor depending on the mode. Both nspins and tfactor are still saved to the results array
                individually
  - API CHANGE: output struct reorganised
- - API CHANGE: format of scconfig changed
- - API CHANGE: spincounting now supports per-machine configurations
+ - CONFIG CHANGE: format of scconfig changed
+ - CONFIG CHANGE: spincounting now supports per-machine configurations
+ - REQUIREMENTS: now requires Matlab R213b
  - existing configurations are no longer overwritten during installation
  - q value can now be read from spectrum file as well as input manually/determined from tune pic file
  - spincounting now asks for spectrum file first, then tune file. This is necessary for getting q from spectrum
    file params
- - use addParameter instead of the deprecated addParamValue in inputParser (Can cause issues with old MatLab versions)
  - changed input validation to allow negative and non-integer background limits
  - added support for screenshots as tune picture files (experimental)
  - added support for Magnetec XML files
  - added support for saving reults to a .mat-file
+ - failure to fit the dip in tune file no longer aborts program execution
