@@ -6,7 +6,7 @@
 CONFIG_VERSION = '3';
 
 % Allow all options to be set in scconfig and machine files, instead of separating them into
-% program state/execution options ( scconfig) and evaluation-related parameteres (machine)
+% program state/execution options (scconfig) and evaluation-related parameteres (machine)
 % Default: false
 %ALLOW_ALL_OPTIONS = false;
 

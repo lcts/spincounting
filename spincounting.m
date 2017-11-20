@@ -144,7 +144,7 @@ pcmd.parse(varargin{:});
 % remember the old diary file
 olddiary = get(0,'DiaryFile');
 % create a temporary filename
-diaryfile = tempname;
+diaryfile = tempname
 % log all output to temporary file
 diary(diaryfile);
 
@@ -176,10 +176,14 @@ strout = struct(...
 % By default, only allow scconfig -> pstate and machinefile -> pmain
 ALLOW_ALL_OPTIONS = false;
 
+% By default, do not filter spectrum or tune file formats
+FILTER_SPECTRUM_FILE = false;
+FILTER_TUNE_FILE = false;
+
 % A WORD ABOUT PARAMETER STRUCTS
-% pmain/pstate:	Main spincounting parameter struct, everything ends here
+% pmain/pstate:	Main spincounting parameter struct, everything ends up here
 %               Initilaised with values from scconfig
-% pspec:        parameters read from spectrum file
+% pfile:        parameters read from spectrum file
 % pmachine:     parameters read from machine files
 % pcmd.Results: paramteres read from commandline
 %
@@ -242,6 +246,16 @@ end
 if ~isempty(pcmd.Results.nospec)
 	pstate.nospec = pcmd.Results.nospec;
 end
+% same for filenames
+if ~isempty(pcmd.Results.specfile)
+	pstate.specfile = pcmd.Results.specfile;
+end
+if ~isempty(pcmd.Results.tunefile)
+	pstate.tunefile = pcmd.Results.tunefile;
+end
+if ~isempty(pcmd.Results.outfile)
+	pstate.outfile = pcmd.Results.outfile;
+end
 
 if strcmp(pstate.warn, 'off'); fprintf('NOTE: Most warnings are disabled.\n\n'); end
 
@@ -279,11 +293,16 @@ end
 
 %% LOAD SPECTRUM DATA AND MERGE PARAMETERS INTO PMAIN/PSTATE
 %==================================================================================================%
+%
+% set FILTER_SPECTRUM_FILE to no filtering if unset
+if ~FILTER_SPECTRUM_FILE
+	FILTER_SPECTRUM_FILE = ':';
+end
 % LOAD SPECTRUM FILE
 if ~pstate.nospec
 	if ~ischar(pstate.specfile)
 		try
-			[sdata, pfile, pstate.specfile] = getfile(SPECTRUM_FORMATS, '', ...
+			[sdata, pfile, pstate.specfile] = getfile(SPECTRUM_FORMATS(FILTER_SPECTRUM_FILE,:), '', ...
 				'Select a spectrum file:', pstate.warn);
 		catch ME
 			warning(warn_state);
@@ -345,11 +364,15 @@ end
 %==================================================================================================%
 % if pmain.q is not defined, set it to false
 if ~isfield(pmain, 'q'); pmain.q = false; end
+% set FILTER_TUNE_FILE to no filtering if unset
+if ~FILTER_TUNE_FILE
+	FILTER_TUNE_FILE = ':';
+end
 % get q from tunefile if needed
 if ~pmain.q
 	if ~ischar(pstate.tunefile)
 		try
-			[tdata, ~, pstate.tunefile] = getfile(TUNE_FORMATS, '', ...
+			[tdata, ~, pstate.tunefile] = getfile(TUNE_FORMATS(FILTER_TUNE_FILE,:), '', ...
 				'Select a tune picture file:', pstate.warn);
 		catch ME
 			warning(warn_state);
@@ -402,10 +425,10 @@ else
 	elseif strcmp(pstate.outfile, 'default')
 		if ischar(pstate.specfile)
 			[path, file, ~] = fileparts(pstate.specfile);
-			pstate.outfile = [path file '.log'];
+			pstate.outfile = fullfile(path, file, '.log');
 		elseif ischar(pstate.tunefile)
 			[path, file, ~] = fileparts(pstate.tunefile);
-			pstate.outfile = [path file '.log'];
+			pstate.outfile = fullfile(path, file, '.log');
 		end
 	end
 	% check if we now have a filename
@@ -419,7 +442,6 @@ else
 			warning('spincounting:FileExists', 'Existing output files will be overwritten.\n');
 			% and remove diary file
 			delete([pstate.outfile extension]);
-			diary([pstate.outfile extension]);
 		end
 	end
 end
@@ -606,8 +628,6 @@ if ~pstate.nosave
 	set(hFigure,'PaperPositionMode','auto', 'PaperOrientation', 'landscape', 'PaperType', 'a4');
 	print(hFigure, outformat, '-r300', strcat(pstate.outfile, '_figure'));
 	fprintf('\nFigure saved.');
-	% attach .log to outfile parameter
-	pstate.outfile = [pstate.outfile '.log'];
 end
 
 %% MODE-DEPENDENT ACTIONS
@@ -667,13 +687,15 @@ strout.parameters = pmain;
 %==================================================================================================%
 if ~pstate.nosave
 	% copy temporary diary to outfile
-	copyfile(diaryfile,[pstate.outfile '.log']);
-	delete(diaryfile);
+	[pstate.outfile '.log']
+	copyfile(diaryfile,[pstate.outfile '.log'])
+%	delete(diaryfile);
 	% save results struct to mat-file or csv-file if needed
 	if pstate.savemat
 		save([pstate.outfile '.mat'], 'results', '-struct')
 		fprintf('Results saved to .mat file.\n');
 	end
+	% attach .log to outfile parameter
 	% end diary and reset DiaryFile to what it was
 	diary off;
 	set(0,'DiaryFile', olddiary);
