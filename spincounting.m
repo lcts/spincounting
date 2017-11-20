@@ -61,7 +61,7 @@ function [out, strout] = spincounting(varargin)
 % strout : a structure containing internal parameters including the various fits,
 %          backgrounds and spectra the quality factor and double integrals
 %
-% Further help in the documentation folder
+% Further help can be found in the documentation folder
 %
 
 
@@ -74,10 +74,10 @@ CV_REQUIRED = '3';
 
 %% CHECK IF DEPENDENCIES ARE INSTALLED
 %==================================================================================================%
-% Matlab Version (R213b = 8.2 for 'addParameter')
+% Matlab Version (R2013b = 8.2 for 'addParameter')
 if verLessThan('matlab','8.2')
 	error('spincounting:MatlabVersion', ...
-		'spincounting requires at least Matlab version 8.2 (Release R213b).')
+		'spincounting requires at least Matlab version 8.2 (Release R2013b).')
 end
 % Optimisation toolbox
 if isempty(which('lsqcurvefit'))
@@ -95,7 +95,7 @@ end
 %==================================================================================================%
 % define input arguments
 pcmd = inputParser;
-%                  <parameter>		<default> 	<validation function>
+%                 <parameter>		<default> 	<validation function>
 % files and file handling
 pcmd.addParameter('tunefile',		[],	@(x)validateattributes(x,{'char','struct'},{'vector'}));
 pcmd.addParameter('specfile',		[],	@(x)validateattributes(x,{'char','struct'},{'vector'}));
@@ -144,7 +144,7 @@ pcmd.parse(varargin{:});
 % remember the old diary file
 olddiary = get(0,'DiaryFile');
 % create a temporary filename
-diaryfile = tempname
+diaryfile = tempname;
 % log all output to temporary file
 diary(diaryfile);
 
@@ -181,8 +181,8 @@ FILTER_SPECTRUM_FILE = false;
 FILTER_TUNE_FILE = false;
 
 % A WORD ABOUT PARAMETER STRUCTS
-% pmain/pstate:	Main spincounting parameter struct, everything ends up here
-%               Initilaised with values from scconfig
+% pmain/pstate:	Main spincounting parameter structs, everything ends up here
+%               Initialised with values from scconfig.m
 % pfile:        parameters read from spectrum file
 % pmachine:     parameters read from machine files
 % pcmd.Results: paramteres read from commandline
@@ -233,20 +233,21 @@ for ii = 1:size(DEFAULT_OPTIONS,1)
 	end
 end
 
-% SOME TWEAKS TO DEFAULT LOADING ORDER
+% SOME TWEAKS TO THE DEFAULT LOADING ORDER
 % pstate.machine needs to be merged directly, as commandline has to override
 % scconfig before pstate.machine is first queried
 if ~isempty(pcmd.Results.machine)
 	pstate.machine = pcmd.Results.machine;
 end
-% warn and nospec need to be merged before the spec file is loaded
+% as warn and nospec apply to file loading, they need to be merged
+% before the spec file is loaded
 if ~isempty(pcmd.Results.warn)
 	pstate.warn = pcmd.Results.warn;
 end
 if ~isempty(pcmd.Results.nospec)
 	pstate.nospec = pcmd.Results.nospec;
 end
-% same for filenames
+% same for filenames, obviously
 if ~isempty(pcmd.Results.specfile)
 	pstate.specfile = pcmd.Results.specfile;
 end
@@ -257,6 +258,7 @@ if ~isempty(pcmd.Results.outfile)
 	pstate.outfile = pcmd.Results.outfile;
 end
 
+% if warn == off, tell user that warnings have been disabled
 if strcmp(pstate.warn, 'off'); fprintf('NOTE: Most warnings are disabled.\n\n'); end
 
 % populate machine parameter struct with values from machine file
@@ -294,15 +296,17 @@ end
 %% LOAD SPECTRUM DATA AND MERGE PARAMETERS INTO PMAIN/PSTATE
 %==================================================================================================%
 %
-% set FILTER_SPECTRUM_FILE to no filtering if unset
-if ~FILTER_SPECTRUM_FILE
-	FILTER_SPECTRUM_FILE = ':';
-end
+
 % LOAD SPECTRUM FILE
+% set FILTER_SPECTRUM_FILE to no filtering if unset
+if ~SPECFORMAT_FILTERS
+	SPECFORMAT_FILTERS = ':';
+end
+% load file
 if ~pstate.nospec
 	if ~ischar(pstate.specfile)
 		try
-			[sdata, pfile, pstate.specfile] = getfile(SPECTRUM_FORMATS(FILTER_SPECTRUM_FILE,:), '', ...
+			[sdata, pfile, pstate.specfile] = getfile(SPECTRUM_FORMATS(SPECFORMAT_FILTERS,:), '', ...
 				'Select a spectrum file:', pstate.warn);
 		catch ME
 			warning(warn_state);
@@ -364,15 +368,15 @@ end
 %==================================================================================================%
 % if pmain.q is not defined, set it to false
 if ~isfield(pmain, 'q'); pmain.q = false; end
-% set FILTER_TUNE_FILE to no filtering if unset
-if ~FILTER_TUNE_FILE
-	FILTER_TUNE_FILE = ':';
+% set TUNEFORMAT_FILTERS to no filtering if unset
+if ~TUNEFORMAT_FILTERS
+	TUNEFORMAT_FILTERS = ':';
 end
 % get q from tunefile if needed
 if ~pmain.q
 	if ~ischar(pstate.tunefile)
 		try
-			[tdata, ~, pstate.tunefile] = getfile(TUNE_FORMATS(FILTER_TUNE_FILE,:), '', ...
+			[tdata, ~, pstate.tunefile] = getfile(TUNE_FORMATS(TUNEFORMAT_FILTERS,:), '', ...
 				'Select a tune picture file:', pstate.warn);
 		catch ME
 			warning(warn_state);
@@ -440,8 +444,9 @@ else
 	% save outfile name and check if it exists
 	if ~pstate.nosave
 		pstate.outfile = fullfile(outpath, outfile, outextension);
-		% check if outfile exists or is a folder
+		% check if outfile exists
 		if exist(pstate.outfile, 'file')
+			% ------check if outfile is actually a folder------
 			% warn
 			warning('spincounting:FileExists', 'Existing output files will be overwritten.\n');
 		end

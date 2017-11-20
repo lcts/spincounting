@@ -1,6 +1,6 @@
 function doubleintpars = sc2doubleint(scpars)
 % convert between the parameter format of spincounting and that of
-% dipfit
+% doubleint
 %
 % USAGE:
 % doubleintpars = sc2doubleint(scpars)

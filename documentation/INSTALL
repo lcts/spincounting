@@ -102,23 +102,22 @@ SPECTRUM_FORMATS  : Same as TUNE_FORMATS, but for spectrum files.
 
 2.2) Options in machine files
 
-Machine files contain the following two variables
+Machine files contain the following variables
 
-DIALOG_FILTERS		 : Use this to select a subset of file types (as specified in TUNE_FORMATS and
-					   SPECTRUM_FORMATS in scconfig.m), for example to restrict the dialogs to
-					   filetypes actually used by this machine. The syntax is a 2x1 cell array
-					   containing two vectors of indices:
+SPECFORMAT_FILTERS : Use this to select a subset of file types (as specified in TUNE_FORMATS and
+TUNEFORMAT_FILTERS	 SPECTRUM_FORMATS in scconfig.m), for example to restrict the dialogs to
+										 filetypes actually used by this machine. This is a vector of indices:
 
-					   { <spectrum_indices>, <tune_indices> }
+										 [ <index1> <index2> ... <indexN> ]
 
-					   where the <spectrum_indices> and <tune_indices> refer to the line numbers
-					   in SPECTRUM_FORMATS and TUNE_FORMATS, respectively.
+										 where the index1...N refer to the line numbers in SPECTRUM_FORMATS and
+										 TUNE_FORMATS, respectively.
 
-MACHINE_PARAMETERS   : Used to set up default measurement parameters. Unless ALLOW_ALL_OPTIONS is
-                       set, every option listed as <VALID IN> machinefile in the README can be set
-                       here. The syntax is the same as that of DEFAULT_OPTIONS, a Nx2 cell array:
+MACHINE_PARAMETERS : Used to set up default measurement parameters. Unless ALLOW_ALL_OPTIONS is
+                     set, every option listed as <VALID IN> machinefile in the README can be set
+                     here. The syntax is the same as that of DEFAULT_OPTIONS, a Nx2 cell array:
 
-                       { 'option1', value1; 'option2', value2; ... }
+                     { 'option1', value1; 'option2', value2; ... }
 
 
 3) UPGRADING
