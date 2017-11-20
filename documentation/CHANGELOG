@@ -70,3 +70,6 @@ v3.0.0
 v3.0.1
  - fixed error with config version checks
 v3.0-devel
+ - file type filters displayed in load dialogs can now be set on a per-machine basis
+ - fixed error which sometimes caused empty logs to be created
+ - fixed error which caused input files on commandline to be ignored

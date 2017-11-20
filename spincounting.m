@@ -50,7 +50,7 @@ function [out, strout] = spincounting(varargin)
 %
 % All options can be given as either Option-Value pairs or in the form of a struct
 % with struct.<Option> = <Value>. Both can be used simultaneously, e.g.
-% 
+%
 % [out, strout] = spincounting(struct, '<option>', <value>)
 %
 %
@@ -400,17 +400,26 @@ if pstate.nosave
 	warning('spincounting:NoSave', '''nosave'' option set. Data will not be saved.\n');
 	pstate.outfile = 'none';
 else
-	% check if we're missing a filename
-	if ~ischar(pstate.outfile)
+	% get a basename from spectrum or tune file
+	if ischar(pstate.specfile)
 		[~, basename, ~] = fileparts(pstate.specfile);
-		% if so, get one
+	elseif ischar(pstate.tunefile)
+		[~, basename, ~] = fileparts(pstate.tunefile);
+	else
+		basename = 'out';
+	end
+	% get a filename if none is set
+	if ~ischar(pstate.outfile)
 		while true
-			[file, path] = uiputfile('*.log','Save Results to File:',[basename '.log']);
-			if file == 0
+			[outfile, outpath] = uiputfile('*.log','Save Results to File:',[basename '.log']);
+			% check if a file was selected
+			if outfile == 0
+				% if not, prompt
 				btn = questdlg('No file selected, data won''t be saved. Continue anyway?', ...
 					'No file selected', ...
 					'Yes','No', ...
 					'No');
+				% if user cancels saving, warn & set nosave mode
 				if strcmp(btn,'Yes')
 					warning('spincounting:NoFile', 'No output file selected. Data will not be saved.\n');
 					pstate.nosave = true;
@@ -418,38 +427,28 @@ else
 					break
 				end
 			else
-				pstate.outfile = fullfile(path, file);
+				[~, outfile, outextension] = fileparts(outfile);
 				break
 			end
 		end
+	% if outfile is 'default', set it to the <currentdir>/<basename>.log
 	elseif strcmp(pstate.outfile, 'default')
-		if ischar(pstate.specfile)
-			[path, file, ~] = fileparts(pstate.specfile);
-			pstate.outfile = fullfile(path, file, '.log');
-		elseif ischar(pstate.tunefile)
-			[path, file, ~] = fileparts(pstate.tunefile);
-			pstate.outfile = fullfile(path, file, '.log');
-		end
+		outdir = pwd;
+		outfile = basename;
+		outextension = '.log';
 	end
-	% check if we now have a filename
+	% save outfile name and check if it exists
 	if ~pstate.nosave
-		% remove extension from filename (because we add our own later)
-		[path, file, extension] = fileparts(pstate.outfile);
-		pstate.outfile = fullfile(path, file);
+		pstate.outfile = fullfile(outpath, outfile, outextension);
 		% check if outfile exists or is a folder
-		if exist([pstate.outfile extension], 'file')
+		if exist(pstate.outfile, 'file')
 			% warn
 			warning('spincounting:FileExists', 'Existing output files will be overwritten.\n');
-			% and remove diary file
-			delete([pstate.outfile extension]);
 		end
 	end
 end
-if ~pstate.nosave
-	fprintf('Log file:\t%s.log\n', pstate.outfile);
-else
-	fprintf('Log file:\t%s\n', pstate.outfile);
-end
+% display log file
+fprintf('Log file:\t%s\n', pstate.outfile);
 
 
 %% SET OPERATION MODE
@@ -547,18 +546,14 @@ end
 % create figure
 close(findobj('type','figure','name','SCFigure'))
 scrsz = get(groot,'ScreenSize');
+hFigure = figure(...
+	'name','SCFigure', ...
+	'Visible', 'off', ...
+	'Position', [10 -10+scrsz(4)/2 scrsz(3)/2 scrsz(4)/2] ...
+	);
+% make it visible
 if ~pstate.noplot
-	hFigure = figure(...
-		'name','SCFigure', ...
-		'Visible', 'on', ...
-		'Position', [10 -10+scrsz(4)/2 scrsz(3)/2 scrsz(4)/2] ...
-		);
-else
-	hFigure = figure(...
-		'name','SCFigure', ...
-		'Visible', 'on', ...
-		'Position', [10 -10+scrsz(4)/2 scrsz(3)/2 scrsz(4)/2] ...
-		);
+	set(hFigure,'Visible', 'on');
 end
 hTuneAxes = axes('Parent',hFigure, 'Position', [0.03 0.07 0.37 0.9]);
 hSpecAxes(1) = axes('Tag', 'specaxes', 'Parent', hFigure, 'Position', [0.47 0.07 0.45 0.9]);
@@ -622,17 +617,9 @@ if ~pstate.nospec
 		pmain.pwr*1000, pmain.T, pmain.nb, pmain.S, pmain.modamp, pmain.rgain, pmain.tc, pmain.nscans);
 end
 
-if ~pstate.nosave
-	% save plots to file
-	outformat = ['-d' pstate.outformat];
-	set(hFigure,'PaperPositionMode','auto', 'PaperOrientation', 'landscape', 'PaperType', 'a4');
-	print(hFigure, outformat, '-r300', strcat(pstate.outfile, '_figure'));
-	fprintf('\nFigure saved.');
-end
-
 %% MODE-DEPENDENT ACTIONS
 %==================================================================================================%
-% calcilate results and save then to strout, out
+% calculate results and save them to strout, out
 switch strout.mode
 	case 'none' % only determine q
 		fprintf('\nNo spin counting requested.\n');
@@ -685,17 +672,20 @@ strout.parameters = pmain;
 
 %% CLEANUP AND EXIT
 %==================================================================================================%
+% save outputs
 if ~pstate.nosave
-	% copy temporary diary to outfile
-	[pstate.outfile '.log']
-	copyfile(diaryfile,[pstate.outfile '.log'])
-%	delete(diaryfile);
-	% save results struct to mat-file or csv-file if needed
+	% save results struct to mat-file if requested
 	if pstate.savemat
-		save([pstate.outfile '.mat'], 'results', '-struct')
+		save(fullfile(outpath, outfile, '.mat'), 'results', '-struct')
 		fprintf('Results saved to .mat file.\n');
 	end
-	% attach .log to outfile parameter
+	% save plots to file
+	outformat = ['-d' pstate.outformat];
+	set(hFigure,'PaperPositionMode','auto', 'PaperOrientation', 'landscape', 'PaperType', 'a4');
+	print(hFigure, outformat, '-r300', fullfile(outpath, strcat(outfile, '_figure')));
+	fprintf('\nFigure saved.');
+	% move temporary diary to log file
+	movefile(diaryfile, fullfile(outpath, outfile, outextension))
 	% end diary and reset DiaryFile to what it was
 	diary off;
 	set(0,'DiaryFile', olddiary);

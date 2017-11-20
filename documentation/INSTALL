@@ -4,7 +4,7 @@
 |                                                            |
 | Author:  Christopher Engelhard                             |
 | Mail:    christopher.engelhard@fu-berlin.de                |
-| Website: http://lcts.github.io/spincounting                |
+| Website: https://github.com/lcts/spincounting              |
 |____________________________________________________________|
 
  ____________________________________________________________
@@ -38,11 +38,11 @@ a folder of your choice. If you have git installed on your computer, you can als
 recent release via
 
   git clone https://github.com/lcts/spincounting.git --branch release
-  
+
 This will result in a folder 'spincounting' at the location you executed git from.
 
 1.2) Git (Development) versions:
-You can either get a current snapshot of the git development branch by downloading 
+You can either get a current snapshot of the git development branch by downloading
 
   https://github.com/lcts/spincounting/archive/master.zip
 
@@ -54,8 +54,7 @@ This will result in a folder 'spincounting' at the location you executed git fro
 
 1.3) Editing Matlab path
 
-To allow Matlab to use the spincounting program, from within Matlab, add the folder you saved it to
-with subfolders to the Matlab path (Matlab Home -> Set Path).
+To allow Matlab to use the spincounting program, from within Matlab, add its folder (including subfolders) to the Matlab path (Matlab Home -> Set Path).
 
 
 2) CONFIGURATION
@@ -73,7 +72,7 @@ These files are not shipped with spincounting by default, but can be generated f
   c) Edit scconfig.m to suit your needs. If you're not sure, you can leave it as is. If you're using
      a machine file, you should put 'machine', '<machinename>'; ... in the DEFAULT_OPTIONS array
      (see below)
-  d) Do the same for the machine file. If you do not want 
+  d) Do the same for the machine file.
 
 2.1) Options in scconfig
 
@@ -87,14 +86,14 @@ ALLOW_ALL_OPTIONS : By default, some parameters can only be set in scconfig, oth
 DEFAULT_OPTIONS   : Used to set up default program behaviour. Unless ALLOW_ALL_OPTIONS is set, every
                     option listed as <VALID IN> scconfig in the README can be set here. The syntax
                     is that of a Nx2 cell array:
-                    
+
                     { 'option1', value1; 'option2', value2; ... }
-                    
+
 TUNE_FORMATS      : Used to tell spincounting about usable loading functions for tune picture files.
                     Only needs to be changed if you've written your own. This is a Nx3 cell array:
-                    
+
                     { '*.<extension1>, '*.<extension2>', '<description>', '<function to run>'; ... }
-                    
+
                     where <function to run> is the name of the function and extension1...N are all
                     extensions this routine is responsible for.
 
@@ -103,36 +102,46 @@ SPECTRUM_FORMATS  : Same as TUNE_FORMATS, but for spectrum files.
 
 2.2) Options in machine files
 
-Machine files contain only a single variable
+Machine files contain the following two variables
+
+DIALOG_FILTERS		 : Use this to select a subset of file types (as specified in TUNE_FORMATS and
+					   SPECTRUM_FORMATS in scconfig.m), for example to restrict the dialogs to
+					   filetypes actually used by this machine. The syntax is a 2x1 cell array
+					   containing two vectors of indices:
+
+					   { <spectrum_indices>, <tune_indices> }
+
+					   where the <spectrum_indices> and <tune_indices> refer to the line numbers
+					   in SPECTRUM_FORMATS and TUNE_FORMATS, respectively.
 
 MACHINE_PARAMETERS   : Used to set up default measurement parameters. Unless ALLOW_ALL_OPTIONS is
                        set, every option listed as <VALID IN> machinefile in the README can be set
                        here. The syntax is the same as that of DEFAULT_OPTIONS, a Nx2 cell array:
-                    
+
                        { 'option1', value1; 'option2', value2; ... }
 
 
 3) UPGRADING
 
-Since spincounting does not ship scconfig and machine files directly, you can upgrade by simply
+Since spincounting does not ship scconfig.m and machine files directly, you can upgrade by simply
 downloading a new version and overwriting the old. If the upgrade necessitates changes to the
-configuration, spincounting will notify the user on first run.
+configuration, spincounting will notify the user on the first run.
 
 Upgrading is particularly easy if you used git to get the program. In that case, just change to the
 installation folder and type
 
   git pull
-  
-You can easily switch between release and development version by typing
+
+You can easily switch between release and development versions by typing
 
   git checkout master
   git pull
-  
+
 to switch from release to develop, and
 
   git checkout release
   git pull
-  
+
 to switch from develop to release.
 
 

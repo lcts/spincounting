@@ -4,7 +4,7 @@
 |                                                            |
 | Author:  Christopher Engelhard                             |
 | Mail:    christopher.engelhard@fu-berlin.de                |
-| Website: http://lcts.github.io/spincounting                |
+| Website: https://github.com/lcts/spincounting              |
 |____________________________________________________________|
 
  ____________________________________________________________
@@ -141,7 +141,7 @@ Currently, the toolbox supports the following EPR data files
  - passing data directly to the toolbox as a MatLab struct variable
 
 - Loading structs
-You can pass a matlab struct in place of a filename. This struct has to contain a field 'data' 
+You can pass a matlab struct in place of a filename. This struct has to contain a field 'data'
 (2xN or Nx2 numeric), and optionally a field 'params', which contains the parameters in format
 'params.name = value'. All other fields are ignored.
 
@@ -152,7 +152,7 @@ for structs.
 - Bruker Xepr BES3T format (.DTA/.DSC)
 In order to load .DTA and .DSC files, the function 'eprload()' from Stefan Stoll's easyspin toolbox
 (www.easyspin.org) is needed. By default, the Xepr software normalises the data for time constant,
-receiver gain and number of scans. Accordingly, these parameters should be set to 1 via 
+receiver gain and number of scans. Accordingly, these parameters should be set to 1 via
 machine files. If Xepr measured the temperature, this parameter is read from the file,
 otherwise you'll have to specify it manually.
 
@@ -276,7 +276,7 @@ params   : struct of parameters params.<parametername>, can be empty struct()
 filename : string, the file to load
 warn     : string, same as main option 'warn', must be present but can be unused by the function
 
-An extensively commented template can be found in documentation/templates. Copy the template to 
+An extensively commented template can be found in documentation/templates. Copy the template to
 private/ and rename it to <your-function-name>.m. Tell spincounting about it by adding it to the
 <TUNE|SPECTRUM>_FORMATS arrays in private/scconfig:
 
@@ -292,7 +292,7 @@ and so on. For example, to add your function 'load-my-tunefile.m', which can loa
 
 The description is used by Matlab's file selector dialog.
 
-Once you've tested your routing, consider sending it to me, so that I can include it in future releases.
+Once you've tested your routine, consider sending it to me, so that I can include it in future releases.
 The function can read and return any parameters you like, as spincounting will ignore any parameter
 other than the ones listed in (2).
 
@@ -309,7 +309,7 @@ other than the ones listed in (2).
 
 8) EXAMPLES
 
-A usage example, demonstration files and templates can be found in the 'examples/' folder. Try usage_example.m .
+A usage example, demonstration files and templates can be found in the 'examples/' folder. Try 'usage_example.m'.
 
 
 9) FURTHER HELP
