@@ -20,137 +20,18 @@
 	<section class="page-header">
 		<h1 class="project-name">Spincounting</h1>
 
-		<h2 class="project-tagline">A MatLab program for quantitative EPR -
-		current version: v2.0.1</h2><a class="btn" href=
-		"https://github.com/lcts/spincounting">View on GitHub</a> <a class=
-		"btn" href=
-		"https://github.com/lcts/spincounting/archive/v2.0.1.zip">Download
-		.zip</a> <a class="btn" href=
-		"https://github.com/lcts/spincounting/archive/v2.0.1.tar.gz">Download
-		.tar.gz</a>
+		<h2 class="project-tagline">A MatLab program for quantitative EPR</h2><a class="btn" href=
+		"https://github.com/lcts/spincounting">View on GitHub</a> <a class="btn" href=
+		"https://github.com/lcts/spincounting/archive/v3.0.1.zip">Download.zip</a> <a class="btn" href=
+		"https://github.com/lcts/spincounting/archive/v3.0.1.tar.gz">Download.tar.gz</a>
 	</section>
 
 	<section class="main-content">
-   	<h2><a class="anchor" href="#new-version-released---v201" id=
-		"new-version-released---v200"><span class=
-		"octicon octicon-link"></span></a>New version released - v2.0.1</h2>
+   	<h2><a class="anchor" href="#page-moved" id=
+		"page-moved"><span class=
+		"octicon octicon-link"></span></a>Page moved</h2>
 
-		<p><strong>Bugfix release vor v2.0</strong></p>
-
-		<p>See the <a href="changelog.html"><strong>Changelog</strong></a> for
-		details.</p>
-
-		<h3><a class="anchor" href="#important-note-to-users-of-v1x" id=
-		"important-note-to-users-of-v1x"><span class=
-		"octicon octicon-link"></span></a><strong>Important note to users of
-		v1.x</strong></h3>
-
-		<blockquote>
-			<p>There have been some changes to the API that require you to
-			update your scripts:</p>
-
-			<ul>
-				<li>tfactor's definition changed (it now follows the definition
-				in <a target="_blank" href="https://www.springer.com/us/book/9783211929476">
-					Eaton &amp; Eaton - Quantitative EPR</a>). Adapt your old
-					calibration factors according to <code>tfactor_v2 = 1 /
-					tfactor_v2</code>.
-				</li>
-
-				<li>the parameter structs intparams and qparams have been
-				replaced by individual options
-
-					<ul>
-						<li><code>qparams.background</code> →
-						<code>tunebglimits</code></li>
-
-						<li><code>qparams.smoothing</code> →
-						<code>tunepicsmoothing</code></li>
-
-						<li><code>qparams.order</code> →
-						<code>tunebgorder</code></li>
-
-						<li><code>qparams.dipmodel</code> →
-						<code>dipmodel</code></li>
-
-						<li><code>intparams.background</code> →
-						<code>intbglimits</code></li>
-
-						<li><code>intparams.order</code> →
-						<code>intbgorder</code></li>
-					</ul>
-				</li>
-
-				<li>the default order for background correction during
-				integration is now <code>[1 3]</code></li>
-			</ul>
-		</blockquote>
-
-		<h2><a class="anchor" href="#overview" id="overview"><span class=
-		"octicon octicon-link"></span></a>Overview</h2>
-
-		<p>This MatLab toolbox is designed to facilitate and automate the
-		evaluation of quantitative EPR data. In can be used both to calibrate
-		an EPR spectrometer for future quantitative measurements and to
-		calculate the number of spins from a spectrum obtained on a calibrated
-		machine.</p>
-
-		<p>Additionally, when given a file containing a tune picture, it can
-		perform automatic calculation of the quality factor Q.</p>
-
-		<h2><a class="anchor" href="#requirements" id=
-		"requirements"><span class=
-		"octicon octicon-link"></span></a>Requirements</h2>
-
-		<ul>
-			<li>MatLab 2012 or later</li>
-
-			<li>MatLab Curve Fitting Toolbox</li>
-
-			<li>
-				<a target="_blank" href="http://easyspin.org">easyspin</a>'s eprload() function
-				for import of Bruker Xepr files
-			</li>
-		</ul>
-
-		<h2><a class="anchor" href="#versions" id="versions"><span class=
-		"octicon octicon-link"></span></a>Versions</h2>
-
-		<h3><a class="anchor" href="#release-versions" id=
-		"release-versions"><span class=
-		"octicon octicon-link"></span></a>Release Versions</h3>
-
-		<p>The current stable release version is v2.0.1. It can be downloaded
-		from the links above. Previous releases are available on the <a href=
-		"https://github.com/lcts/spincounting/releases">Releases</a> page.</p>
-
-		<h3><a class="anchor" href="#development-versions" id=
-		"development-versions"><span class=
-		"octicon octicon-link"></span></a>Development Versions</h3>
-		
-		<p><a href="develop.html">Development versions</a> of the toolbox are available <a href="develop.html">here</a>.</p>
-
-		<h2><a class="anchor" href="#installation--first-steps" id=
-		"installation--first-steps"><span class=
-		"octicon octicon-link"></span></a>Installation &amp; first steps</h2>
-
-		<p>Extract the downloaded archive to any location on your computer, and
-		add that location to your MatLab search path. (In MatLab → 'Set Path
-		...' or by editing MatLab's <i>pathdef.m</i>). The toolbox can be
-		invoked by typing <code>spincounting</code> on the MatLab command line.
-		Further information can be found in the <i>documentation/</i> and
-		<i>examples/</i> subfolders.</p>
-
-		<h2><a class="anchor" href="#support-or-contact" id=
-		"support-or-contact"><span class=
-		"octicon octicon-link"></span></a>Contact and Support</h2>
-
-		<p>Having trouble? Questions? Requests? Contact me and I’ll try to help
-		you sort it out.</p>
-
-		<p>Author: Christopher Engelhard</p>
-
-		<p>Mail: christopher.engelhard [at] fu-berlin.de</p>
+		<p><strong>This page has moved <a target="_blank" href="https://github.com/lcts/spincounting">here</a></strong></p>
 
 		<footer class="site-footer">
 			<span class="site-footer-owner"><a href=
