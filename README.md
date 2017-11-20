@@ -12,7 +12,8 @@ This MatLab toolbox is designed to facilitate and automate the evaluation of qua
 
 ### Releases & Download
 
-Latest stable release: [v3.0.1](https://github.com/lcts/spincounting/releases/latest) ([Download](https://github.com/lcts/spincounting/archive/v3.0.1.zip))  Development version: [Download](https://github.com/lcts/spincounting/archive/master.zip)
+ * Latest stable release: [v3.0.1](https://github.com/lcts/spincounting/releases/latest) ([Download](https://github.com/lcts/spincounting/archive/v3.0.1.zip))
+ * Development version: [Download](https://github.com/lcts/spincounting/archive/master.zip)
 
 Older releases can be found on the [releases page](https://github.com/lcts/spincounting/releases).
 
