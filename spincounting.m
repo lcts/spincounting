@@ -142,11 +142,12 @@ pcmd.parse(varargin{:});
 %==================================================================================================%
 % SET UP TEMPORARY DIARYFILE
 % remember the old diary file
-olddiary = get(0,'DiaryFile');
+diarystate = get(0, 'Diary');
+diaryfile = get(0,'DiaryFile');
 % create a temporary filename
-diaryfile = tempname;
+sclogfile = tempname();
 % log all output to temporary file
-diary(diaryfile);
+diary(sclogfile);
 
 % PRINT VERSION NUMBER
 fprintf('\nspincouting v%s\n%s\n\n', VERSION, RUNDATE);
@@ -177,8 +178,8 @@ strout = struct(...
 ALLOW_ALL_OPTIONS = false;
 
 % By default, do not filter spectrum or tune file formats
-FILTER_SPECTRUM_FILE = false;
-FILTER_TUNE_FILE = false;
+SPECFORMAT_FILTERS = false;
+TUNEFORMAT_FILTERS = false;
 
 % A WORD ABOUT PARAMETER STRUCTS
 % pmain/pstate:	Main spincounting parameter structs, everything ends up here
@@ -384,7 +385,7 @@ if ~pmain.q
 		end
 	else
 		try
-			tdata = getfile(TUNE_FORMATS, pmain.tunefile, '', pstate.warn);
+			tdata = getfile(TUNE_FORMATS, pstate.tunefile, '', pstate.warn);
 		catch ME
 			warning(warn_state);
 			rethrow(ME)
@@ -437,18 +438,22 @@ else
 		end
 	% if outfile is 'default', set it to the <currentdir>/<basename>.log
 	elseif strcmp(pstate.outfile, 'default')
-		outdir = pwd;
+		outpath = pwd;
 		outfile = basename;
 		outextension = '.log';
 	end
 	% save outfile name and check if it exists
 	if ~pstate.nosave
-		pstate.outfile = fullfile(outpath, outfile, outextension);
+		pstate.outfile = fullfile(outpath, strcat(outfile, outextension));
 		% check if outfile exists
 		if exist(pstate.outfile, 'file')
-			% ------check if outfile is actually a folder------
-			% warn
-			warning('spincounting:FileExists', 'Existing output files will be overwritten.\n');
+			% check if outfile is actually a folder
+			if exist(pstate.outfile, 'file') == 7
+				error('spincounting:FileExists', 'Specified filename is a folder.\n');
+			else
+			% warn about overwriting a file
+				warning('spincounting:FileExists', 'Existing output files will be overwritten.\n');
+			end
 		end
 	end
 end
@@ -681,7 +686,7 @@ strout.parameters = pmain;
 if ~pstate.nosave
 	% save results struct to mat-file if requested
 	if pstate.savemat
-		save(fullfile(outpath, outfile, '.mat'), 'results', '-struct')
+		save(fullfile(outpath, strcat(outfile, '.mat')), '-struct', 'strout')
 		fprintf('Results saved to .mat file.\n');
 	end
 	% save plots to file
@@ -689,11 +694,11 @@ if ~pstate.nosave
 	set(hFigure,'PaperPositionMode','auto', 'PaperOrientation', 'landscape', 'PaperType', 'a4');
 	print(hFigure, outformat, '-r300', fullfile(outpath, strcat(outfile, '_figure')));
 	fprintf('\nFigure saved.');
-	% move temporary diary to log file
-	movefile(diaryfile, fullfile(outpath, outfile, outextension))
-	% end diary and reset DiaryFile to what it was
-	diary off;
-	set(0,'DiaryFile', olddiary);
+	% reset Diary and DiaryFile to what they were
+	set(0,'DiaryFile', diaryfile);
+	set(0, 'Diary', diarystate);
+	% move temporary diary to log file	
+	movefile(sclogfile, fullfile(outpath, strcat(outfile, outextension)))
 end
 
 % reset warning state
