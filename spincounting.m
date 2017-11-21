@@ -201,7 +201,6 @@ TUNEFORMAT_FILTERS = false;
 % SET UP INITIAL PMAIN
 % load config from scconfig.m
 scconfig
-
 % check if config file is up-to-date
 CV_REQUIRED_NUMERIC = sscanf(CV_REQUIRED,'%d.%d.%d');
 if exist('CONFIG_VERSION', 'var') ~= 1
@@ -264,9 +263,12 @@ if strcmp(pstate.warn, 'off'); fprintf('NOTE: Most warnings are disabled.\n\n');
 
 % populate machine parameter struct with values from machine file
 if pstate.machine
+	% generate path to machinefile, as it is not located on the matlab path
 	scpath = fileparts(mfilename('fullpath'));
 	machinefile = [scpath, '/private/machines/', pstate.machine, '.m'];
+	% load machine file
 	if exist(machinefile, 'file') == 2
+		clear(machinefile); % clear a potentially cached version
 		run(machinefile);
 		for ii = 1:size(MACHINE_PARAMETERS,1)
 			pmachine.(MACHINE_PARAMETERS{ii,1}) = MACHINE_PARAMETERS{ii,2};
